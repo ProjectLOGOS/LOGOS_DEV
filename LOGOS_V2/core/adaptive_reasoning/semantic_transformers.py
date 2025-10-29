@@ -32,19 +32,24 @@ except ImportError:
     torch = None
     F = None
 
-# LOGOS imports
+# LOGOS V2 imports
 try:
-    from LOGOS_AGI.v7.adaptive_reasoning.bayesian_inference import (
+    from reasoning_engines.bayesian_inference import (
         TrinityVector,
         UnifiedBayesianInferencer,
     )
 except ImportError:
     # Mock for development
     class TrinityVector:
-        pass
+        def __init__(self, **kwargs):
+            self.e_identity = kwargs.get("e_identity", 0.5)
+            self.g_experience = kwargs.get("g_experience", 0.5)
+            self.t_logos = kwargs.get("t_logos", 0.5)
+            self.confidence = kwargs.get("confidence", 0.5)
 
     class UnifiedBayesianInferencer:
-        pass
+        def __init__(self):
+            pass
 
 
 @dataclass

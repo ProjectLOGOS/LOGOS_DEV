@@ -34,14 +34,14 @@ except ImportError:
     RABBITMQ_AVAILABLE = False
     pika = None
 
-# LOGOS imports
+# LOGOS V2 imports
 try:
-    from LOGOS_AGI.v7.adaptive_reasoning.bayesian_inference import (
+    from reasoning_engines.bayesian_inference import (
         TrinityVector,
         UnifiedBayesianInferencer,
     )
-    from LOGOS_AGI.v7.adaptive_reasoning.semantic_transformers import UnifiedSemanticTransformer
-    from LOGOS_AGI.v7.adaptive_reasoning.torch_adapters import UnifiedTorchAdapter
+    from core.adaptive_reasoning.semantic_transformers import UnifiedSemanticTransformer
+    from core.adaptive_reasoning.torch_adapters import UnifiedTorchAdapter
 except ImportError:
     # Mock for development
     class TrinityVector:
@@ -52,10 +52,18 @@ except ImportError:
             self.confidence = kwargs.get("confidence", 0.5)
 
     class UnifiedBayesianInferencer:
-        pass
+        def __init__(self):
+            pass
+        
+        def infer(self, evidence):
+            return TrinityVector()
 
     class UnifiedSemanticTransformer:
-        pass
+        def __init__(self):
+            pass
+        
+        def transform(self, text):
+            return {"embeddings": [], "tokens": []}
 
     class UnifiedTorchAdapter:
         pass

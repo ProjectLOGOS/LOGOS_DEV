@@ -8,7 +8,7 @@ from core.system_imports import *
 import subprocess
 
 # Add LOGOS to path
-sys.path.insert(0, str(Path(__file__).parent / "LOGOS_V2"))
+sys.path.insert(0, str(Path(__file__).parent))
 
 class LOGOSLauncher:
     """Comprehensive LOGOS AGI system launcher with health checks"""
@@ -30,7 +30,7 @@ class LOGOSLauncher:
         try:
             self.log("Initializing LOGOS Core System...")
 
-            from LOGOS_V2.entry import get_logos_core
+            from entry import get_logos_core
             self.core_system = get_logos_core()
 
             self.log("✅ LOGOS Core System initialized successfully")

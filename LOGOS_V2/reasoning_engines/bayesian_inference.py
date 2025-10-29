@@ -30,22 +30,38 @@ except ImportError:
 
 # LOGOS Core imports
 try:
-    from LOGOS_AGI.v5.reasoning.bayesian_interface import (
+    # V2 internal imports
+    from core.adaptive_reasoning.bayesian_interface import (
         BayesianInterface,
         TrueP,
         ProbabilisticResult,
     )
-    from PXL_IEL_overlay_system.modules.infra.adaptive.ModalProbabilistic import ModalProbabilistic
 except ImportError:
-    # Mock for development
+    # Fallback implementations for development
     class BayesianInterface:
-        pass
+        def __init__(self):
+            pass
+        
+        def infer(self, evidence):
+            return {"probability": 0.5}
 
-    def TrueP(p, threshold):
-        return True
+    def TrueP(p, threshold=0.5):
+        return p >= threshold
 
     class ProbabilisticResult:
-        pass
+        def __init__(self, probability=0.5, confidence=0.5):
+            self.probability = probability
+            self.confidence = confidence
+
+# Modal Probabilistic functionality - V2 implementation
+class ModalProbabilistic:
+    """Placeholder for modal probabilistic reasoning"""
+    
+    def __init__(self):
+        self.cache = {}
+    
+    def evaluate_modal_proposition(self, proposition):
+        return {"necessity": 0.5, "possibility": 0.8}
 
 
 @dataclass
