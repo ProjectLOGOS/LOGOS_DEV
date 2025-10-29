@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  pxl-prover:
+    image: logos-pxl-core:v0.5-rc1
+    build:
+      context: .
+      dockerfile: Dockerfile.pxl-core
+    ports:
+      - "8088:8088"
+    environment:
+      - ENABLE_HMAC_AUTH=true
+      - HMAC_SECRET_KEY=${HMAC_SECRET_KEY}
+      - PXL_SERVER_PORT=8088
+      - PXL_POOL_SIZE=10
+      - PXL_CACHE_TTL=600
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./logs:/app/logs
+      - ./configs:/app/configs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8088/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 1G
+          cpus: '0.5'
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+    depends_on:
+      - pxl-prover
+    profiles:
+      - monitoring
+
+volumes:
+  prometheus_data:
+  logs:
+  configs:
+
+networks:
+  default:
+    name: logos-pxl-network
