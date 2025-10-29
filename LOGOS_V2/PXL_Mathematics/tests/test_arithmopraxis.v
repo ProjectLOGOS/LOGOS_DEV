@@ -1,7 +1,7 @@
 (** ArithmoPraxis Infrastructure Test *)
 (* Test domain stubs *)
-Load "modules/infra/arithmo/BooleanLogic/Boolean.v".
-Load "modules/infra/arithmo/Core/ModalWrap.v".
+Load "../modules/infra/arithmo/BooleanLogic/Boolean.v".
+Load "../modules/infra/arithmo/Core/ModalWrap.v".
 Load "modules/infra/arithmo/NumberTheory/Number.v".
 
 (* Test Goldbach example functionality *)
