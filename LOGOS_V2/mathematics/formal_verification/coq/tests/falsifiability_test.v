@@ -4,9 +4,6 @@ From Coq Require Import Extraction List String Bool Classical.
 From PXLs Require Import PXLv3.
 Require Import Coq.Logic.Classical_Pred_Type.
 
-(** Load bridge validation definitions **)
-Load "bridge_validation.v".
-
 (** ========== Falsifiability Core Definitions ========== **)
 
 (** Falsifiability predicate: a proposition is falsifiable if there exists a countermodel **)
