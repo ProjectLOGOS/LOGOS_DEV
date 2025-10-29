@@ -1,5 +1,8 @@
 # OBDC - Object-Based Denotational Calculus kernel
+# Updated for GPT Consolidation Phase 1
 
+from .system_imports import *
+from .unified_classes import *
 from .logos_core import *
 from .adaptive_reasoning import *
 from .runtime_services import *

@@ -12,13 +12,8 @@ Combines:
 - IEL epistemic truth mapping
 """
 
-import json
-import logging
+from core.system_imports import *
 import numpy as np
-from typing import Dict, List, Optional, Any, Tuple, Union
-from dataclasses import dataclass
-from datetime import datetime
-from pathlib import Path
 
 # Safe imports with fallback handling
 try:

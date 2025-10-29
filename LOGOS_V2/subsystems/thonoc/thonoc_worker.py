@@ -1,13 +1,5 @@
-import os
+from core.system_imports import *
 import pika
-import json
-import time
-import logging
-import os
-import pika
-import json
-import time
-import logging
 
 
 class AxiomaticProofEngine:
