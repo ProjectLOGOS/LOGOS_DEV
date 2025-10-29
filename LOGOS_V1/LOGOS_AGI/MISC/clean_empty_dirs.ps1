@@ -1,1 +1,0 @@
-Get-ChildItem -Recurse -Directory | Where-Object { @(Get-ChildItem $_.FullName -Force -EA SilentlyContinue).Count -eq 0 } | Remove-Item -Recurse -Force
