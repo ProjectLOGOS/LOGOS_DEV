@@ -1,0 +1,22 @@
+﻿# LOGOS AI System Requirements
+# Core dependencies for the three-protocol architecture
+asyncio
+logging
+pathlib
+dataclasses
+threading
+uuid
+json
+datetime
+argparse
+subprocess
+concurrent.futures
+
+# External libraries (install as needed)
+# psutil  # For system monitoring
+# pytest  # For testing
+# pylint  # For linting
+# mypy    # For type checking
+# black   # For code formatting
+# isort   # For import sorting
+# autoflake  # For unused import removal
