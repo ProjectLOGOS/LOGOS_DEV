@@ -1,5 +1,5 @@
 (** Simple test to isolate the performance issue *)
-Load "modules/iel-math/MathPraxis/Problems/Goldbach/ScanFeatures.v".
+Load "ScanFeatures.v".
 Import ScanFeatures.
 
 (* Test basic functions first *)

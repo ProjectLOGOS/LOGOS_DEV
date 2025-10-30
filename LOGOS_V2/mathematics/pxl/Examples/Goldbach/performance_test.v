@@ -1,6 +1,5 @@
 (** Realistic performance test for invariant scanning *)
-Load "modules/iel-math/MathPraxis/Problems/Goldbach/ScanFeatures.v".
-Import ScanFeatures.
+Require Import ScanFeatures.
 
 (* Test individual components *)
 Eval compute in (is_prime 17).

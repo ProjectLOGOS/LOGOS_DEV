@@ -1,8 +1,8 @@
 (** MathPraxis/Problems/Goldbach/Invariants.v *)
-From Coq Require Import Arith Lia Bool.
+Require Import Arith Lia Bool.
 From MathPraxis.Core Require Import Numbers.
-From MathPraxis.Problems.Goldbach Require Import Extract Verify.
-Import Numbers GoldbachExtract GoldbachVerify.
+(* From MathPraxis.Problems.Goldbach Require Import Extract Verify.
+Import GoldbachExtract GoldbachVerify. *)
 
 Module Invariants.
 

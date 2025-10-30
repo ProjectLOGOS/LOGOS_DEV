@@ -1,0 +1,181 @@
+def _validate_etg_logic_bijection(self) -> bool:
+    """
+    Technical validation of f: T → L bijection
+    T = {EI, AT, OG} → L = {ID, NC, EM}
+    """
+    
+    # Step 1: Verify Existence/Identity (EI ↔ ID) mapping
+    def validate_existence_identity():
+        # Test: Does system have ontological grounding?
+        try:
+            # Check if system can establish identity relations
+            test_identity = self._test_identity_law()
+            # Verify existence preconditions are met
+            existence_grounded = self._verify_existence_grounding()
+            
+            # Bijection requirement: EI maps uniquely to ID
+            return test_identity and existence_grounded and self._verify_unique_mapping("EI", "ID")
+        except Exception:
+            return False
+    
+    # Step 2: Verify Truth/Non-Contradiction (AT ↔ NC) mapping  
+    def validate_truth_noncontradiction():
+        # Test: Can system maintain logical consistency?
+        try:
+            # Check if system enforces non-contradiction
+            consistency_check = self._test_noncontradiction_law()
+            # Verify truth conditions are absolute
+            truth_absolute = self._verify_absolute_truth()
+            
+            # Bijection requirement: AT maps uniquely to NC
+            return consistency_check and truth_absolute and self._verify_unique_mapping("AT", "NC")
+        except Exception:
+            return False
+    
+    # Step 3: Verify Goodness/Excluded Middle (OG ↔ EM) mapping
+    def validate_goodness_excludedmiddle():
+        # Test: Does system align with objective good?
+        try:
+            # Check if system enforces excluded middle for values
+            excluded_middle_check = self._test_excluded_middle_law()
+            # Verify goodness is objective (not subjective)
+            goodness_objective = self._verify_objective_goodness()
+            
+            # Bijection requirement: OG maps uniquely to EM
+            return excluded_middle_check and goodness_objective and self._verify_unique_mapping("OG", "EM")
+        except Exception:
+            return False
+    
+    # Step 4: Verify bijection properties (injective + surjective)
+    def verify_bijection_properties():
+        # Injective: Each element in T maps to unique element in L
+        injective = self._verify_injective_mapping({
+            "EI": "ID", "AT": "NC", "OG": "EM"
+        })
+        
+        # Surjective: Every element in L is mapped to by some element in T  
+        surjective = self._verify_surjective_mapping({
+            "ID": "EI", "NC": "AT", "EM": "OG"
+        })
+        
+        return injective and surjective
+    
+    # Execute all validations
+    ei_id_valid = validate_existence_identity()
+    at_nc_valid = validate_truth_noncontradiction()
+    og_em_valid = validate_goodness_excludedmiddle()
+    bijection_valid = verify_bijection_properties()
+    
+    return ei_id_valid and at_nc_valid and og_em_valid and bijection_valid
+
+def _validate_mesh_operations_bijection(self) -> bool:
+    """
+    Technical validation of g: M → O bijection
+    M = {Σ, B, M} → O = {SIGN, BRIDGE, MIND}
+    """
+    
+    # Step 1: Verify Simultaneity ↔ SIGN mapping
+    def validate_simultaneity_sign():
+        try:
+            # Test SIGN principle: Simultaneous Interconnected Governing Nexus
+            sign_operational = self._test_sign_simultaneity()
+            # Verify cross-domain parameter coordination
+            simultaneity_active = self._verify_cross_domain_simultaneity()
+            
+            return sign_operational and simultaneity_active and self._verify_unique_mapping("Σ", "SIGN")
+        except Exception:
+            return False
+    
+    # Step 2: Verify Bridge ↔ BRIDGE mapping
+    def validate_bridge_bridge():
+        try:
+            # Test BRIDGE principle: Mathematical-Metaphysical Bridge
+            bridge_operational = self._test_bridge_elimination()
+            # Verify impossibility → necessity propagation
+            necessity_propagation = self._verify_necessity_propagation()
+            
+            return bridge_operational and necessity_propagation and self._verify_unique_mapping("B", "BRIDGE")
+        except Exception:
+            return False
+    
+    # Step 3: Verify Mind ↔ MIND mapping
+    def validate_mind_mind():
+        try:
+            # Test MIND principle: Metaphysical Instantiative Necessity Driver
+            mind_operational = self._test_mind_closure()
+            # Verify typing/closure operations
+            closure_active = self._verify_closure_operations()
+            
+            return mind_operational and closure_active and self._verify_unique_mapping("M", "MIND")
+        except Exception:
+            return False
+    
+    # Execute validations
+    simultaneity_sign_valid = validate_simultaneity_sign()
+    bridge_bridge_valid = validate_bridge_bridge()
+    mind_mind_valid = validate_mind_mind()
+    
+    return simultaneity_sign_valid and bridge_bridge_valid and mind_mind_valid
+
+def _validate_bijection_commutation(self) -> bool:
+    """
+    Technical validation of commutation: τ∘f = g∘κ
+    Both bijections must preserve Unity/Trinity structure
+    """
+    
+    # Step 1: Verify Unity preservation (U = 1)
+    def verify_unity_preservation():
+        # ETG bijection preserves unity
+        etg_unity = self._calculate_etg_unity()  # Should equal 1
+        # MESH bijection preserves unity  
+        mesh_unity = self._calculate_mesh_unity()  # Should equal 1
+        
+        return abs(etg_unity - 1.0) < 1e-10 and abs(mesh_unity - 1.0) < 1e-10
+    
+    # Step 2: Verify Trinity preservation (Θ = 3)
+    def verify_trinity_preservation():
+        # ETG bijection preserves triadic structure
+        etg_trinity = self._calculate_etg_cardinality()  # Should equal 3
+        # MESH bijection preserves triadic structure
+        mesh_trinity = self._calculate_mesh_cardinality()  # Should equal 3
+        
+        return etg_trinity == 3 and mesh_trinity == 3
+    
+    # Step 3: Verify ratio preservation (U/Θ = 1/3)
+    def verify_ratio_preservation():
+        # Both bijections preserve unity/trinity ratio
+        etg_ratio = self._calculate_etg_ratio()  # Should equal 1/3
+        mesh_ratio = self._calculate_mesh_ratio()  # Should equal 1/3
+        
+        return abs(etg_ratio - (1/3)) < 1e-10 and abs(mesh_ratio - (1/3)) < 1e-10
+    
+    # Step 4: Verify path equivalence
+    def verify_path_equivalence():
+        # Path 1: T → L → O (through ETG then mapping to operations)
+        # Path 2: T → M → O (through MESH then to operations)
+        
+        test_inputs = [
+            {"existence": 1.0, "truth": 0.8, "goodness": 0.9},
+            {"existence": 0.7, "truth": 1.0, "goodness": 0.85},
+            {"existence": 0.9, "truth": 0.9, "goodness": 1.0}
+        ]
+        
+        for test_input in test_inputs:
+            # Path 1: ETG → Logic → Operations
+            path1_result = self._compute_etg_path(test_input)
+            # Path 2: ETG → MESH → Operations  
+            path2_result = self._compute_mesh_path(test_input)
+            
+            # Both paths must yield identical results
+            if not self._results_equivalent(path1_result, path2_result):
+                return False
+        
+        return True
+    
+    # Execute all commutation checks
+    unity_preserved = verify_unity_preservation()
+    trinity_preserved = verify_trinity_preservation()
+    ratio_preserved = verify_ratio_preservation()
+    paths_equivalent = verify_path_equivalence()
+    
+    return unity_preserved and trinity_preserved and ratio_preserved and paths_equivalent
