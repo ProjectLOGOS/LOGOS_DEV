@@ -49,6 +49,14 @@ except ImportError:
     def TrueP(p, threshold):
         return True
 
+# Translation Engine Enhancement
+try:
+    from .translation.translation_engine import TranslationEngine
+    from .translation.pdn_bridge import PDNBottleneckSolver
+    TRANSLATION_ENGINE_AVAILABLE = True
+except ImportError:
+    TRANSLATION_ENGINE_AVAILABLE = False
+
     class ProbabilisticResult:
         pass
 
@@ -109,6 +117,14 @@ class UnifiedBayesianInferencer:
             self.advanced_interface = BayesianInterface(verification_context=verification_context)
         else:
             self.advanced_interface = None
+
+        # Initialize Translation Engine for semantic enhancement
+        if TRANSLATION_ENGINE_AVAILABLE:
+            self.translation_engine = TranslationEngine()
+            self.pdn_solver = PDNBottleneckSolver(None)  # Will initialize bridge separately
+        else:
+            self.translation_engine = None
+            self.pdn_solver = None
 
         # Setup logging
         self.logger = logging.getLogger(f"LOGOS.{self.__class__.__name__}")
@@ -428,8 +444,205 @@ class UnifiedBayesianInferencer:
             "advanced_interface_available": self.advanced_interface is not None,
         }
 
+    def translation_enhanced_inference(
+        self, 
+        natural_language_query: str,
+        use_pdn_optimization: bool = True,
+        semantic_context: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """
+        Enhanced Bayesian inference using Translation Engine for semantic processing.
+        
+        Args:
+            natural_language_query: Natural language input for inference
+            use_pdn_optimization: Whether to apply PDN bottleneck optimization
+            semantic_context: Additional semantic context
+            
+        Returns:
+            Enhanced inference results with translation layer
+        """
+        if not TRANSLATION_ENGINE_AVAILABLE:
+            # Fallback to keyword extraction and standard inference
+            keywords = natural_language_query.split()
+            trinity_result = self.infer_trinity_vector(keywords)
+            return {
+                "trinity_vector": trinity_result,
+                "translation_enhanced": False,
+                "fallback_method": "keyword_split"
+            }
+        
+        try:
+            # Step 1: Translation Engine processing
+            translation_result = self.translation_engine.translate(natural_language_query)
+            
+            # Step 2: Extract semantic features for Bayesian inference
+            mind_layer = translation_result.get("mind_layer", {})
+            bridge_layer = translation_result.get("bridge_layer", {})
+            
+            # Step 3: Convert semantic features to keyword weights
+            semantic_keywords = []
+            semantic_weights = []
+            
+            # Map ontological dimensions to keywords
+            for dimension, value in bridge_layer.items():
+                if value > 0.1:  # Only include significant dimensions
+                    semantic_keywords.append(dimension)
+                    semantic_weights.append(value)
+            
+            # Map mind categories to keywords
+            for category, value in mind_layer.items():
+                if value > 0.1:
+                    semantic_keywords.append(category)
+                    semantic_weights.append(value)
+            
+            # Step 4: Enhanced Bayesian inference
+            if semantic_keywords:
+                trinity_result = self.infer_trinity_vector(
+                    semantic_keywords, 
+                    semantic_weights, 
+                    use_advanced_inference=True
+                )
+            else:
+                # Fallback if no semantic features extracted
+                fallback_keywords = natural_language_query.split()
+                trinity_result = self.infer_trinity_vector(fallback_keywords)
+            
+            # Step 5: PDN optimization if requested
+            if use_pdn_optimization and self.pdn_solver:
+                try:
+                    optimized_result = self.pdn_solver.optimize_translation_path(natural_language_query)
+                    optimization_metrics = optimized_result.get("improvement_metrics", {})
+                except Exception as e:
+                    optimization_metrics = {"error": str(e)}
+            else:
+                optimization_metrics = {}
+            
+            return {
+                "trinity_vector": trinity_result,
+                "translation_enhanced": True,
+                "translation_result": translation_result,
+                "semantic_keywords": semantic_keywords,
+                "semantic_weights": semantic_weights,
+                "pdn_optimization": optimization_metrics,
+                "original_query": natural_language_query
+            }
+            
+        except Exception as e:
+            # Fallback on error
+            fallback_keywords = natural_language_query.split()
+            trinity_result = self.infer_trinity_vector(fallback_keywords)
+            return {
+                "trinity_vector": trinity_result,
+                "translation_enhanced": False,
+                "error": str(e),
+                "fallback_method": "error_recovery"
+            }
 
-# Example usage and integration functions
+
+# UIP Step 5 Integration Functions
+def update_posteriors(trinity_vector: Dict[str, Any], iel_bundle: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Update Bayesian posterior beliefs based on Trinity vector and IEL bundle.
+    
+    Args:
+        trinity_vector: Trinity reasoning output with existence/goodness/truth values
+        iel_bundle: IEL unified bundle with reasoning chains and frame coherence
+        
+    Returns:
+        Dictionary with updated beliefs, confidence, and variance metrics
+    """
+    try:
+        # Initialize inferencer
+        inferencer = UnifiedBayesianInferencer()
+        
+        # Extract trinity values with fallbacks
+        existence = trinity_vector.get("existence", 0.5)
+        goodness = trinity_vector.get("goodness", 0.5)  
+        truth = trinity_vector.get("truth", 0.5)
+        
+        # Create trinity vector for inference
+        trinity_vec = TrinityVector(
+            existence_strength=existence,
+            goodness_strength=goodness,
+            truth_strength=truth,
+            metadata={"source": "adaptive_inference_layer"}
+        )
+        
+        # Extract keywords from IEL bundle for inference
+        keywords = []
+        if "reasoning_chains" in iel_bundle:
+            chains = iel_bundle["reasoning_chains"]
+            if isinstance(chains, list):
+                for chain in chains[:3]:  # Limit to first 3 chains
+                    if isinstance(chain, dict) and "keywords" in chain:
+                        keywords.extend(chain["keywords"][:2])  # Max 2 keywords per chain
+        
+        # Fallback keywords if none found
+        if not keywords:
+            keywords = ["reasoning", "inference", "adaptation"]
+        
+        # Perform Bayesian inference
+        inference_result = inferencer.inference_with_trinity(keywords, trinity_vec)
+        
+        # Map to IEL epistemic state
+        iel_state = inferencer.map_to_iel_epistemic(inference_result)
+        
+        # Calculate confidence and variance metrics
+        base_confidence = inference_result.confidence
+        epistemic_confidence = iel_state.verified_confidence
+        combined_confidence = (base_confidence + epistemic_confidence) / 2.0
+        
+        # Calculate variance based on trinity vector spread
+        trinity_values = [existence, goodness, truth]
+        trinity_mean = sum(trinity_values) / len(trinity_values)
+        trinity_variance = sum((v - trinity_mean) ** 2 for v in trinity_values) / len(trinity_values)
+        
+        # Posterior beliefs structure
+        posterior_beliefs = {
+            "trinity_inference": {
+                "existence": existence,
+                "goodness": goodness,
+                "truth": truth,
+                "confidence": base_confidence
+            },
+            "iel_epistemic": {
+                "verified_confidence": epistemic_confidence,
+                "epistemic_certainty": iel_state.epistemic_certainty,
+                "coherence_status": iel_state.coherence_status
+            },
+            "keywords_processed": keywords,
+            "inference_timestamp": inference_result.timestamp
+        }
+        
+        return {
+            "beliefs": posterior_beliefs,
+            "confidence": combined_confidence,
+            "variance": trinity_variance,
+            "epistemic_state": iel_state.epistemic_certainty,
+            "coherence_level": iel_state.coherence_status,
+            "meta": {
+                "inference_method": "unified_bayesian_trinity",
+                "keywords_count": len(keywords),
+                "trinity_balance": max(trinity_values) - min(trinity_values)
+            }
+        }
+        
+    except Exception as e:
+        logging.error(f"Posterior update failed: {e}")
+        # Return fallback posterior with error information
+        return {
+            "beliefs": {"error": str(e)},
+            "confidence": 0.5,  # Neutral confidence on error
+            "variance": 0.8,    # High variance indicates uncertainty
+            "epistemic_state": "uncertain",
+            "coherence_level": "degraded",
+            "meta": {
+                "inference_method": "fallback",
+                "error": str(e)
+            }
+        }
+
+# Example usage and integration functions  
 def example_unified_inference():
     """Example of unified Bayesian inference with IEL mapping"""
 

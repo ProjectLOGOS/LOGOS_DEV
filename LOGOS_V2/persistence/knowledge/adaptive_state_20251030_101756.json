@@ -1,0 +1,12 @@
+{
+  "test": "data",
+  "meta": {
+    "step": 5
+  },
+  "persistence_meta": {
+    "timestamp": "2025-10-30T10:17:55.112084",
+    "version": "1.0.0",
+    "source": "adaptive_inference_layer",
+    "checksum": "6cac163550a90ec4d2a08c2c534586a97f2ad31a0a18360ad08e3b3e972721b8"
+  }
+}

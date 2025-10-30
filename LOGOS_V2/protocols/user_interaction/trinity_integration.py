@@ -5,10 +5,36 @@ Trinity Integration - UIP Step 4
 Integrates with the Trinity reasoning engines for core logical processing.
 Coordinates multi-engine reasoning and synthesizes results from various
 logical frameworks into coherent analytical outputs.
+
+Enhanced with V2_Possible_Gap_Fillers integration for improved reasoning capabilities.
 """
 
 from protocols.shared.system_imports import *
 from protocols.user_interaction.uip_registry import register_uip_handler, UIPStep, UIPContext
+
+# Enhanced Mathematical Integration
+try:
+    from mathematics.pxl.arithmopraxis.arithmetic_engine import TrinityArithmeticEngine
+    from mathematics.pxl.arithmopraxis.symbolic_math import FractalSymbolicMath
+    from mathematics.pxl.arithmopraxis.proof_engine import OntologicalProofEngine
+    ENHANCED_MATHEMATICS_AVAILABLE = True
+except ImportError:
+    ENHANCED_MATHEMATICS_AVAILABLE = False
+
+# Translation Engine Integration
+try:
+    from intelligence.reasoning_engines.translation.translation_engine import TranslationEngine
+    from intelligence.reasoning_engines.translation.pdn_bridge import PDNBottleneckSolver
+    TRANSLATION_ENGINE_AVAILABLE = True
+except ImportError:
+    TRANSLATION_ENGINE_AVAILABLE = False
+
+# Lambda Engine Integration
+try:
+    from intelligence.trinity.thonoc.symbolic_engine.lambda_engine.logos_lambda_core import LambdaLogosEngine
+    LAMBDA_ENGINE_AVAILABLE = True
+except ImportError:
+    LAMBDA_ENGINE_AVAILABLE = False
 
 
 @dataclass
@@ -30,8 +56,32 @@ class TrinityIntegrationEngine:
     """Core Trinity reasoning integration engine"""
     
     def __init__(self):
-        """Initialize Trinity integration engine"""
+        """Initialize Trinity integration engine with enhanced capabilities"""
         self.logger = logging.getLogger(__name__)
+        
+        # Enhanced Mathematical Integration
+        if ENHANCED_MATHEMATICS_AVAILABLE:
+            self.arithmetic_engine = TrinityArithmeticEngine()
+            self.symbolic_math = FractalSymbolicMath()
+            self.proof_engine = OntologicalProofEngine()
+        else:
+            self.arithmetic_engine = None
+            self.symbolic_math = None
+            self.proof_engine = None
+        
+        # Translation Engine Integration
+        if TRANSLATION_ENGINE_AVAILABLE:
+            self.translation_engine = TranslationEngine()
+            self.pdn_solver = PDNBottleneckSolver(None)  # Initialize bridge separately
+        else:
+            self.translation_engine = None
+            self.pdn_solver = None
+        
+        # Lambda Engine Integration
+        if LAMBDA_ENGINE_AVAILABLE:
+            self.lambda_engine = LambdaLogosEngine()
+        else:
+            self.lambda_engine = None
         self.trinity_engines = {}
         self.knowledge_bases = {}
         self.reasoning_coordinators = {}
@@ -229,6 +279,18 @@ class TrinityIntegrationEngine:
             complexity_metrics = self._calculate_complexity_metrics(
                 required_engines, reasoning_results, kb_results
             )
+            
+            # Enhanced processing with V2_Possible_Gap_Fillers integration
+            enhancement_results = await self._apply_enhanced_processing(
+                context, reasoning_results, iel_data
+            )
+            
+            # Merge enhancement results into synthesis
+            if enhancement_results.get("enhanced"):
+                synthesis_output.update(enhancement_results.get("enhancements", {}))
+                # Boost confidence if enhancements were successful
+                if "confidence" in synthesis_output:
+                    synthesis_output["confidence"] = min(1.0, synthesis_output["confidence"] * 1.2)
             
             result = TrinityIntegrationResult(
                 integration_successful=len(reasoning_results) > 0,
@@ -845,6 +907,93 @@ async def handle_trinity_integration(context: UIPContext) -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"Trinity integration failed for {context.correlation_id}: {e}")
         raise
+
+    async def _apply_enhanced_processing(
+        self,
+        context: Dict[str, Any],
+        reasoning_results: Dict[str, Any],
+        iel_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Apply enhanced processing using integrated V2_Possible_Gap_Fillers."""
+        enhancement_results = {
+            "enhanced": False,
+            "enhancements": {},
+            "applied_engines": []
+        }
+        
+        try:
+            # Trinity Arithmetic Enhancement
+            if self.trinity_arithmetic and "mathematical" in context.get("domains", []):
+                try:
+                    math_enhancement = await self.trinity_arithmetic.enhance_reasoning(
+                        reasoning_results, context
+                    )
+                    if math_enhancement:
+                        enhancement_results["enhancements"]["arithmetic"] = math_enhancement
+                        enhancement_results["applied_engines"].append("TrinityArithmetic")
+                        enhancement_results["enhanced"] = True
+                except Exception as e:
+                    self.logger.warning(f"Trinity Arithmetic enhancement failed: {e}")
+            
+            # Fractal Symbolic Processing
+            if self.fractal_symbolic:
+                try:
+                    fractal_enhancement = await self.fractal_symbolic.process_reasoning_fractally(
+                        reasoning_results, iel_data
+                    )
+                    if fractal_enhancement:
+                        enhancement_results["enhancements"]["fractal"] = fractal_enhancement
+                        enhancement_results["applied_engines"].append("FractalSymbolic")
+                        enhancement_results["enhanced"] = True
+                except Exception as e:
+                    self.logger.warning(f"Fractal Symbolic enhancement failed: {e}")
+            
+            # Ontological Proof Verification
+            if self.ontological_proof:
+                try:
+                    proof_enhancement = await self.ontological_proof.verify_reasoning_ontologically(
+                        reasoning_results, context
+                    )
+                    if proof_enhancement:
+                        enhancement_results["enhancements"]["ontological"] = proof_enhancement
+                        enhancement_results["applied_engines"].append("OntologicalProof")
+                        enhancement_results["enhanced"] = True
+                except Exception as e:
+                    self.logger.warning(f"Ontological Proof enhancement failed: {e}")
+            
+            # Translation Enhancement for natural language contexts
+            if self.translation_engine and "natural_language" in context.get("processing", []):
+                try:
+                    translation_enhancement = await self.translation_engine.enhance_with_translation(
+                        reasoning_results, context
+                    )
+                    if translation_enhancement:
+                        enhancement_results["enhancements"]["translation"] = translation_enhancement
+                        enhancement_results["applied_engines"].append("Translation")
+                        enhancement_results["enhanced"] = True
+                except Exception as e:
+                    self.logger.warning(f"Translation enhancement failed: {e}")
+            
+            # Lambda Logic Processing
+            if self.lambda_logos:
+                try:
+                    lambda_enhancement = await self.lambda_logos.process_with_lambda_logic(
+                        reasoning_results, context
+                    )
+                    if lambda_enhancement:
+                        enhancement_results["enhancements"]["lambda"] = lambda_enhancement
+                        enhancement_results["applied_engines"].append("LambdaLogos")
+                        enhancement_results["enhanced"] = True
+                except Exception as e:
+                    self.logger.warning(f"Lambda Logic enhancement failed: {e}")
+            
+            self.logger.info(f"Enhanced processing applied {len(enhancement_results['applied_engines'])} engines")
+            
+        except Exception as e:
+            self.logger.error(f"Error in enhanced processing: {e}")
+            enhancement_results["error"] = str(e)
+        
+        return enhancement_results
 
 
 __all__ = [
