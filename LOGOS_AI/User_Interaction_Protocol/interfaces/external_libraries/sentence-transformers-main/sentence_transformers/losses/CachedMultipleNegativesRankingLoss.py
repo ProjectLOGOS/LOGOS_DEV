@@ -47,7 +47,9 @@ def _backward_hook(
     assert loss_obj.cache is not None
     assert loss_obj.random_states is not None
     with torch.enable_grad():
-        for sentence_feature, grad, random_states in zip(sentence_features, loss_obj.cache, loss_obj.random_states):
+        for sentence_feature, grad, random_states in zip(
+            sentence_features, loss_obj.cache, loss_obj.random_states
+        ):
             for (reps_mb, _), grad_mb in zip(
                 loss_obj.embed_minibatch_iter(
                     sentence_feature=sentence_feature,
@@ -57,7 +59,9 @@ def _backward_hook(
                 ),
                 grad,
             ):
-                surrogate = torch.dot(reps_mb.flatten(), grad_mb.flatten()) * grad_output
+                surrogate = (
+                    torch.dot(reps_mb.flatten(), grad_mb.flatten()) * grad_output
+                )
                 surrogate.backward()
 
 
@@ -184,11 +188,19 @@ class CachedMultipleNegativesRankingLoss(nn.Module):
         """Do forward pass on a minibatch of the input features and return corresponding embeddings."""
         grad_context = nullcontext if with_grad else torch.no_grad
         random_state_context = nullcontext() if random_state is None else random_state
-        sentence_feature_minibatch = {k: v[begin:end] for k, v in sentence_feature.items()}
+        sentence_feature_minibatch = {
+            k: v[begin:end] for k, v in sentence_feature.items()
+        }
         with random_state_context:
             with grad_context():
-                random_state = RandContext(*sentence_feature_minibatch.values()) if copy_random_state else None
-                reps = self.model(sentence_feature_minibatch)["sentence_embedding"]  # (mbsz, hdim)
+                random_state = (
+                    RandContext(*sentence_feature_minibatch.values())
+                    if copy_random_state
+                    else None
+                )
+                reps = self.model(sentence_feature_minibatch)[
+                    "sentence_embedding"
+                ]  # (mbsz, hdim)
         return reps, random_state
 
     def embed_minibatch_iter(
@@ -226,14 +238,20 @@ class CachedMultipleNegativesRankingLoss(nn.Module):
         loss = self.calculate_loss(reps, with_backward=True)
         loss = loss.detach().requires_grad_()
 
-        self.cache = [[r.grad for r in rs] for rs in reps]  # e.g. 3 * bsz/mbsz * (mbsz, hdim)
+        self.cache = [
+            [r.grad for r in rs] for rs in reps
+        ]  # e.g. 3 * bsz/mbsz * (mbsz, hdim)
 
         return loss
 
-    def calculate_loss(self, reps: list[list[Tensor]], with_backward: bool = False) -> Tensor:
+    def calculate_loss(
+        self, reps: list[list[Tensor]], with_backward: bool = False
+    ) -> Tensor:
         """Calculate the cross-entropy loss. No need to cache the gradients."""
         anchors = torch.cat(reps[0])  # (batch_size, embedding_dim)
-        candidates = [torch.cat(r) for r in reps[1:]]  # (1 + num_neg) tensors of shape (batch_size, embedding_dim)
+        candidates = [
+            torch.cat(r) for r in reps[1:]
+        ]  # (1 + num_neg) tensors of shape (batch_size, embedding_dim)
         batch_size = len(anchors)
         offset = 0
 
@@ -241,7 +259,10 @@ class CachedMultipleNegativesRankingLoss(nn.Module):
             # Gather the positives and negatives across all devices, with gradients, but not the anchors. We compute
             # only this device's anchors with all candidates from all devices, such that the backward pass on the document
             # embeddings can flow back to the original devices.
-            candidates = [all_gather_with_grad(embedding_column) for embedding_column in candidates]
+            candidates = [
+                all_gather_with_grad(embedding_column)
+                for embedding_column in candidates
+            ]
             # (1 + num_negatives) tensors of shape (batch_size * world_size, embedding_dim)
 
             # Adjust the range_labels to account for the gathered candidates
@@ -266,7 +287,9 @@ class CachedMultipleNegativesRankingLoss(nn.Module):
         ):
             e = b + self.mini_batch_size
             scores: Tensor = self.similarity_fct(anchors[b:e], candidates) * self.scale
-            loss_mbatch: torch.Tensor = self.cross_entropy_loss(scores, labels[b:e]) * len(scores) / batch_size
+            loss_mbatch: torch.Tensor = (
+                self.cross_entropy_loss(scores, labels[b:e]) * len(scores) / batch_size
+            )
             if with_backward:
                 loss_mbatch.backward()
                 loss_mbatch = loss_mbatch.detach()
@@ -275,10 +298,14 @@ class CachedMultipleNegativesRankingLoss(nn.Module):
         loss = sum(losses)
         return loss
 
-    def forward(self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor) -> Tensor:
+    def forward(
+        self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor
+    ) -> Tensor:
         # Step (1): A quick embedding step without gradients/computation graphs to get all the embeddings
         reps = []
-        self.random_states = []  # Copy random states to guarantee exact reproduction of the embeddings during the second forward pass, i.e. step (3)
+        self.random_states = (
+            []
+        )  # Copy random states to guarantee exact reproduction of the embeddings during the second forward pass, i.e. step (3)
         for sentence_feature in sentence_features:
             reps_mbs = []
             random_state_mbs = []
@@ -297,7 +324,11 @@ class CachedMultipleNegativesRankingLoss(nn.Module):
             loss = self.calculate_loss_and_cache_gradients(reps)
 
             # Step (3): A 2nd embedding step with gradients/computation graphs and connect the cached gradients into the backward chain
-            loss.register_hook(partial(_backward_hook, sentence_features=sentence_features, loss_obj=self))
+            loss.register_hook(
+                partial(
+                    _backward_hook, sentence_features=sentence_features, loss_obj=self
+                )
+            )
         else:
             # If grad is not enabled (e.g. in evaluation), then we don't have to worry about the gradients or backward hook
             loss = self.calculate_loss(reps)

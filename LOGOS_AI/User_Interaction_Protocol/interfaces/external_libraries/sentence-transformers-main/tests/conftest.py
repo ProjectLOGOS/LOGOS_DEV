@@ -18,25 +18,37 @@ if is_datasets_available():
 
 @pytest.fixture(scope="session")
 def _stsb_bert_tiny_model() -> SentenceTransformer:
-    model = SentenceTransformer("sentence-transformers-testing/stsb-bert-tiny-safetensors")
-    model.model_card_data.generate_widget_examples = False  # Disable widget examples generation for testing
+    model = SentenceTransformer(
+        "sentence-transformers-testing/stsb-bert-tiny-safetensors"
+    )
+    model.model_card_data.generate_widget_examples = (
+        False  # Disable widget examples generation for testing
+    )
     return model
 
 
 @pytest.fixture()
-def stsb_bert_tiny_model(_stsb_bert_tiny_model: SentenceTransformer) -> SentenceTransformer:
+def stsb_bert_tiny_model(
+    _stsb_bert_tiny_model: SentenceTransformer,
+) -> SentenceTransformer:
     return deepcopy(_stsb_bert_tiny_model)
 
 
 @pytest.fixture(scope="session")
 def _avg_word_embeddings_levy() -> SentenceTransformer:
-    model = SentenceTransformer("sentence-transformers/average_word_embeddings_levy_dependency")
-    model.model_card_data.generate_widget_examples = False  # Disable widget examples generation for testing
+    model = SentenceTransformer(
+        "sentence-transformers/average_word_embeddings_levy_dependency"
+    )
+    model.model_card_data.generate_widget_examples = (
+        False  # Disable widget examples generation for testing
+    )
     return model
 
 
 @pytest.fixture()
-def avg_word_embeddings_levy(_avg_word_embeddings_levy: SentenceTransformer) -> SentenceTransformer:
+def avg_word_embeddings_levy(
+    _avg_word_embeddings_levy: SentenceTransformer,
+) -> SentenceTransformer:
     return deepcopy(_avg_word_embeddings_levy)
 
 
@@ -62,7 +74,9 @@ def _static_retrieval_mrl_en_v1_model() -> SentenceTransformer:
 
 
 @pytest.fixture()
-def static_retrieval_mrl_en_v1_model(_static_retrieval_mrl_en_v1_model: SentenceTransformer) -> SentenceTransformer:
+def static_retrieval_mrl_en_v1_model(
+    _static_retrieval_mrl_en_v1_model: SentenceTransformer,
+) -> SentenceTransformer:
     return deepcopy(_static_retrieval_mrl_en_v1_model)
 
 

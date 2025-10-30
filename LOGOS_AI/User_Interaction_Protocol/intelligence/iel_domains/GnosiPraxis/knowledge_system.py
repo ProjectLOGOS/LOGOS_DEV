@@ -5,10 +5,11 @@ Provides classes for representing, managing, and reasoning
 about knowledge in formal and informal systems.
 """
 
-from typing import Dict, List, Any, Optional, Set, Tuple, Callable
+import hashlib
 from dataclasses import dataclass
 from enum import Enum
-import hashlib
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+
 
 class KnowledgeType(Enum):
     FACTUAL = "factual"
@@ -16,15 +17,18 @@ class KnowledgeType(Enum):
     CONCEPTUAL = "conceptual"
     METACOGNITIVE = "metacognitive"
 
+
 class JustificationType(Enum):
     EMPIRICAL = "empirical"
     LOGICAL = "logical"
     AUTHORITATIVE = "authoritative"
     CONSENSUAL = "consensual"
 
+
 @dataclass
 class KnowledgeItem:
     """Represents a piece of knowledge."""
+
     content: Any
     knowledge_type: KnowledgeType
     confidence: float
@@ -44,6 +48,7 @@ class KnowledgeItem:
         """Generate unique ID for this knowledge item."""
         content_str = str(self.content)
         return hashlib.md5(content_str.encode()).hexdigest()[:8]
+
 
 class KnowledgeSystem:
     """
@@ -98,16 +103,14 @@ class KnowledgeSystem:
             "justification_check": self._validate_justification(item),
             "consistency_check": self._check_consistency(item),
             "prerequisite_check": self._check_prerequisites(item),
-            "confidence_assessment": self._assess_confidence(item)
+            "confidence_assessment": self._assess_confidence(item),
         }
 
-        overall_valid = all(result for result in validation_results.values()
-                          if isinstance(result, bool))
+        overall_valid = all(
+            result for result in validation_results.values() if isinstance(result, bool)
+        )
 
-        return {
-            "valid": overall_valid,
-            "details": validation_results
-        }
+        return {"valid": overall_valid, "details": validation_results}
 
     def _validate_justification(self, item: KnowledgeItem) -> bool:
         """Validate knowledge justification."""
@@ -145,7 +148,7 @@ class KnowledgeSystem:
             JustificationType.EMPIRICAL: 1.0,
             JustificationType.LOGICAL: 0.9,
             JustificationType.AUTHORITATIVE: 0.8,
-            JustificationType.CONSENSUAL: 0.7
+            JustificationType.CONSENSUAL: 0.7,
         }
 
         return min(1.0, base_confidence * justification_multiplier[item.justification])
@@ -191,7 +194,9 @@ class KnowledgeSystem:
 
         return chain[::-1]  # Reverse to show dependencies first
 
-    def search_knowledge(self, query: str, knowledge_type: Optional[KnowledgeType] = None) -> List[str]:
+    def search_knowledge(
+        self, query: str, knowledge_type: Optional[KnowledgeType] = None
+    ) -> List[str]:
         """Search knowledge base for items matching query."""
         results = []
 
@@ -212,15 +217,23 @@ class KnowledgeSystem:
         total_confidence = 0.0
 
         for item in self.knowledge_base.values():
-            type_counts[item.knowledge_type] = type_counts.get(item.knowledge_type, 0) + 1
-            justification_counts[item.justification] = justification_counts.get(item.justification, 0) + 1
+            type_counts[item.knowledge_type] = (
+                type_counts.get(item.knowledge_type, 0) + 1
+            )
+            justification_counts[item.justification] = (
+                justification_counts.get(item.justification, 0) + 1
+            )
             total_confidence += item.confidence
 
         return {
             "total_items": len(self.knowledge_base),
             "type_distribution": type_counts,
             "justification_distribution": justification_counts,
-            "average_confidence": total_confidence / len(self.knowledge_base) if self.knowledge_base else 0.0,
+            "average_confidence": (
+                total_confidence / len(self.knowledge_base)
+                if self.knowledge_base
+                else 0.0
+            ),
             "graph_nodes": len(self.knowledge_graph),
-            "graph_edges": sum(len(edges) for edges in self.knowledge_graph.values())
+            "graph_edges": sum(len(edges) for edges in self.knowledge_graph.values()),
         }

@@ -31,6 +31,8 @@ def test_TripletEvaluator(stsb_bert_tiny_model: SentenceTransformer) -> None:
     assert evaluator.primary_metric == "all_nli_dev_cosine_accuracy"
     assert metrics[evaluator.primary_metric] == 1.0
 
-    evaluator_with_margin = TripletEvaluator(anchors, positives, negatives, margin=0.7, name="all_nli_dev")
+    evaluator_with_margin = TripletEvaluator(
+        anchors, positives, negatives, margin=0.7, name="all_nli_dev"
+    )
     metrics = evaluator_with_margin(model)
     assert metrics[evaluator.primary_metric] == 0.0

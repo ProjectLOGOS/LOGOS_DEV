@@ -29,17 +29,27 @@ from typing_extensions import deprecated
 
 from sentence_transformers import __version__
 from sentence_transformers.cross_encoder.fit_mixin import FitMixin
-from sentence_transformers.cross_encoder.model_card import CrossEncoderModelCardData, generate_model_card
+from sentence_transformers.cross_encoder.model_card import (
+    CrossEncoderModelCardData,
+    generate_model_card,
+)
 from sentence_transformers.cross_encoder.util import (
     cross_encoder_init_args_decorator,
     cross_encoder_predict_rank_args_decorator,
 )
-from sentence_transformers.util import fullname, get_device_name, import_from_string, load_file_path
+from sentence_transformers.util import (
+    fullname,
+    get_device_name,
+    import_from_string,
+    load_file_path,
+)
 
 logger = logging.getLogger(__name__)
 
 
-def _save_pretrained_wrapper(_save_pretrained_fn: Callable, subfolder: str) -> Callable[..., None]:
+def _save_pretrained_wrapper(
+    _save_pretrained_fn: Callable, subfolder: str
+) -> Callable[..., None]:
     def wrapper(save_directory: str | Path, **kwargs) -> None:
         os.makedirs(Path(save_directory) / subfolder, exist_ok=True)
         return _save_pretrained_fn(Path(save_directory) / subfolder, **kwargs)
@@ -143,7 +153,9 @@ class CrossEncoder(nn.Module, PushToHubMixin, FitMixin):
             model_kwargs = {}
         if config_kwargs is None:
             config_kwargs = {}
-        self.model_card_data = model_card_data or CrossEncoderModelCardData(local_files_only=local_files_only)
+        self.model_card_data = model_card_data or CrossEncoderModelCardData(
+            local_files_only=local_files_only
+        )
         self.trust_remote_code = trust_remote_code
         self._model_card_text = None
         self.backend = backend
@@ -157,7 +169,10 @@ class CrossEncoder(nn.Module, PushToHubMixin, FitMixin):
             token=token,
             **config_kwargs,
         )
-        if hasattr(config, "sentence_transformers") and "version" in config.sentence_transformers:
+        if (
+            hasattr(config, "sentence_transformers")
+            and "version" in config.sentence_transformers
+        ):
             model_version = config.sentence_transformers["version"]
             if version.parse(model_version) > version.parse(__version__):
                 logger.warning(
@@ -168,7 +183,12 @@ class CrossEncoder(nn.Module, PushToHubMixin, FitMixin):
 
         classifier_trained = False
         if config.architectures is not None:
-            classifier_trained = any([arch.endswith("ForSequenceClassification") for arch in config.architectures])
+            classifier_trained = any(
+                [
+                    arch.endswith("ForSequenceClassification")
+                    for arch in config.architectures
+                ]
+            )
 
         if num_labels is None and not classifier_trained:
             num_labels = 1
@@ -198,8 +218,12 @@ class CrossEncoder(nn.Module, PushToHubMixin, FitMixin):
             token=token,
             **tokenizer_kwargs,
         )
-        if "model_max_length" not in tokenizer_kwargs and hasattr(self.config, "max_position_embeddings"):
-            self.tokenizer.model_max_length = min(self.tokenizer.model_max_length, self.config.max_position_embeddings)
+        if "model_max_length" not in tokenizer_kwargs and hasattr(
+            self.config, "max_position_embeddings"
+        ):
+            self.tokenizer.model_max_length = min(
+                self.tokenizer.model_max_length, self.config.max_position_embeddings
+            )
 
         # Check if a readme exists
         model_card_path = load_file_path(
@@ -236,19 +260,25 @@ class CrossEncoder(nn.Module, PushToHubMixin, FitMixin):
         **model_kwargs,
     ) -> None:
         if backend == "torch":
-            self.model: PreTrainedModel = AutoModelForSequenceClassification.from_pretrained(
-                model_name_or_path,
-                config=config,
-                **model_kwargs,
+            self.model: PreTrainedModel = (
+                AutoModelForSequenceClassification.from_pretrained(
+                    model_name_or_path,
+                    config=config,
+                    **model_kwargs,
+                )
             )
         elif backend == "onnx":
             self._load_onnx_model(model_name_or_path, config, **model_kwargs)
         elif backend == "openvino":
             self._load_openvino_model(model_name_or_path, config, **model_kwargs)
         else:
-            raise ValueError(f"Unsupported backend '{backend}'. `backend` should be `torch`, `onnx`, or `openvino`.")
+            raise ValueError(
+                f"Unsupported backend '{backend}'. `backend` should be `torch`, `onnx`, or `openvino`."
+            )
 
-    def _load_openvino_model(self, model_name_or_path: str, config: PretrainedConfig, **model_kwargs) -> None:
+    def _load_openvino_model(
+        self, model_name_or_path: str, config: PretrainedConfig, **model_kwargs
+    ) -> None:
         try:
             from optimum.intel import OVModelForSequenceClassification
             from optimum.intel.openvino import OV_XML_FILE_NAME
@@ -265,7 +295,12 @@ class CrossEncoder(nn.Module, PushToHubMixin, FitMixin):
 
         # Determine whether the model should be exported or whether we can load it directly
         export, model_kwargs = self._backend_should_export(
-            load_path, is_local, model_kwargs, OV_XML_FILE_NAME, target_file_glob, backend_name
+            load_path,
+            is_local,
+            model_kwargs,
+            OV_XML_FILE_NAME,
+            target_file_glob,
+            backend_name,
         )
 
         # If we're exporting, then there's no need for a file_name to load the model from
@@ -286,23 +321,32 @@ class CrossEncoder(nn.Module, PushToHubMixin, FitMixin):
             model_kwargs["ov_config"] = {}
 
         # Either load an exported model, or export the model to OpenVINO
-        self.model: OVModelForSequenceClassification = OVModelForSequenceClassification.from_pretrained(
-            model_name_or_path,
-            config=config,
-            export=export,
-            **model_kwargs,
+        self.model: OVModelForSequenceClassification = (
+            OVModelForSequenceClassification.from_pretrained(
+                model_name_or_path,
+                config=config,
+                export=export,
+                **model_kwargs,
+            )
         )
         # Wrap the save_pretrained method to save the model in the correct subfolder
-        self.model._save_pretrained = _save_pretrained_wrapper(self.model._save_pretrained, self.backend)
+        self.model._save_pretrained = _save_pretrained_wrapper(
+            self.model._save_pretrained, self.backend
+        )
 
         # Warn the user to save the model if they haven't already
         if export:
             self._backend_warn_to_save(model_name_or_path, is_local, backend_name)
 
-    def _load_onnx_model(self, model_name_or_path: str, config: PretrainedConfig, **model_kwargs) -> None:
+    def _load_onnx_model(
+        self, model_name_or_path: str, config: PretrainedConfig, **model_kwargs
+    ) -> None:
         try:
             import onnxruntime as ort
-            from optimum.onnxruntime import ONNX_WEIGHTS_NAME, ORTModelForSequenceClassification
+            from optimum.onnxruntime import (
+                ONNX_WEIGHTS_NAME,
+                ORTModelForSequenceClassification,
+            )
         except ModuleNotFoundError:
             raise Exception(
                 "Using the ONNX backend requires installing Optimum and ONNX Runtime. "
@@ -312,7 +356,9 @@ class CrossEncoder(nn.Module, PushToHubMixin, FitMixin):
 
         # Default to the highest priority available provider if not specified
         # E.g. Tensorrt > CUDA > CPU
-        model_kwargs["provider"] = model_kwargs.pop("provider", ort.get_available_providers()[0])
+        model_kwargs["provider"] = model_kwargs.pop(
+            "provider", ort.get_available_providers()[0]
+        )
 
         load_path = Path(model_name_or_path)
         is_local = load_path.exists()
@@ -321,7 +367,12 @@ class CrossEncoder(nn.Module, PushToHubMixin, FitMixin):
 
         # Determine whether the model should be exported or whether we can load it directly
         export, model_kwargs = self._backend_should_export(
-            load_path, is_local, model_kwargs, ONNX_WEIGHTS_NAME, target_file_glob, backend_name
+            load_path,
+            is_local,
+            model_kwargs,
+            ONNX_WEIGHTS_NAME,
+            target_file_glob,
+            backend_name,
         )
 
         # If we're exporting, then there's no need for a file_name to load the model from
@@ -329,14 +380,18 @@ class CrossEncoder(nn.Module, PushToHubMixin, FitMixin):
             model_kwargs.pop("file_name", None)
 
         # Either load an exported model, or export the model to ONNX
-        self.model: ORTModelForSequenceClassification = ORTModelForSequenceClassification.from_pretrained(
-            model_name_or_path,
-            config=config,
-            export=export,
-            **model_kwargs,
+        self.model: ORTModelForSequenceClassification = (
+            ORTModelForSequenceClassification.from_pretrained(
+                model_name_or_path,
+                config=config,
+                export=export,
+                **model_kwargs,
+            )
         )
         # Wrap the save_pretrained method to save the model in the correct subfolder
-        self.model._save_pretrained = _save_pretrained_wrapper(self.model._save_pretrained, self.backend)
+        self.model._save_pretrained = _save_pretrained_wrapper(
+            self.model._save_pretrained, self.backend
+        )
 
         # Warn the user to save the model if they haven't already
         if export:
@@ -387,17 +442,28 @@ class CrossEncoder(nn.Module, PushToHubMixin, FitMixin):
 
         file_name = model_kwargs.get("file_name", target_file_name)
         subfolder = model_kwargs.get("subfolder", None)
-        primary_full_path = Path(subfolder, file_name).as_posix() if subfolder else Path(file_name).as_posix()
+        primary_full_path = (
+            Path(subfolder, file_name).as_posix()
+            if subfolder
+            else Path(file_name).as_posix()
+        )
         secondary_full_path = (
             Path(subfolder, self.backend, file_name).as_posix()
             if subfolder
             else Path(self.backend, file_name).as_posix()
         )
-        glob_pattern = f"{subfolder}/**/{target_file_glob}" if subfolder else f"**/{target_file_glob}"
+        glob_pattern = (
+            f"{subfolder}/**/{target_file_glob}"
+            if subfolder
+            else f"**/{target_file_glob}"
+        )
 
         # Get the list of files in the model directory that match the target file name
         if is_local:
-            model_file_names = [path.relative_to(load_path).as_posix() for path in load_path.glob(glob_pattern)]
+            model_file_names = [
+                path.relative_to(load_path).as_posix()
+                for path in load_path.glob(glob_pattern)
+            ]
         else:
             all_files = huggingface_hub.list_repo_files(
                 load_path.as_posix(),
@@ -405,7 +471,9 @@ class CrossEncoder(nn.Module, PushToHubMixin, FitMixin):
                 revision=model_kwargs.get("revision", None),
                 token=model_kwargs.get("token", None),
             )
-            model_file_names = [fname for fname in all_files if fnmatch(fname, glob_pattern)]
+            model_file_names = [
+                fname for fname in all_files if fnmatch(fname, glob_pattern)
+            ]
 
         # First check if the expected file exists in the root of the model directory
         # If it doesn't, check if it exists in the backend subfolder.
@@ -428,7 +496,9 @@ class CrossEncoder(nn.Module, PushToHubMixin, FitMixin):
         file_name_parts = Path(file_name).parts
         if len(file_name_parts) > 1:
             model_kwargs["file_name"] = file_name_parts[-1]
-            model_kwargs["subfolder"] = Path(model_kwargs.get("subfolder", ""), *file_name_parts[:-1]).as_posix()
+            model_kwargs["subfolder"] = Path(
+                model_kwargs.get("subfolder", ""), *file_name_parts[:-1]
+            ).as_posix()
 
         if export:
             logger.warning(
@@ -443,7 +513,9 @@ class CrossEncoder(nn.Module, PushToHubMixin, FitMixin):
 
         return export, model_kwargs
 
-    def _backend_warn_to_save(self, model_name_or_path: str, is_local: str, backend_name: str) -> None:
+    def _backend_warn_to_save(
+        self, model_name_or_path: str, is_local: str, backend_name: str
+    ) -> None:
         to_log = f"Saving the exported {backend_name} model is heavily recommended to avoid having to export it again."
         if is_local:
             to_log += f" Do so with `model.save_pretrained({model_name_or_path!r})`."
@@ -451,7 +523,9 @@ class CrossEncoder(nn.Module, PushToHubMixin, FitMixin):
             to_log += f" Do so with `model.push_to_hub({model_name_or_path!r}, create_pr=True)`."
         logger.warning(to_log)
 
-    def set_activation_fn(self, activation_fn: Callable | None, set_default: bool = True) -> None:
+    def set_activation_fn(
+        self, activation_fn: Callable | None, set_default: bool = True
+    ) -> None:
         if activation_fn is not None:
             self.activation_fn = activation_fn
         else:
@@ -462,7 +536,10 @@ class CrossEncoder(nn.Module, PushToHubMixin, FitMixin):
 
     def get_default_activation_fn(self) -> Callable:
         activation_fn_path = None
-        if hasattr(self.config, "sentence_transformers") and "activation_fn" in self.config.sentence_transformers:
+        if (
+            hasattr(self.config, "sentence_transformers")
+            and "activation_fn" in self.config.sentence_transformers
+        ):
             activation_fn_path = self.config.sentence_transformers["activation_fn"]
 
         # Backwards compatibility with <v4.0: we stored the activation_fn under 'sbert_ce_default_activation_function'
@@ -543,7 +620,9 @@ class CrossEncoder(nn.Module, PushToHubMixin, FitMixin):
     @overload
     def predict(
         self,
-        sentences: list[tuple[str, str]] | list[list[str]] | tuple[str, str] | list[str],
+        sentences: (
+            list[tuple[str, str]] | list[list[str]] | tuple[str, str] | list[str]
+        ),
         batch_size: int = ...,
         show_progress_bar: bool | None = ...,
         activation_fn: Callable | None = ...,
@@ -555,7 +634,9 @@ class CrossEncoder(nn.Module, PushToHubMixin, FitMixin):
     @overload
     def predict(
         self,
-        sentences: list[tuple[str, str]] | list[list[str]] | tuple[str, str] | list[str],
+        sentences: (
+            list[tuple[str, str]] | list[list[str]] | tuple[str, str] | list[str]
+        ),
         batch_size: int = ...,
         show_progress_bar: bool | None = ...,
         activation_fn: Callable | None = ...,
@@ -580,7 +661,9 @@ class CrossEncoder(nn.Module, PushToHubMixin, FitMixin):
     @cross_encoder_predict_rank_args_decorator
     def predict(
         self,
-        sentences: list[tuple[str, str]] | list[list[str]] | tuple[str, str] | list[str],
+        sentences: (
+            list[tuple[str, str]] | list[list[str]] | tuple[str, str] | list[str]
+        ),
         batch_size: int = 32,
         show_progress_bar: bool | None = None,
         activation_fn: Callable | None = None,
@@ -625,13 +708,16 @@ class CrossEncoder(nn.Module, PushToHubMixin, FitMixin):
                 # => array([0.6912767, 0.4303499], dtype=float32)
         """
         input_was_singular = False
-        if isinstance(sentences[0], str):  # Cast an individual pair to a list with length 1
+        if isinstance(
+            sentences[0], str
+        ):  # Cast an individual pair to a list with length 1
             sentences = [sentences]
             input_was_singular = True
 
         if show_progress_bar is None:
             show_progress_bar = (
-                logger.getEffectiveLevel() == logging.INFO or logger.getEffectiveLevel() == logging.DEBUG
+                logger.getEffectiveLevel() == logging.INFO
+                or logger.getEffectiveLevel() == logging.DEBUG
             )
 
         if activation_fn is not None:
@@ -639,7 +725,9 @@ class CrossEncoder(nn.Module, PushToHubMixin, FitMixin):
 
         pred_scores = []
         self.eval()
-        for start_index in trange(0, len(sentences), batch_size, desc="Batches", disable=not show_progress_bar):
+        for start_index in trange(
+            0, len(sentences), batch_size, desc="Batches", disable=not show_progress_bar
+        ):
             batch = sentences[start_index : start_index + batch_size]
             features = self.tokenizer(
                 batch,
@@ -661,7 +749,9 @@ class CrossEncoder(nn.Module, PushToHubMixin, FitMixin):
         if convert_to_tensor:
             pred_scores = torch.stack(pred_scores)
         elif convert_to_numpy:
-            pred_scores = np.asarray([score.cpu().detach().float().numpy() for score in pred_scores])
+            pred_scores = np.asarray(
+                [score.cpu().detach().float().numpy() for score in pred_scores]
+            )
 
         if input_was_singular:
             pred_scores = pred_scores[0]
@@ -770,11 +860,15 @@ class CrossEncoder(nn.Module, PushToHubMixin, FitMixin):
 
         logger.info(f"Save model to {path}")
         self.set_config_value("version", __version__)
-        self.model.save_pretrained(path, safe_serialization=safe_serialization, **kwargs)
+        self.model.save_pretrained(
+            path, safe_serialization=safe_serialization, **kwargs
+        )
         self.tokenizer.save_pretrained(path, **kwargs)
         self._create_model_card(path)
 
-    def save_pretrained(self, path: str, *, safe_serialization: bool = True, **kwargs) -> None:
+    def save_pretrained(
+        self, path: str, *, safe_serialization: bool = True, **kwargs
+    ) -> None:
         """
         Save the model and tokenizer to the specified path.
 
@@ -802,7 +896,10 @@ class CrossEncoder(nn.Module, PushToHubMixin, FitMixin):
         """
         # If we loaded a model from the Hub, and no training was done, then
         # we don't generate a new model card, but reuse the old one instead.
-        if self._model_card_text and "generated_from_trainer" not in self.model_card_data.tags:
+        if (
+            self._model_card_text
+            and "generated_from_trainer" not in self.model_card_data.tags
+        ):
             model_card = self._model_card_text
             if self.model_card_data.model_id:
                 # If the original model card was saved without a model_id, we replace the model_id with the new model_id
@@ -875,7 +972,9 @@ class CrossEncoder(nn.Module, PushToHubMixin, FitMixin):
             repo_type=None,
             exist_ok=exist_ok or create_pr,
         )
-        repo_id = repo_url.repo_id  # Update the repo_id in case the old repo_id didn't contain a user or organization
+        repo_id = (
+            repo_url.repo_id
+        )  # Update the repo_id in case the old repo_id didn't contain a user or organization
         self.model_card_data.set_model_id(repo_id)
         if tags is not None:
             self.model_card_data.add_tags(tags)

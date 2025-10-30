@@ -108,13 +108,20 @@ class MultipleNegativesRankingLoss(nn.Module):
         self.gather_across_devices = gather_across_devices
         self.cross_entropy_loss = nn.CrossEntropyLoss()
 
-    def forward(self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor) -> Tensor:
+    def forward(
+        self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor
+    ) -> Tensor:
         # Compute the embeddings and distribute them to anchor and candidates (positive and optionally negatives)
-        embeddings = [self.model(sentence_feature)["sentence_embedding"] for sentence_feature in sentence_features]
+        embeddings = [
+            self.model(sentence_feature)["sentence_embedding"]
+            for sentence_feature in sentence_features
+        ]
 
         return self.compute_loss_from_embeddings(embeddings, labels)
 
-    def compute_loss_from_embeddings(self, embeddings: list[Tensor], labels: Tensor) -> Tensor:
+    def compute_loss_from_embeddings(
+        self, embeddings: list[Tensor], labels: Tensor
+    ) -> Tensor:
         """
         Compute the multiple negatives ranking loss from embeddings.
 
@@ -125,7 +132,9 @@ class MultipleNegativesRankingLoss(nn.Module):
             Loss value
         """
         anchors = embeddings[0]  # (batch_size, embedding_dim)
-        candidates = embeddings[1:]  # (1 + num_negatives) tensors of shape (batch_size, embedding_dim)
+        candidates = embeddings[
+            1:
+        ]  # (1 + num_negatives) tensors of shape (batch_size, embedding_dim)
         batch_size = anchors.size(0)
         offset = 0
 
@@ -133,7 +142,10 @@ class MultipleNegativesRankingLoss(nn.Module):
             # Gather the positives and negatives across all devices, with gradients, but not the anchors. We compute
             # only this device's anchors with all candidates from all devices, such that the backward pass on the document
             # embeddings can flow back to the original devices.
-            candidates = [all_gather_with_grad(embedding_column) for embedding_column in candidates]
+            candidates = [
+                all_gather_with_grad(embedding_column)
+                for embedding_column in candidates
+            ]
             # (1 + num_negatives) tensors of shape (batch_size * world_size, embedding_dim)
 
             # Adjust the offset to account for the gathered candidates

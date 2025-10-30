@@ -5,10 +5,11 @@ Provides optimization algorithms for ergonomic systems,
 balancing efficiency, user experience, and resource constraints.
 """
 
-from typing import Dict, List, Any, Optional, Tuple, Callable
+import math
 from dataclasses import dataclass
 from enum import Enum
-import math
+from typing import Any, Callable, Dict, List, Optional, Tuple
+
 
 class OptimizationGoal(Enum):
     EFFICIENCY = "efficiency"
@@ -17,21 +18,26 @@ class OptimizationGoal(Enum):
     RELIABILITY = "reliability"
     ADAPTABILITY = "adaptability"
 
+
 @dataclass
 class ErgonomicConstraint:
     """Represents a constraint in the ergonomic optimization."""
+
     name: str
     constraint_type: str  # "equality", "inequality", "bound"
     value: float
     tolerance: float = 0.0
 
+
 @dataclass
 class OptimizationVariable:
     """Represents a variable in the optimization problem."""
+
     name: str
     bounds: Tuple[float, float]
     initial_value: float
     variable_type: str = "continuous"  # "continuous", "integer", "binary"
+
 
 class ErgonomicOptimizer:
     """
@@ -55,17 +61,23 @@ class ErgonomicOptimizer:
         """Add an optimization constraint."""
         self.constraints.append(constraint)
 
-    def add_objective(self, name: str, objective_function: Callable,
-                     weight: float = 1.0, goal: OptimizationGoal = OptimizationGoal.EFFICIENCY):
+    def add_objective(
+        self,
+        name: str,
+        objective_function: Callable,
+        weight: float = 1.0,
+        goal: OptimizationGoal = OptimizationGoal.EFFICIENCY,
+    ):
         """Add an objective function."""
         self.objectives[name] = {
             "function": objective_function,
             "weight": weight,
-            "goal": goal
+            "goal": goal,
         }
 
-    def optimize(self, method: str = "gradient_descent",
-                max_iterations: int = 100) -> Dict[str, Any]:
+    def optimize(
+        self, method: str = "gradient_descent", max_iterations: int = 100
+    ) -> Dict[str, Any]:
         """Run optimization using specified method."""
         if method == "gradient_descent":
             return self._gradient_descent_optimization(max_iterations)
@@ -77,7 +89,9 @@ class ErgonomicOptimizer:
     def _simple_optimization(self) -> Dict[str, Any]:
         """Simple optimization for demonstration."""
         # Initialize with current values
-        current_values = {name: var.initial_value for name, var in self.variables.items()}
+        current_values = {
+            name: var.initial_value for name, var in self.variables.items()
+        }
 
         # Evaluate objectives
         objective_values = {}
@@ -97,7 +111,7 @@ class ErgonomicOptimizer:
             "objective_values": objective_values,
             "total_score": total_score,
             "constraints_satisfied": self._check_constraints(current_values),
-            "iterations": 1
+            "iterations": 1,
         }
 
         self.optimization_history.append(result)
@@ -106,10 +120,12 @@ class ErgonomicOptimizer:
     def _gradient_descent_optimization(self, max_iterations: int) -> Dict[str, Any]:
         """Gradient descent optimization."""
         # Simplified gradient descent
-        current_values = {name: var.initial_value for name, var in self.variables.items()}
+        current_values = {
+            name: var.initial_value for name, var in self.variables.items()
+        }
         learning_rate = 0.01
 
-        best_score = float('-inf')
+        best_score = float("-inf")
         best_values = current_values.copy()
 
         for iteration in range(max_iterations):
@@ -119,10 +135,14 @@ class ErgonomicOptimizer:
             # Update values
             for var_name in current_values:
                 if var_name in gradient:
-                    new_value = current_values[var_name] + learning_rate * gradient[var_name]
+                    new_value = (
+                        current_values[var_name] + learning_rate * gradient[var_name]
+                    )
                     # Apply bounds
                     var_bounds = self.variables[var_name].bounds
-                    current_values[var_name] = max(var_bounds[0], min(var_bounds[1], new_value))
+                    current_values[var_name] = max(
+                        var_bounds[0], min(var_bounds[1], new_value)
+                    )
 
             # Evaluate
             score = self._evaluate_total_score(current_values)
@@ -135,12 +155,14 @@ class ErgonomicOptimizer:
             "optimal_values": best_values,
             "total_score": best_score,
             "constraints_satisfied": self._check_constraints(best_values),
-            "iterations": max_iterations
+            "iterations": max_iterations,
         }
 
     def _simulated_annealing_optimization(self, max_iterations: int) -> Dict[str, Any]:
         """Simulated annealing optimization."""
-        current_values = {name: var.initial_value for name, var in self.variables.items()}
+        current_values = {
+            name: var.initial_value for name, var in self.variables.items()
+        }
         current_score = self._evaluate_total_score(current_values)
 
         best_values = current_values.copy()
@@ -157,7 +179,10 @@ class ErgonomicOptimizer:
             neighbor_score = self._evaluate_total_score(neighbor_values)
 
             # Accept or reject
-            if neighbor_score > current_score or math.exp((neighbor_score - current_score) / temperature) > 0.5:
+            if (
+                neighbor_score > current_score
+                or math.exp((neighbor_score - current_score) / temperature) > 0.5
+            ):
                 current_values = neighbor_values
                 current_score = neighbor_score
 
@@ -172,7 +197,7 @@ class ErgonomicOptimizer:
             "optimal_values": best_values,
             "total_score": best_score,
             "constraints_satisfied": self._check_constraints(best_values),
-            "iterations": max_iterations
+            "iterations": max_iterations,
         }
 
     def _calculate_gradient(self, values: Dict[str, float]) -> Dict[str, float]:
@@ -187,7 +212,10 @@ class ErgonomicOptimizer:
             values_minus = values.copy()
             values_minus[var_name] -= epsilon
 
-            grad = (self._evaluate_total_score(values_plus) - self._evaluate_total_score(values_minus)) / (2 * epsilon)
+            grad = (
+                self._evaluate_total_score(values_plus)
+                - self._evaluate_total_score(values_minus)
+            ) / (2 * epsilon)
             gradient[var_name] = grad
 
         return gradient
@@ -200,7 +228,9 @@ class ErgonomicOptimizer:
             bounds = self.variables[var_name].bounds
             range_size = bounds[1] - bounds[0]
             perturbation = (0.5 - 0.5) * range_size * 0.1  # Small random change
-            neighbor[var_name] = max(bounds[0], min(bounds[1], neighbor[var_name] + perturbation))
+            neighbor[var_name] = max(
+                bounds[0], min(bounds[1], neighbor[var_name] + perturbation)
+            )
         return neighbor
 
     def _evaluate_total_score(self, values: Dict[str, float]) -> float:
@@ -220,7 +250,11 @@ class ErgonomicOptimizer:
             if constraint.constraint_type == "bound":
                 if constraint.name in values:
                     value = values[constraint.name]
-                    if not (constraint.value - constraint.tolerance <= value <= constraint.value + constraint.tolerance):
+                    if not (
+                        constraint.value - constraint.tolerance
+                        <= value
+                        <= constraint.value + constraint.tolerance
+                    ):
                         return False
         return True
 

@@ -88,7 +88,12 @@ class BaseModelNXTest:
             "mu": {"shape": "ellipse", "style": None, "label": "mu\n~\nNormal"},
         },
         "_adj": {"eta": {"obs": {}}, "obs": {}, "tau": {"obs": {}}, "mu": {"obs": {}}},
-        "_pred": {"eta": {}, "obs": {"tau": {}, "eta": {}, "mu": {}}, "tau": {}, "mu": {}},
+        "_pred": {
+            "eta": {},
+            "obs": {"tau": {}, "eta": {}, "mu": {}},
+            "tau": {},
+            "mu": {},
+        },
         "_succ": {"eta": {"obs": {}}, "obs": {}, "tau": {"obs": {}}, "mu": {"obs": {}}},
     }
 
@@ -197,7 +202,9 @@ def model_with_imputations():
         ),
         Plate(
             dim_info=DimInfo(names=(None,), lengths=(10,)),
-            variables=[NodeInfo(var=model["L_observed"], node_type=NodeType.OBSERVED_RV)],
+            variables=[
+                NodeInfo(var=model["L_observed"], node_type=NodeType.OBSERVED_RV)
+            ],
         ),
         Plate(
             dim_info=DimInfo(names=(None,), lengths=(12,)),
@@ -208,7 +215,9 @@ def model_with_imputations():
 
 
 def model_with_dims():
-    with pm.Model(coords={"city": ["Aachen", "Maastricht", "London", "Bergheim"]}) as pmodel:
+    with pm.Model(
+        coords={"city": ["Aachen", "Maastricht", "London", "Bergheim"]}
+    ) as pmodel:
         economics = pm.Uniform("economics", lower=-1, upper=1, shape=(1,))
 
         population = pm.HalfNormal("population", sigma=5, dims=("city"))
@@ -216,7 +225,9 @@ def model_with_dims():
         time = pm.Data("time", [2014, 2015, 2016], dims="year")
 
         n = pm.Deterministic(
-            "tax revenue", economics * population[None, :] * time[:, None], dims=("year", "city")
+            "tax revenue",
+            economics * population[None, :] * time[:, None],
+            dims=("year", "city"),
         )
 
         yobs = pm.Data("observed", np.ones((3, 4)))
@@ -245,7 +256,9 @@ def model_with_dims():
         ),
         Plate(
             dim_info=DimInfo(names=("year", "city"), lengths=(3, 4)),
-            variables=[NodeInfo(var=pmodel["tax revenue"], node_type=NodeType.DETERMINISTIC)],
+            variables=[
+                NodeInfo(var=pmodel["tax revenue"], node_type=NodeType.DETERMINISTIC)
+            ],
         ),
         Plate(
             dim_info=DimInfo(names=(None, None), lengths=(3, 4)),
@@ -449,7 +462,9 @@ class TestModelWithDims(BaseModelGraphTest):
             [
                 Plate(
                     dim_info=DimInfo(names=(None, "time"), lengths=(3, 5)),
-                    variables=[NodeInfo(var=pmodel["n"], node_type=NodeType.DETERMINISTIC)],
+                    variables=[
+                        NodeInfo(var=pmodel["n"], node_type=NodeType.DETERMINISTIC)
+                    ],
                 ),
             ]
         )
@@ -548,7 +563,11 @@ def test_model_graph_complex_observed_dependency():
         observed = pt.exp(x) + pt.log(y)
         pm.Normal("obs", mu=0, observed=observed)
 
-    assert ModelGraph(model).make_compute_graph() == {"obs": set(), "x": {"obs"}, "y": {"obs"}}
+    assert ModelGraph(model).make_compute_graph() == {
+        "obs": set(),
+        "x": {"obs"},
+        "y": {"obs"},
+    }
 
 
 @pytest.fixture
@@ -660,7 +679,8 @@ def test_scalars_dim_info() -> None:
 
 
 def test_model_to_mermaid(simple_model):
-    expected_mermaid_string = dedent("""
+    expected_mermaid_string = dedent(
+        """
     graph TD
     %% Nodes:
     a([a ~ Normal])
@@ -675,7 +695,8 @@ def test_model_to_mermaid(simple_model):
     b --> c
 
     %% Plates:
-    """)
+    """
+    )
     assert model_to_mermaid(simple_model) == expected_mermaid_string.strip()
 
 
@@ -683,7 +704,8 @@ def test_model_to_mermaid_with_variable_with_space():
     with pm.Model() as variable_with_space:
         pm.Normal("plant growth")
 
-    expected_mermaid_string = dedent("""
+    expected_mermaid_string = dedent(
+        """
     graph TD
     %% Nodes:
     plant_growth([plant growth ~ Normal])
@@ -692,5 +714,6 @@ def test_model_to_mermaid_with_variable_with_space():
     %% Edges:
 
     %% Plates:
-    """)
+    """
+    )
     assert model_to_mermaid(variable_with_space) == expected_mermaid_string.strip()

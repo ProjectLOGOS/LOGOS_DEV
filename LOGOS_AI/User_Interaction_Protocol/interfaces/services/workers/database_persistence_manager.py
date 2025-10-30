@@ -1,8 +1,8 @@
 # logos_agi_v1/services/database/persistence_manager.py
 
-import sqlite3
 import json
 import logging
+import sqlite3
 import threading
 import time
 from typing import Any, Dict, List, Optional, Tuple
@@ -31,7 +31,9 @@ class PersistenceManager:
         """Creates a new database connection with proper configuration."""
         conn = sqlite3.connect(self.db_file, check_same_thread=False)
         conn.execute("PRAGMA foreign_keys = ON")  # Enable foreign key constraints
-        conn.execute("PRAGMA journal_mode = WAL")  # Write-Ahead Logging for better concurrency
+        conn.execute(
+            "PRAGMA journal_mode = WAL"
+        )  # Write-Ahead Logging for better concurrency
         return conn
 
     def _init_db(self):
@@ -130,7 +132,9 @@ class PersistenceManager:
 
                 conn.commit()
                 conn.close()
-                logging.info("Database initialized successfully with all tables and indexes.")
+                logging.info(
+                    "Database initialized successfully with all tables and indexes."
+                )
 
             except Exception as e:
                 logging.error(f"Failed to initialize database: {e}")
@@ -301,9 +305,13 @@ class PersistenceManager:
 
     def get_goals_by_status(self, status: str) -> List[Dict[str, Any]]:
         """Retrieve goals filtered by status."""
-        return self.query("SELECT * FROM goals WHERE status = ? ORDER BY priority", (status,))
+        return self.query(
+            "SELECT * FROM goals WHERE status = ? ORDER BY priority", (status,)
+        )
 
-    def log_system_event(self, source: str, data: Dict[str, Any], level: str = "INFO") -> bool:
+    def log_system_event(
+        self, source: str, data: Dict[str, Any], level: str = "INFO"
+    ) -> bool:
         """Convenience method to log system events."""
         log_entry = {
             "source": source,
@@ -333,7 +341,13 @@ class PersistenceManager:
 
     def _validate_table_name(self, table_name: str) -> bool:
         """Validate table name to prevent SQL injection."""
-        allowed_tables = {"system_log", "goals", "nodes", "relations", "semantic_glyphs"}
+        allowed_tables = {
+            "system_log",
+            "goals",
+            "nodes",
+            "relations",
+            "semantic_glyphs",
+        }
         return table_name in allowed_tables
 
     def backup_database(self, backup_path: str) -> bool:

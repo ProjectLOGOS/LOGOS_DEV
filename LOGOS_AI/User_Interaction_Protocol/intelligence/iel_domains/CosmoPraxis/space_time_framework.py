@@ -5,9 +5,10 @@ Provides classes for modeling space-time structures,
 coordinate systems, and temporal reasoning.
 """
 
-from typing import List, Tuple, Dict, Any, Optional
 import math
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple
+
 
 class SpaceTimeFramework:
     """
@@ -32,19 +33,21 @@ class SpaceTimeFramework:
         # Add default Minkowski coordinate system
         self.add_coordinate_system("Minkowski", MinkowskiCoordinates())
 
-    def add_coordinate_system(self, name: str, system: 'CoordinateSystem'):
+    def add_coordinate_system(self, name: str, system: "CoordinateSystem"):
         """Add a coordinate system."""
         self.coordinate_systems[name] = system
 
-    def add_event(self, event: 'SpaceTimeEvent'):
+    def add_event(self, event: "SpaceTimeEvent"):
         """Add a space-time event."""
         self.events.append(event)
 
-    def get_events_in_region(self, region: 'SpaceTimeRegion') -> List['SpaceTimeEvent']:
+    def get_events_in_region(self, region: "SpaceTimeRegion") -> List["SpaceTimeEvent"]:
         """Get all events within a space-time region."""
         return [event for event in self.events if region.contains(event)]
 
-    def calculate_interval(self, event1: 'SpaceTimeEvent', event2: 'SpaceTimeEvent') -> float:
+    def calculate_interval(
+        self, event1: "SpaceTimeEvent", event2: "SpaceTimeEvent"
+    ) -> float:
         """Calculate space-time interval between two events."""
         coords1 = event1.coordinates
         coords2 = event2.coordinates
@@ -53,13 +56,15 @@ class SpaceTimeFramework:
             raise ValueError("Coordinate dimension mismatch")
 
         # Minkowski metric: ds² = -dt² + dx² + dy² + dz²
-        interval = - (coords1[0] - coords2[0])**2
+        interval = -((coords1[0] - coords2[0]) ** 2)
         for i in range(1, self.dimensions):
-            interval += (coords1[i] - coords2[i])**2
+            interval += (coords1[i] - coords2[i]) ** 2
 
         return interval
 
-    def check_causality(self, event1: 'SpaceTimeEvent', event2: 'SpaceTimeEvent') -> str:
+    def check_causality(
+        self, event1: "SpaceTimeEvent", event2: "SpaceTimeEvent"
+    ) -> str:
         """Check causal relationship between events."""
         interval = self.calculate_interval(event1, event2)
 
@@ -70,12 +75,14 @@ class SpaceTimeFramework:
         else:
             return "spacelike"  # Cannot be causally connected
 
+
 class CoordinateSystem:
     """Base class for coordinate systems."""
 
     def transform(self, coordinates: List[float], to_system: str) -> List[float]:
         """Transform coordinates to another system."""
         raise NotImplementedError
+
 
 class MinkowskiCoordinates(CoordinateSystem):
     """Standard Minkowski coordinates (t, x, y, z)."""
@@ -84,16 +91,23 @@ class MinkowskiCoordinates(CoordinateSystem):
         # For now, assume Minkowski is the standard
         return coordinates.copy()
 
+
 class SpaceTimeEvent:
     """Represents an event in space-time."""
 
-    def __init__(self, coordinates: List[float], description: str = "", timestamp: Optional[datetime] = None):
+    def __init__(
+        self,
+        coordinates: List[float],
+        description: str = "",
+        timestamp: Optional[datetime] = None,
+    ):
         self.coordinates = coordinates
         self.description = description
         self.timestamp = timestamp or datetime.now()
 
     def __repr__(self):
         return f"Event({self.coordinates}, '{self.description}')"
+
 
 class SpaceTimeRegion:
     """Represents a region in space-time."""
@@ -104,8 +118,11 @@ class SpaceTimeRegion:
 
     def contains(self, event: SpaceTimeEvent) -> bool:
         """Check if event is within this region."""
-        distance = math.sqrt(sum((a - b)**2 for a, b in zip(event.coordinates, self.center)))
+        distance = math.sqrt(
+            sum((a - b) ** 2 for a, b in zip(event.coordinates, self.center))
+        )
         return distance <= self.radius
+
 
 class TemporalRelations:
     """Manages temporal relationships between events."""

@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any, Dict
 
 
 class TetragnosNexus:  # Your existing class
@@ -22,8 +22,12 @@ class TetragnosNexus:  # Your existing class
 
     def _process_translation(self, enhanced_data):
         # Your existing logic
-        text = enhanced_data.get("text") or enhanced_data.get("original_data", {}).get("text")
-        domain = enhanced_data.get("domain") or enhanced_data.get("original_data", {}).get("domain")
+        text = enhanced_data.get("text") or enhanced_data.get("original_data", {}).get(
+            "text"
+        )
+        domain = enhanced_data.get("domain") or enhanced_data.get(
+            "original_data", {}
+        ).get("domain")
 
         # existing processing
         return self.your_existing_translation_logic(text, domain)
@@ -55,7 +59,10 @@ class TrinityNexusIntegration:
             if self._validate_trinity_coherence(result):
                 return result
             else:
-                return {"status": "trinity_validation_failed", "component": self.component}
+                return {
+                    "status": "trinity_validation_failed",
+                    "component": self.component,
+                }
 
         except Exception as e:
             return {

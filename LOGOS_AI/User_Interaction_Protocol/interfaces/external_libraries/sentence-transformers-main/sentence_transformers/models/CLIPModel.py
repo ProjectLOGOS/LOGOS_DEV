@@ -15,7 +15,9 @@ from sentence_transformers.models.Router import InputModule
 class CLIPModel(InputModule):
     save_in_root: bool = True
 
-    def __init__(self, model_name: str = "openai/clip-vit-base-patch32", processor_name=None) -> None:
+    def __init__(
+        self, model_name: str = "openai/clip-vit-base-patch32", processor_name=None
+    ) -> None:
         super().__init__()
 
         if processor_name is None:
@@ -40,7 +42,9 @@ class CLIPModel(InputModule):
         text_embeds = []
 
         if "pixel_values" in features:
-            vision_outputs = self.model.vision_model(pixel_values=features["pixel_values"])
+            vision_outputs = self.model.vision_model(
+                pixel_values=features["pixel_values"]
+            )
             image_embeds = self.model.visual_projection(vision_outputs[1])
 
         if "input_ids" in features:
@@ -82,7 +86,9 @@ class CLIPModel(InputModule):
 
         encoding = {}
         if len(texts_values):
-            encoding = self.processor.tokenizer(texts_values, padding=padding, truncation=True, return_tensors="pt")
+            encoding = self.processor.tokenizer(
+                texts_values, padding=padding, truncation=True, return_tensors="pt"
+            )
 
         if len(images):
             image_features = self.processor.image_processor(images, return_tensors="pt")
@@ -95,7 +101,9 @@ class CLIPModel(InputModule):
     def tokenizer(self) -> transformers.CLIPProcessor:
         return self.processor
 
-    def save(self, output_path: str, *args, safe_serialization: bool = True, **kwargs) -> None:
+    def save(
+        self, output_path: str, *args, safe_serialization: bool = True, **kwargs
+    ) -> None:
         self.model.save_pretrained(output_path, safe_serialization=safe_serialization)
         self.processor.save_pretrained(output_path)
 

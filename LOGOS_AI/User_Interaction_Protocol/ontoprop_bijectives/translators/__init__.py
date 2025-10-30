@@ -7,4 +7,4 @@ to natural language representations.
 
 from .translation_engine import convert_to_nl
 
-__all__ = ['convert_to_nl']
+__all__ = ["convert_to_nl"]

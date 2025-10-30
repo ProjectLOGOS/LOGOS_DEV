@@ -10,10 +10,10 @@ Dependencies: json, uuid, time, logging, typing
 """
 
 import json
-import uuid
-import time
 import logging
-from typing import Dict, Any, Optional, List, Tuple
+import time
+import uuid
+from typing import Any, Dict, List, Optional, Tuple
 
 
 class ThonocMathematicalCore:
@@ -195,14 +195,20 @@ class ThonocVerifier:
 
         elif action == "run_unit_tests":
             code_ref = payload.get("code_input_ref", "no code reference provided")
-            logging.info(f"Simulating running unit tests for code from task {code_ref}.")
+            logging.info(
+                f"Simulating running unit tests for code from task {code_ref}."
+            )
             return {"test_status": "passed", "coverage": "98%"}
 
         else:
             # As a fallback, we can treat a generic 'prompt' as a query
             prompt = payload.get("prompt")
             if prompt:
-                logging.warning(f"No specific action found. Treating generic prompt as a query.")
+                logging.warning(
+                    f"No specific action found. Treating generic prompt as a query."
+                )
                 return self.process_query(prompt)
 
-            raise NotImplementedError(f"Action '{action}' is not implemented in ThonocCore.")
+            raise NotImplementedError(
+                f"Action '{action}' is not implemented in ThonocCore."
+            )

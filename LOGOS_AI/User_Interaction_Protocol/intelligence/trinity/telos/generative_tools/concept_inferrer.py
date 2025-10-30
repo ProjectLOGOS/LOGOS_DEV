@@ -13,9 +13,9 @@ Core Capabilities:
 Dependencies: typing, json, math
 """
 
-from typing import Dict, List, Tuple, Optional, Union, Any
 import json
 import math
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 
 class BayesianTrinityInferencer:
@@ -50,7 +50,9 @@ class BayesianTrinityInferencer:
                 "truth": {"E": 0.6, "G": 0.7, "T": 0.9},
             }
 
-    def infer(self, keywords: List[str], weights: Optional[List[float]] = None) -> Dict[str, Any]:
+    def infer(
+        self, keywords: List[str], weights: Optional[List[float]] = None
+    ) -> Dict[str, Any]:
         """Infer trinity vector and complex value from keywords.
 
         Args:
@@ -209,4 +211,6 @@ class BayesianTrinityInferencer:
         Returns:
             Distance metric in trinity space
         """
-        return math.sqrt((t1[0] - t2[0]) ** 2 + (t1[1] - t2[1]) ** 2 + (t1[2] - t2[2]) ** 2)
+        return math.sqrt(
+            (t1[0] - t2[0]) ** 2 + (t1[1] - t2[1]) ** 2 + (t1[2] - t2[2]) ** 2
+        )

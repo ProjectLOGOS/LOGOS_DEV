@@ -12,7 +12,10 @@ from .ContrastiveLoss import SiameseDistanceMetric
 
 class OnlineContrastiveLoss(nn.Module):
     def __init__(
-        self, model: SentenceTransformer, distance_metric=SiameseDistanceMetric.COSINE_DISTANCE, margin: float = 0.5
+        self,
+        model: SentenceTransformer,
+        distance_metric=SiameseDistanceMetric.COSINE_DISTANCE,
+        margin: float = 0.5,
     ) -> None:
         """
         This Online Contrastive loss is similar to :class:`ConstrativeLoss`, but it selects hard positive (positives that
@@ -71,8 +74,16 @@ class OnlineContrastiveLoss(nn.Module):
         self.margin = margin
         self.distance_metric = distance_metric
 
-    def forward(self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor, size_average=False) -> Tensor:
-        embeddings = [self.model(sentence_feature)["sentence_embedding"] for sentence_feature in sentence_features]
+    def forward(
+        self,
+        sentence_features: Iterable[dict[str, Tensor]],
+        labels: Tensor,
+        size_average=False,
+    ) -> Tensor:
+        embeddings = [
+            self.model(sentence_feature)["sentence_embedding"]
+            for sentence_feature in sentence_features
+        ]
 
         distance_matrix = self.distance_metric(embeddings[0], embeddings[1])
         negs = distance_matrix[labels == 0]

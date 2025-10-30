@@ -27,21 +27,22 @@ Safety Constraints:
 - Proof obligations for significant parameter changes
 """
 
+import json
 import logging
-import random
 import math
-from typing import Dict, List, Set, Optional, Any, Tuple, Callable
+import random
+from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from collections import defaultdict, deque
-import json
 from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
-from .coherence_metrics import CoherenceMetrics, TrinityCoherence, CoherenceConfig
+from .coherence_metrics import CoherenceConfig, CoherenceMetrics, TrinityCoherence
 
 
 class OptimizationMethod(Enum):
     """Optimization methods available"""
+
     HILL_CLIMBING = "hill_climbing"
     SIMULATED_ANNEALING = "simulated_annealing"
     BAYESIAN = "bayesian"
@@ -52,6 +53,7 @@ class OptimizationMethod(Enum):
 @dataclass
 class Parameter:
     """Represents an optimizable parameter"""
+
     name: str
     current_value: Any
     parameter_type: str  # "float", "int", "bool", "categorical"
@@ -88,6 +90,7 @@ class Parameter:
 @dataclass
 class OptimizationResult:
     """Result of parameter optimization"""
+
     success: bool
     parameters_changed: Dict[str, Any]
     coherence_improvement: float
@@ -103,6 +106,7 @@ class OptimizationResult:
 @dataclass
 class OptimizerConfig:
     """Configuration for coherence optimizer"""
+
     optimization_method: OptimizationMethod = OptimizationMethod.HILL_CLIMBING
     max_iterations: int = 50
     convergence_threshold: float = 0.001
@@ -144,7 +148,7 @@ class CoherenceOptimizer:
             "total_optimizations": 0,
             "successful_optimizations": 0,
             "rollbacks_performed": 0,
-            "average_improvement": 0.0
+            "average_improvement": 0.0,
         }
 
         # Safety monitoring
@@ -160,7 +164,7 @@ class CoherenceOptimizer:
         if not logger.handlers:
             handler = logging.StreamHandler()
             formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
             )
             handler.setFormatter(formatter)
             logger.addHandler(handler)
@@ -190,7 +194,9 @@ class CoherenceOptimizer:
             self.logger.error(f"Failed to register parameter {parameter.name}: {e}")
             return False
 
-    def optimize_coherence(self, max_time_minutes: Optional[int] = None) -> OptimizationResult:
+    def optimize_coherence(
+        self, max_time_minutes: Optional[int] = None
+    ) -> OptimizationResult:
         """
         Optimize system parameters to maximize Trinity-Coherence
 
@@ -209,7 +215,7 @@ class CoherenceOptimizer:
                 method_used=self.config.optimization_method,
                 iterations=0,
                 safety_constraints_satisfied=False,
-                metadata={"error": "Optimization already active"}
+                metadata={"error": "Optimization already active"},
             )
 
         try:
@@ -218,7 +224,9 @@ class CoherenceOptimizer:
 
             # Record baseline coherence
             baseline_coherence = self.trinity_coherence.get_current_trinity_coherence()
-            self.logger.info(f"Starting optimization from baseline coherence: {baseline_coherence:.3f}")
+            self.logger.info(
+                f"Starting optimization from baseline coherence: {baseline_coherence:.3f}"
+            )
 
             # Create rollback point
             rollback_point = self._create_rollback_point()
@@ -233,7 +241,9 @@ class CoherenceOptimizer:
             # Update statistics
             self._update_optimization_statistics(result)
 
-            self.logger.info(f"Optimization completed: {'success' if result.success else 'failed'}")
+            self.logger.info(
+                f"Optimization completed: {'success' if result.success else 'failed'}"
+            )
             return result
 
         except Exception as e:
@@ -246,7 +256,7 @@ class CoherenceOptimizer:
                 method_used=self.config.optimization_method,
                 iterations=0,
                 safety_constraints_satisfied=False,
-                metadata={"error": str(e)}
+                metadata={"error": str(e)},
             )
         finally:
             self._optimization_active = False
@@ -274,7 +284,9 @@ class CoherenceOptimizer:
                     self._parameters[param_name].current_value = param_value
 
             # Log rollback
-            self.logger.info(f"Rolled back to rollback point from {rollback_point['timestamp']}")
+            self.logger.info(
+                f"Rolled back to rollback point from {rollback_point['timestamp']}"
+            )
             self._optimization_statistics["rollbacks_performed"] += 1
 
             return True
@@ -289,7 +301,9 @@ class CoherenceOptimizer:
             return None
         return self._parameters[name].current_value
 
-    def set_parameter_value(self, name: str, value: Any, verify_safety: bool = True) -> bool:
+    def set_parameter_value(
+        self, name: str, value: Any, verify_safety: bool = True
+    ) -> bool:
         """
         Set parameter value with safety checking
 
@@ -317,12 +331,19 @@ class CoherenceOptimizer:
             constrained_value = parameter.constrain_change(value)
 
             # Safety check if required
-            if verify_safety and not self._safety_checker.check_parameter_change(parameter, constrained_value):
+            if verify_safety and not self._safety_checker.check_parameter_change(
+                parameter, constrained_value
+            ):
                 self.logger.error(f"Safety check failed for parameter {name}")
                 return False
 
             # Verification gate if required
-            if parameter.requires_verification and not self._verification_gate.verify_parameter_change(parameter, constrained_value):
+            if (
+                parameter.requires_verification
+                and not self._verification_gate.verify_parameter_change(
+                    parameter, constrained_value
+                )
+            ):
                 self.logger.error(f"Verification failed for parameter {name}")
                 return False
 
@@ -333,7 +354,9 @@ class CoherenceOptimizer:
             # Record change
             self._record_parameter_change(name, old_value, constrained_value)
 
-            self.logger.info(f"Updated parameter {name}: {old_value} -> {constrained_value}")
+            self.logger.info(
+                f"Updated parameter {name}: {old_value} -> {constrained_value}"
+            )
             return True
 
         except Exception as e:
@@ -351,69 +374,91 @@ class CoherenceOptimizer:
     def _initialize_default_parameters(self) -> None:
         """Initialize default optimizable parameters"""
         # Coherence weight parameters
-        self.register_parameter(Parameter(
-            name="pxl_weight",
-            current_value=0.4,
-            parameter_type="float",
-            bounds=(0.1, 0.7),
-            change_limit=0.05,
-            requires_verification=False,
-            safety_critical=False
-        ))
+        self.register_parameter(
+            Parameter(
+                name="pxl_weight",
+                current_value=0.4,
+                parameter_type="float",
+                bounds=(0.1, 0.7),
+                change_limit=0.05,
+                requires_verification=False,
+                safety_critical=False,
+            )
+        )
 
-        self.register_parameter(Parameter(
-            name="iel_weight",
-            current_value=0.3,
-            parameter_type="float",
-            bounds=(0.1, 0.7),
-            change_limit=0.05,
-            requires_verification=False,
-            safety_critical=False
-        ))
+        self.register_parameter(
+            Parameter(
+                name="iel_weight",
+                current_value=0.3,
+                parameter_type="float",
+                bounds=(0.1, 0.7),
+                change_limit=0.05,
+                requires_verification=False,
+                safety_critical=False,
+            )
+        )
 
-        self.register_parameter(Parameter(
-            name="runtime_weight",
-            current_value=0.3,
-            parameter_type="float",
-            bounds=(0.1, 0.7),
-            change_limit=0.05,
-            requires_verification=False,
-            safety_critical=False
-        ))
+        self.register_parameter(
+            Parameter(
+                name="runtime_weight",
+                current_value=0.3,
+                parameter_type="float",
+                bounds=(0.1, 0.7),
+                change_limit=0.05,
+                requires_verification=False,
+                safety_critical=False,
+            )
+        )
 
         # System behavior parameters
-        self.register_parameter(Parameter(
-            name="verification_timeout",
-            current_value=300,
-            parameter_type="int",
-            bounds=(60, 600),
-            change_limit=30,
-            requires_verification=True,
-            safety_critical=True
-        ))
+        self.register_parameter(
+            Parameter(
+                name="verification_timeout",
+                current_value=300,
+                parameter_type="int",
+                bounds=(60, 600),
+                change_limit=30,
+                requires_verification=True,
+                safety_critical=True,
+            )
+        )
 
-        self.register_parameter(Parameter(
-            name="coherence_check_interval",
-            current_value=60,
-            parameter_type="int",
-            bounds=(30, 300),
-            change_limit=30,
-            requires_verification=False,
-            safety_critical=False
-        ))
+        self.register_parameter(
+            Parameter(
+                name="coherence_check_interval",
+                current_value=60,
+                parameter_type="int",
+                bounds=(30, 300),
+                change_limit=30,
+                requires_verification=False,
+                safety_critical=False,
+            )
+        )
 
-    def _run_optimization_method(self, baseline_coherence: float, max_time_minutes: Optional[int]) -> OptimizationResult:
+    def _run_optimization_method(
+        self, baseline_coherence: float, max_time_minutes: Optional[int]
+    ) -> OptimizationResult:
         """Run the selected optimization method"""
         if self.config.optimization_method == OptimizationMethod.HILL_CLIMBING:
-            return self._hill_climbing_optimization(baseline_coherence, max_time_minutes)
+            return self._hill_climbing_optimization(
+                baseline_coherence, max_time_minutes
+            )
         elif self.config.optimization_method == OptimizationMethod.SIMULATED_ANNEALING:
-            return self._simulated_annealing_optimization(baseline_coherence, max_time_minutes)
+            return self._simulated_annealing_optimization(
+                baseline_coherence, max_time_minutes
+            )
         elif self.config.optimization_method == OptimizationMethod.GENETIC:
-            return self._genetic_algorithm_optimization(baseline_coherence, max_time_minutes)
+            return self._genetic_algorithm_optimization(
+                baseline_coherence, max_time_minutes
+            )
         else:
-            return self._gradient_free_optimization(baseline_coherence, max_time_minutes)
+            return self._gradient_free_optimization(
+                baseline_coherence, max_time_minutes
+            )
 
-    def _hill_climbing_optimization(self, baseline_coherence: float, max_time_minutes: Optional[int]) -> OptimizationResult:
+    def _hill_climbing_optimization(
+        self, baseline_coherence: float, max_time_minutes: Optional[int]
+    ) -> OptimizationResult:
         """Hill climbing optimization implementation"""
         start_time = datetime.now()
         max_time = max_time_minutes or self.config.max_optimization_time_minutes
@@ -439,19 +484,30 @@ class CoherenceOptimizer:
 
                 # Test candidate
                 old_value = parameter.current_value
-                if self.set_parameter_value(param_name, candidate_value, verify_safety=True):
+                if self.set_parameter_value(
+                    param_name, candidate_value, verify_safety=True
+                ):
 
                     # Evaluate coherence
-                    new_coherence = self.trinity_coherence.get_current_trinity_coherence()
+                    new_coherence = (
+                        self.trinity_coherence.get_current_trinity_coherence()
+                    )
 
-                    if new_coherence > best_coherence + self.config.convergence_threshold:
+                    if (
+                        new_coherence
+                        > best_coherence + self.config.convergence_threshold
+                    ):
                         # Accept improvement
                         best_coherence = new_coherence
                         parameters_changed[param_name] = candidate_value
-                        self.logger.debug(f"Accepted {param_name}: {old_value} -> {candidate_value}, coherence: {new_coherence:.3f}")
+                        self.logger.debug(
+                            f"Accepted {param_name}: {old_value} -> {candidate_value}, coherence: {new_coherence:.3f}"
+                        )
                     else:
                         # Reject and revert
-                        self.set_parameter_value(param_name, old_value, verify_safety=False)
+                        self.set_parameter_value(
+                            param_name, old_value, verify_safety=False
+                        )
 
                 # Safety check
                 if iteration % self.config.safety_check_interval == 0:
@@ -473,8 +529,8 @@ class CoherenceOptimizer:
                 safety_constraints_satisfied=True,
                 metadata={
                     "baseline_coherence": baseline_coherence,
-                    "final_coherence": final_coherence
-                }
+                    "final_coherence": final_coherence,
+                },
             )
 
         except Exception as e:
@@ -487,20 +543,26 @@ class CoherenceOptimizer:
                 method_used=OptimizationMethod.HILL_CLIMBING,
                 iterations=iterations,
                 safety_constraints_satisfied=False,
-                metadata={"error": str(e)}
+                metadata={"error": str(e)},
             )
 
-    def _simulated_annealing_optimization(self, baseline_coherence: float, max_time_minutes: Optional[int]) -> OptimizationResult:
+    def _simulated_annealing_optimization(
+        self, baseline_coherence: float, max_time_minutes: Optional[int]
+    ) -> OptimizationResult:
         """Simulated annealing optimization implementation"""
         # Placeholder: implement simulated annealing
         return self._hill_climbing_optimization(baseline_coherence, max_time_minutes)
 
-    def _genetic_algorithm_optimization(self, baseline_coherence: float, max_time_minutes: Optional[int]) -> OptimizationResult:
+    def _genetic_algorithm_optimization(
+        self, baseline_coherence: float, max_time_minutes: Optional[int]
+    ) -> OptimizationResult:
         """Genetic algorithm optimization implementation"""
         # Placeholder: implement genetic algorithm
         return self._hill_climbing_optimization(baseline_coherence, max_time_minutes)
 
-    def _gradient_free_optimization(self, baseline_coherence: float, max_time_minutes: Optional[int]) -> OptimizationResult:
+    def _gradient_free_optimization(
+        self, baseline_coherence: float, max_time_minutes: Optional[int]
+    ) -> OptimizationResult:
         """Gradient-free optimization implementation"""
         # Placeholder: implement gradient-free optimization
         return self._hill_climbing_optimization(baseline_coherence, max_time_minutes)
@@ -517,7 +579,9 @@ class CoherenceOptimizer:
         elif parameter.parameter_type == "int":
             if parameter.bounds:
                 current = parameter.current_value
-                step_size = max(1, int((parameter.bounds[1] - parameter.bounds[0]) * 0.1))
+                step_size = max(
+                    1, int((parameter.bounds[1] - parameter.bounds[0]) * 0.1)
+                )
                 candidate = current + random.randint(-step_size, step_size)
                 return max(parameter.bounds[0], min(parameter.bounds[1], candidate))
         elif parameter.parameter_type == "bool":
@@ -531,8 +595,10 @@ class CoherenceOptimizer:
         """Create rollback point with current parameter state"""
         rollback_point = {
             "timestamp": datetime.now().isoformat(),
-            "parameters": {name: param.current_value for name, param in self._parameters.items()},
-            "coherence": self.trinity_coherence.get_current_trinity_coherence()
+            "parameters": {
+                name: param.current_value for name, param in self._parameters.items()
+            },
+            "coherence": self.trinity_coherence.get_current_trinity_coherence(),
         }
 
         self._rollback_points.append(rollback_point)
@@ -543,13 +609,15 @@ class CoherenceOptimizer:
 
         return rollback_point
 
-    def _record_parameter_change(self, name: str, old_value: Any, new_value: Any) -> None:
+    def _record_parameter_change(
+        self, name: str, old_value: Any, new_value: Any
+    ) -> None:
         """Record parameter change in history"""
         change_record = {
             "timestamp": datetime.now().isoformat(),
             "parameter_name": name,
             "old_value": old_value,
-            "new_value": new_value
+            "new_value": new_value,
         }
 
         self._parameter_history.append(change_record)
@@ -564,7 +632,10 @@ class CoherenceOptimizer:
             # Update average improvement
             total_successful = self._optimization_statistics["successful_optimizations"]
             current_avg = self._optimization_statistics["average_improvement"]
-            new_avg = current_avg + (result.coherence_improvement - current_avg) / total_successful
+            new_avg = (
+                current_avg
+                + (result.coherence_improvement - current_avg) / total_successful
+            )
             self._optimization_statistics["average_improvement"] = new_avg
 
 

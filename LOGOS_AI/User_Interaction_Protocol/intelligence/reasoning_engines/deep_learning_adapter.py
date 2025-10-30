@@ -13,21 +13,22 @@ Core Design Principles:
 - Gradient safety: Monitored gradient flows to prevent instability
 """
 
+import json
 import logging
 import traceback
-from typing import Dict, Any, Optional, List, Tuple, Union, Callable
 from dataclasses import dataclass
 from datetime import datetime
-import numpy as np
 from pathlib import Path
-import json
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+
+import numpy as np
 
 # Safe imports with fallback handling
 try:
     import torch
     import torch.nn as nn
-    import torch.optim as optim
     import torch.nn.functional as F
+    import torch.optim as optim
     from torch.utils.data import DataLoader, TensorDataset
 
     TORCH_AVAILABLE = True
@@ -43,9 +44,9 @@ except ImportError as e:
 
 # LOGOS Core imports (assuming these exist from v0.6)
 try:
-    from logos_core.trinity_coherence import TrinityCoherenceValidator
-    from logos_core.reference_monitor import ReferenceMonitor
     from logos_core.proof_gates import ProofGate
+    from logos_core.reference_monitor import ReferenceMonitor
+    from logos_core.trinity_coherence import TrinityCoherenceValidator
     from logos_core.verification import VerificationContext
 except ImportError:
     # Mock implementations for development
@@ -120,7 +121,10 @@ class VerifiedNeuralNetwork(nn.Module if TORCH_AVAILABLE else object):
     """
 
     def __init__(
-        self, architecture: Dict[str, Any], verification_bounds: Dict[str, float], operation_id: str
+        self,
+        architecture: Dict[str, Any],
+        verification_bounds: Dict[str, float],
+        operation_id: str,
     ):
         """
         Initialize verified neural network.
@@ -256,7 +260,9 @@ class VerifiedNeuralNetwork(nn.Module if TORCH_AVAILABLE else object):
         output_norm = torch.norm(output).item()
 
         if output_norm > max_output_norm:
-            self.logger.warning(f"Output norm {output_norm:.4f} exceeds bound {max_output_norm}")
+            self.logger.warning(
+                f"Output norm {output_norm:.4f} exceeds bound {max_output_norm}"
+            )
             return False
         return True
 
@@ -265,7 +271,9 @@ class VerifiedNeuralNetwork(nn.Module if TORCH_AVAILABLE else object):
         return {
             "num_parameters": self.num_parameters,
             "gradient_history_length": len(self.gradient_history),
-            "max_gradient_norm": max(self.gradient_history) if self.gradient_history else 0.0,
+            "max_gradient_norm": (
+                max(self.gradient_history) if self.gradient_history else 0.0
+            ),
             "parameter_bounds_satisfied": self._check_parameter_bounds(),
             "verification_bounds": self.verification_bounds,
         }
@@ -345,7 +353,9 @@ class DeepLearningAdapter:
             # Trinity-Coherence validation context
             trinity_context = {
                 "operation_type": operation.operation_type,
-                "model_complexity": operation.model_architecture.get("num_parameters", 0),
+                "model_complexity": operation.model_architecture.get(
+                    "num_parameters", 0
+                ),
                 "training_config": operation.training_config,
                 "verification_context": self.verification_context,
                 "constraints": operation.trinity_constraints,
@@ -412,24 +422,32 @@ class DeepLearningAdapter:
             with VerificationContext(operation_id) as ctx:
                 # Proof-gate: Verify preconditions
                 if not self.proof_gate.verify_preconditions(operation.preconditions):
-                    self.logger.error(f"Precondition verification failed for {operation_id}")
+                    self.logger.error(
+                        f"Precondition verification failed for {operation_id}"
+                    )
                     return None
 
                 # Trinity-Coherence validation
                 if not self._verify_trinity_coherence(operation):
-                    self.logger.error(f"Trinity-Coherence validation failed for {operation_id}")
+                    self.logger.error(
+                        f"Trinity-Coherence validation failed for {operation_id}"
+                    )
                     return None
 
                 self.active_operations[operation_id] = operation
 
                 # Create verified neural network
                 model = VerifiedNeuralNetwork(
-                    architecture=architecture, verification_bounds=bounds, operation_id=operation_id
+                    architecture=architecture,
+                    verification_bounds=bounds,
+                    operation_id=operation_id,
                 )
 
                 # Proof-gate: Verify postconditions
                 if not self.proof_gate.verify_postconditions(operation.postconditions):
-                    self.logger.error(f"Postcondition verification failed for {operation_id}")
+                    self.logger.error(
+                        f"Postcondition verification failed for {operation_id}"
+                    )
                     return None
 
                 # Store model
@@ -542,7 +560,9 @@ class DeepLearningAdapter:
                         dataset = TensorDataset(X_tensor)
 
                     batch_size = training_config.get("batch_size", 32)
-                    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+                    dataloader = DataLoader(
+                        dataset, batch_size=batch_size, shuffle=True
+                    )
 
                     # Setup optimizer
                     lr = training_config.get("learning_rate", 0.001)
@@ -585,8 +605,12 @@ class DeepLearningAdapter:
                             loss.backward()
 
                             # Gradient clipping for stability
-                            max_grad_norm = model.verification_bounds.get("max_gradient_norm", 10.0)
-                            torch.nn.utils.clip_grad_norm_(model.parameters(), max_grad_norm)
+                            max_grad_norm = model.verification_bounds.get(
+                                "max_gradient_norm", 10.0
+                            )
+                            torch.nn.utils.clip_grad_norm_(
+                                model.parameters(), max_grad_norm
+                            )
 
                             optimizer.step()
 
@@ -606,7 +630,10 @@ class DeepLearningAdapter:
 
                         # Early stopping check
                         patience = training_config.get(
-                            "patience", self.default_verification_bounds["min_convergence_patience"]
+                            "patience",
+                            self.default_verification_bounds[
+                                "min_convergence_patience"
+                            ],
                         )
                         if len(training_losses) > patience:
                             recent_losses = training_losses[-patience:]
@@ -618,10 +645,16 @@ class DeepLearningAdapter:
 
                         # Log progress
                         if epoch % 10 == 0:
-                            self.logger.info(f"Epoch {epoch}/{epochs}, Loss: {avg_loss:.6f}")
+                            self.logger.info(
+                                f"Epoch {epoch}/{epochs}, Loss: {avg_loss:.6f}"
+                            )
 
-                    final_loss = training_losses[-1] if training_losses else float("inf")
-                    convergence_achieved = len(training_losses) < epochs  # Early stopped
+                    final_loss = (
+                        training_losses[-1] if training_losses else float("inf")
+                    )
+                    convergence_achieved = (
+                        len(training_losses) < epochs
+                    )  # Early stopped
 
                 else:
                     # Mock training when PyTorch unavailable
@@ -669,12 +702,16 @@ class DeepLearningAdapter:
                     training_metrics=training_metrics,
                     final_loss=final_loss,
                     gradient_norms=gradient_norms,
-                    verification_status="verified" if convergence_achieved else "failed",
+                    verification_status=(
+                        "verified" if convergence_achieved else "failed"
+                    ),
                     provenance_ref=provenance_ref,
                     convergence_achieved=convergence_achieved,
                 )
 
-                self.logger.info(f"Model training completed successfully for {model_id}")
+                self.logger.info(
+                    f"Model training completed successfully for {model_id}"
+                )
                 return result
 
         except Exception as e:
@@ -839,7 +876,9 @@ def example_neural_training():
             )
 
             if prediction_result:
-                print(f"Prediction completed: {prediction_result['verification_status']}")
+                print(
+                    f"Prediction completed: {prediction_result['verification_status']}"
+                )
                 print(f"Output shape: {prediction_result['output_shape']}")
 
             return training_result
@@ -854,7 +893,8 @@ def example_neural_training():
 if __name__ == "__main__":
     # Configure logging
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     # Run example

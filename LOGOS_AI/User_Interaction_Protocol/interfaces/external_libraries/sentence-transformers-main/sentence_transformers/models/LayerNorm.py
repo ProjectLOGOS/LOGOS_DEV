@@ -49,5 +49,7 @@ class LayerNorm(Module):
         }
         config = cls.load_config(model_name_or_path=model_name_or_path, **hub_kwargs)
         model = cls(**config)
-        model = cls.load_torch_weights(model_name_or_path=model_name_or_path, model=model, **hub_kwargs)
+        model = cls.load_torch_weights(
+            model_name_or_path=model_name_or_path, model=model, **hub_kwargs
+        )
         return model

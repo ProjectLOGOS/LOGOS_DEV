@@ -5,6 +5,7 @@ Provides classes for representing and working with different
 conceptions of time: discrete, continuous, branching, circular, etc.
 """
 
+
 class TimeModel:
     """
     Framework for modeling time in various forms.
@@ -13,7 +14,7 @@ class TimeModel:
     for reasoning about temporal phenomena.
     """
 
-    def __init__(self, time_type: str = 'linear_discrete'):
+    def __init__(self, time_type: str = "linear_discrete"):
         """
         Initialize a time model.
 
@@ -48,11 +49,7 @@ class TimeModel:
             end: End time point
             properties: Properties of the interval
         """
-        interval = {
-            'start': start,
-            'end': end,
-            'properties': properties or {}
-        }
+        interval = {"start": start, "end": end, "properties": properties or {}}
         self.intervals.append(interval)
 
     def define_relation(self, point1, point2, relation: str):
@@ -64,11 +61,9 @@ class TimeModel:
             point2: Second time point
             relation: Temporal relation ('before', 'after', 'during', 'overlaps', etc.)
         """
-        self.relations.append({
-            'point1': point1,
-            'point2': point2,
-            'relation': relation
-        })
+        self.relations.append(
+            {"point1": point1, "point2": point2, "relation": relation}
+        )
 
     def check_consistency(self) -> bool:
         """
@@ -79,12 +74,14 @@ class TimeModel:
         """
         # Check for basic temporal contradictions
         for rel in self.relations:
-            if rel['relation'] == 'before':
+            if rel["relation"] == "before":
                 # Check if there's a contradictory 'after' relation
                 for other_rel in self.relations:
-                    if (other_rel['point1'] == rel['point2'] and
-                        other_rel['point2'] == rel['point1'] and
-                        other_rel['relation'] == 'after'):
+                    if (
+                        other_rel["point1"] == rel["point2"]
+                        and other_rel["point2"] == rel["point1"]
+                        and other_rel["relation"] == "after"
+                    ):
                         return False
 
         return True
@@ -107,8 +104,8 @@ class TimeModel:
 
             # Visit all points that come after this one
             for rel in self.relations:
-                if rel['point1'] == point and rel['relation'] == 'before':
-                    visit(rel['point2'])
+                if rel["point1"] == point and rel["relation"] == "before":
+                    visit(rel["point2"])
 
             order.append(point)
 
@@ -128,16 +125,16 @@ class TimeModel:
 
         # Simple chain finding based on temporal and causal relations
         for rel in self.relations:
-            if rel['relation'] == 'causes':
-                chain = [rel['point1'], rel['point2']]
+            if rel["relation"] == "causes":
+                chain = [rel["point1"], rel["point2"]]
 
                 # Extend chain forward
-                current = rel['point2']
+                current = rel["point2"]
                 while True:
                     next_event = None
                     for r in self.relations:
-                        if r['point1'] == current and r['relation'] == 'causes':
-                            next_event = r['point2']
+                        if r["point1"] == current and r["relation"] == "causes":
+                            next_event = r["point2"]
                             break
                     if next_event:
                         chain.append(next_event)
@@ -166,9 +163,13 @@ class TimeModel:
 
         for step in range(steps):
             state = {
-                'time': current_time,
-                'active_events': [e for e in self.events.keys() if self.events[e].get('active', False)],
-                'relations_satisfied': len([r for r in self.relations if r['relation'] == 'before'])
+                "time": current_time,
+                "active_events": [
+                    e for e in self.events.keys() if self.events[e].get("active", False)
+                ],
+                "relations_satisfied": len(
+                    [r for r in self.relations if r["relation"] == "before"]
+                ),
             }
             states.append(state)
             current_time += 1

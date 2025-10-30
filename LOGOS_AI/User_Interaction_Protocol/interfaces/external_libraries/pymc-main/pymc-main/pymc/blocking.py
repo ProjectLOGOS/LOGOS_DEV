@@ -49,7 +49,9 @@ class RaveledVars(NamedTuple):
 class Compose(Generic[T]):
     """Compose two functions in a pickleable way."""
 
-    def __init__(self, fa: Callable[[PointType], T], fb: Callable[[RaveledVars], PointType]):
+    def __init__(
+        self, fa: Callable[[PointType], T], fb: Callable[[RaveledVars], PointType]
+    ):
         self.fa = fa
         self.fb = fb
 

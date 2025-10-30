@@ -1,8 +1,9 @@
-import os
-import pika
 import json
-import time
 import logging
+import os
+import time
+
+import pika
 
 
 class ForecastingNexus:
@@ -43,7 +44,11 @@ class MockBayesianLearner:
     def predict(self, data):
         # Simulate predicting outcomes based on input data
         # In a real system, this would be a trained model.
-        return {"aligned_action": 0.7, "unforeseen_consequence": 0.2, "neutral_outcome": 0.1}
+        return {
+            "aligned_action": 0.7,
+            "unforeseen_consequence": 0.2,
+            "neutral_outcome": 0.1,
+        }
 
 
 class TelosWorker:
@@ -57,7 +62,9 @@ class TelosWorker:
     def _connect_rabbitmq(self, host):
         for _ in range(10):
             try:
-                connection = pika.BlockingConnection(pika.ConnectionParameters(host, heartbeat=600))
+                connection = pika.BlockingConnection(
+                    pika.ConnectionParameters(host, heartbeat=600)
+                )
                 channel = connection.channel()
                 self.logger.info("Telos worker connected to RabbitMQ.")
                 return connection, channel
@@ -85,19 +92,23 @@ class TelosWorker:
             payload = task.get("payload", {})
 
             if task_type == "predict_outcomes":
-                raw_predictions = self.bayesian_learner.predict(payload.get("node_data", {}))
+                raw_predictions = self.bayesian_learner.predict(
+                    payload.get("node_data", {})
+                )
 
                 formatted_predictions = []
                 for desc, prob in raw_predictions.items():
                     alignment = (
                         "good"
                         if "aligned" in desc
-                        else "evil"
-                        if "consequence" in desc
-                        else "neutral"
+                        else "evil" if "consequence" in desc else "neutral"
                     )
                     formatted_predictions.append(
-                        {"description": desc, "alignment": alignment, "probability": prob}
+                        {
+                            "description": desc,
+                            "alignment": alignment,
+                            "probability": prob,
+                        }
                     )
 
                 result_payload = formatted_predictions
@@ -113,10 +124,20 @@ class TelosWorker:
                 probabilities = {}
                 for cause_hypothesis in payload["hypotheses"]:
                     probabilities[cause_hypothesis] = evaluate_counterfactual(
-                        scm, payload["target"], payload["context"], {"past_cause": cause_hypothesis}
+                        scm,
+                        payload["target"],
+                        payload["context"],
+                        {"past_cause": cause_hypothesis},
                     )
-                best_cause = max(probabilities, key=probabilities.get) if probabilities else "N/A"
-                result_payload = {"best_explanation": best_cause, "probabilities": probabilities}
+                best_cause = (
+                    max(probabilities, key=probabilities.get)
+                    if probabilities
+                    else "N/A"
+                )
+                result_payload = {
+                    "best_explanation": best_cause,
+                    "probabilities": probabilities,
+                }
                 status = "success"
             else:
                 result_payload = {"error": f"Unknown task type: {task_type}"}
@@ -140,14 +161,17 @@ class TelosWorker:
         ch.basic_ack(delivery_tag=method.delivery_tag)
 
     def start(self):
-        self.channel.basic_consume(queue="telos_task_queue", on_message_callback=self.process_task)
+        self.channel.basic_consume(
+            queue="telos_task_queue", on_message_callback=self.process_task
+        )
         self.logger.info("Telos worker started and waiting for tasks.")
         self.channel.start_consuming()
 
 
 if __name__ == "__main__":
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
     worker = TelosWorker(os.getenv("RABBITMQ_HOST", "rabbitmq"))
     worker.start()

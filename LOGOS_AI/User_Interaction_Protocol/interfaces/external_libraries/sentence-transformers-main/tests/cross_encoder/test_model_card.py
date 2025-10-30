@@ -142,7 +142,9 @@ def test_model_card_base(
 
     train_dataset = dummy_dataset
     if num_datasets:
-        train_dataset = DatasetDict({f"train_{i}": train_dataset for i in range(num_datasets)})
+        train_dataset = DatasetDict(
+            {f"train_{i}": train_dataset for i in range(num_datasets)}
+        )
 
     # This adds data to model.model_card_data
     CrossEncoderTrainer(model, train_dataset=train_dataset)

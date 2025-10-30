@@ -13,12 +13,21 @@ from transformers.integrations import WandbCallback
 
 from sentence_transformers.evaluation import SentenceEvaluator, SequentialEvaluator
 from sentence_transformers.models import Router
-from sentence_transformers.sparse_encoder.callbacks.splade_callbacks import SpladeRegularizerWeightSchedulerCallback
+from sentence_transformers.sparse_encoder.callbacks.splade_callbacks import (
+    SpladeRegularizerWeightSchedulerCallback,
+)
 from sentence_transformers.sparse_encoder.data_collator import SparseEncoderDataCollator
-from sentence_transformers.sparse_encoder.losses import SparseMultipleNegativesRankingLoss, SpladeLoss
-from sentence_transformers.sparse_encoder.model_card import SparseEncoderModelCardCallback
+from sentence_transformers.sparse_encoder.losses import (
+    SparseMultipleNegativesRankingLoss,
+    SpladeLoss,
+)
+from sentence_transformers.sparse_encoder.model_card import (
+    SparseEncoderModelCardCallback,
+)
 from sentence_transformers.sparse_encoder.SparseEncoder import SparseEncoder
-from sentence_transformers.sparse_encoder.training_args import SparseEncoderTrainingArguments
+from sentence_transformers.sparse_encoder.training_args import (
+    SparseEncoderTrainingArguments,
+)
 from sentence_transformers.trainer import SentenceTransformerTrainer
 from sentence_transformers.util import is_datasets_available, is_training_available
 
@@ -120,7 +129,9 @@ class SparseEncoderTrainer(SentenceTransformerTrainer):
             None,
             None,
         ),
-        preprocess_logits_for_metrics: (Callable[[torch.Tensor, torch.Tensor], torch.Tensor] | None) = None,
+        preprocess_logits_for_metrics: (
+            Callable[[torch.Tensor, torch.Tensor], torch.Tensor] | None
+        ) = None,
     ) -> None:
         if not is_training_available():
             raise RuntimeError(
@@ -131,17 +142,23 @@ class SparseEncoderTrainer(SentenceTransformerTrainer):
 
         if args is None:
             output_dir = "tmp_trainer"
-            logger.info(f"No `SparseEncoderTrainingArguments` passed, using `output_dir={output_dir}`.")
+            logger.info(
+                f"No `SparseEncoderTrainingArguments` passed, using `output_dir={output_dir}`."
+            )
             args = SparseEncoderTrainingArguments(output_dir=output_dir)
         elif not isinstance(args, SparseEncoderTrainingArguments):
-            raise ValueError("Please use `SparseEncoderTrainingArguments` imported from `sentence_transformers`.")
+            raise ValueError(
+                "Please use `SparseEncoderTrainingArguments` imported from `sentence_transformers`."
+            )
 
         if model is None:
             if model_init is not None:
                 self.model_init = model_init
                 model = self.call_model_init()
             else:
-                raise RuntimeError("`Trainer` requires either a `model` or `model_init` argument")
+                raise RuntimeError(
+                    "`Trainer` requires either a `model` or `model_init` argument"
+                )
         else:
             if model_init is not None:
                 logger.warning(
@@ -159,14 +176,20 @@ class SparseEncoderTrainer(SentenceTransformerTrainer):
 
         # Get a dictionary of the default training arguments, so we can determine which arguments have been changed
         # for the model card
-        default_args_dict = SparseEncoderTrainingArguments(output_dir="unused").to_dict()
+        default_args_dict = SparseEncoderTrainingArguments(
+            output_dir="unused"
+        ).to_dict()
 
         # If the model ID is set via the SparseEncoderTrainingArguments, but not via the SparseEncoderModelCardData,
         # then we can set it here for the model card regardless
         if args.hub_model_id and not model.model_card_data.model_id:
             model.model_card_data.set_model_id(args.hub_model_id)
 
-        if tokenizer is None and hasattr(model, "tokenizer") and isinstance(model.tokenizer, PreTrainedTokenizerBase):
+        if (
+            tokenizer is None
+            and hasattr(model, "tokenizer")
+            and isinstance(model.tokenizer, PreTrainedTokenizerBase)
+        ):
             tokenizer = model.tokenizer
 
         if data_collator is None:
@@ -174,10 +197,17 @@ class SparseEncoderTrainer(SentenceTransformerTrainer):
                 tokenize_fn=model.tokenize,
                 router_mapping=args.router_mapping,
                 prompts=args.prompts,
-                all_special_ids=set(tokenizer.all_special_ids) if hasattr(tokenizer, "all_special_ids") else set(),
+                all_special_ids=(
+                    set(tokenizer.all_special_ids)
+                    if hasattr(tokenizer, "all_special_ids")
+                    else set()
+                ),
             )
 
-            if Router in [module.__class__ for module in model.children()] and not args.router_mapping:
+            if (
+                Router in [module.__class__ for module in model.children()]
+                and not args.router_mapping
+            ):
                 raise ValueError(
                     "You are using a Router module in your model, but you did not provide a `router_mapping` in the "
                     "training arguments. This means that the Router module will not be able to route the inputs to "
@@ -185,7 +215,9 @@ class SparseEncoderTrainer(SentenceTransformerTrainer):
                     "e.g. {'column_one': 'query', 'column_two': 'document', 'column_three': 'document'}."
                 )
 
-        for dataset_name, dataset in zip(["train", "eval"], [train_dataset, eval_dataset]):
+        for dataset_name, dataset in zip(
+            ["train", "eval"], [train_dataset, eval_dataset]
+        ):
             if isinstance(dataset, IterableDataset) and dataset.column_names is None:
                 sample = next(iter(dataset))
                 naive_type_mapping = {
@@ -195,7 +227,8 @@ class SparseEncoderTrainer(SentenceTransformerTrainer):
                     bool: "bool",
                 }
                 example_features = {
-                    key: Value(naive_type_mapping.get(type(value), "null")) for key, value in sample.items()
+                    key: Value(naive_type_mapping.get(type(value), "null"))
+                    for key, value in sample.items()
                 }
                 raise ValueError(
                     f"The provided `{dataset_name}_dataset` must have Features. Specify them with e.g.:\n"
@@ -205,7 +238,9 @@ class SparseEncoderTrainer(SentenceTransformerTrainer):
                     "https://huggingface.co/docs/datasets/en/about_dataset_features"
                 )
 
-        if isinstance(train_dataset, dict) and not isinstance(train_dataset, DatasetDict):
+        if isinstance(train_dataset, dict) and not isinstance(
+            train_dataset, DatasetDict
+        ):
             train_dataset = DatasetDict(train_dataset)
         if isinstance(eval_dataset, dict) and not isinstance(eval_dataset, DatasetDict):
             eval_dataset = DatasetDict(eval_dataset)
@@ -218,7 +253,11 @@ class SparseEncoderTrainer(SentenceTransformerTrainer):
             "args": args,
             "data_collator": data_collator,
             "train_dataset": train_dataset,
-            "eval_dataset": (eval_dataset if eval_dataset is not None or evaluator is None else "dummy"),
+            "eval_dataset": (
+                eval_dataset
+                if eval_dataset is not None or evaluator is None
+                else "dummy"
+            ),
             "model_init": model_init,
             "compute_metrics": compute_metrics,
             "callbacks": callbacks,
@@ -261,7 +300,12 @@ class SparseEncoderTrainer(SentenceTransformerTrainer):
         self.args: SparseEncoderTrainingArguments
         self.data_collator: SparseEncoderDataCollator
         # Set the W&B project via environment variables if it's not already set
-        if any([isinstance(callback, WandbCallback) for callback in self.callback_handler.callbacks]):
+        if any(
+            [
+                isinstance(callback, WandbCallback)
+                for callback in self.callback_handler.callbacks
+            ]
+        ):
             os.environ.setdefault("WANDB_PROJECT", "sentence-transformers")
 
         if loss is None:
@@ -278,8 +322,13 @@ class SparseEncoderTrainer(SentenceTransformerTrainer):
             )
 
         if isinstance(loss, dict):
-            self.loss = {dataset_name: self.prepare_loss(loss_fn, model) for dataset_name, loss_fn in loss.items()}
-            for dataset_name, dataset in zip(["train", "eval"], [train_dataset, eval_dataset]):
+            self.loss = {
+                dataset_name: self.prepare_loss(loss_fn, model)
+                for dataset_name, loss_fn in loss.items()
+            }
+            for dataset_name, dataset in zip(
+                ["train", "eval"], [train_dataset, eval_dataset]
+            ):
                 if dataset is None:
                     continue
                 if not isinstance(dataset, dict):
@@ -301,11 +350,17 @@ class SparseEncoderTrainer(SentenceTransformerTrainer):
 
         if self.train_dataset is not None:
             self.train_dataset = self.preprocess_dataset(
-                train_dataset, prompts=args.prompts, router_mapping=args.router_mapping, dataset_name="train"
+                train_dataset,
+                prompts=args.prompts,
+                router_mapping=args.router_mapping,
+                dataset_name="train",
             )
         if self.eval_dataset is not None:
             self.eval_dataset = self.preprocess_dataset(
-                eval_dataset, prompts=args.prompts, router_mapping=args.router_mapping, dataset_name="eval"
+                eval_dataset,
+                prompts=args.prompts,
+                router_mapping=args.router_mapping,
+                dataset_name="eval",
             )
         self.add_model_card_callback(default_args_dict)
 
@@ -323,12 +378,16 @@ class SparseEncoderTrainer(SentenceTransformerTrainer):
 
         model_card_callback = SparseEncoderModelCardCallback(default_args_dict)
         self.add_callback(model_card_callback)
-        model_card_callback.on_init_end(self.args, self.state, self.control, model=self.model, trainer=self)
+        model_card_callback.on_init_end(
+            self.args, self.state, self.control, model=self.model, trainer=self
+        )
 
     def call_model_init(self, trial=None) -> SparseEncoder:
         return super().call_model_init(trial=trial)
 
-    def override_model_in_loss(self, loss: torch.nn.Module, model: SparseEncoder) -> torch.nn.Module:
+    def override_model_in_loss(
+        self, loss: torch.nn.Module, model: SparseEncoder
+    ) -> torch.nn.Module:
         from sentence_transformers import SparseEncoder
 
         for name, child in loss.named_children():
@@ -356,9 +415,14 @@ class SparseEncoderTrainer(SentenceTransformerTrainer):
                 break
 
         # If we're using SpladeLoss but don't have a scheduler callback, add one or if it's not the second one in the list
-        if is_splade_loss and (splade_scheduler_callback_index is None or splade_scheduler_callback_index > 1):
+        if is_splade_loss and (
+            splade_scheduler_callback_index is None
+            or splade_scheduler_callback_index > 1
+        ):
             if splade_scheduler_callback_index is not None:
-                splade_callback = self.callback_handler.callbacks.pop(splade_scheduler_callback_index)
+                splade_callback = self.callback_handler.callbacks.pop(
+                    splade_scheduler_callback_index
+                )
 
             else:
                 logger.warning(
@@ -398,7 +462,10 @@ class SparseEncoderTrainer(SentenceTransformerTrainer):
             Union[torch.Tensor, Tuple[torch.Tensor, Dict[str, Any]]]: The computed loss. If `return_outputs` is True, returns a tuple of loss and outputs. Otherwise, returns only the loss.
         """
         return super().compute_loss(
-            model=model, inputs=inputs, return_outputs=return_outputs, num_items_in_batch=num_items_in_batch
+            model=model,
+            inputs=inputs,
+            return_outputs=return_outputs,
+            num_items_in_batch=num_items_in_batch,
         )
 
     def get_optimizer_cls_and_kwargs(

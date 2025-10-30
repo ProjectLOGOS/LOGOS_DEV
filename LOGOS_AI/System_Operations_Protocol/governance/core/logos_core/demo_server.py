@@ -1,10 +1,10 @@
-
+import requests
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-import requests
 
 app = FastAPI(title="LOGOS Interactive Demo")
+
 
 @app.get("/", response_class=HTMLResponse)
 async def demo_interface():
@@ -137,10 +137,13 @@ async def demo_interface():
     </html>
     """
 
+
 @app.get("/health")
 async def health():
     return {"status": "healthy", "service": "demo-interface"}
 
+
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="127.0.0.1", port=8080)

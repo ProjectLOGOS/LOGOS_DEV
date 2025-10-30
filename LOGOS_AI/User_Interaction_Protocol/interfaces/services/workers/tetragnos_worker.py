@@ -14,15 +14,15 @@ Responsibilities:
 - Dimensional reduction and classification
 """
 
-import os
-import sys
 import json
-import time
 import logging
+import os
 import signal
+import sys
+import time
 import uuid
-from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
 
 # RabbitMQ and messaging
 import pika
@@ -30,9 +30,9 @@ import pika
 # Core LOGOS imports
 try:
     from core.cognitive.feature_extraction import FeatureExtractor
+    from core.data_structures import OperationResult, TaskDescriptor
     from core.ml.clustering import ClusterAnalyzer
     from core.nlp.translation import TranslationEngine
-    from core.data_structures import TaskDescriptor, OperationResult
 except ImportError:
     # Fallback implementations if core modules aren't available
     pass
@@ -40,11 +40,11 @@ except ImportError:
 # ML and NLP libraries with fallbacks
 try:
     import numpy as np
-    from sklearn.feature_extraction.text import TfidfVectorizer
-    from sklearn.cluster import KMeans, DBSCAN
-    from sklearn.metrics.pairwise import cosine_similarity
-    from sklearn.decomposition import PCA
     from sentence_transformers import SentenceTransformer
+    from sklearn.cluster import DBSCAN, KMeans
+    from sklearn.decomposition import PCA
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.metrics.pairwise import cosine_similarity
 
     SKLEARN_AVAILABLE = True
     SENTENCE_TRANSFORMERS_AVAILABLE = True
@@ -87,7 +87,9 @@ class TetragnosCoreEngine:
         self.pattern_cache = {}
         self.feature_cache = {}
 
-        self.logger.info(f"TETRAGNOS Core Engine initialized with worker ID: {self.worker_id}")
+        self.logger.info(
+            f"TETRAGNOS Core Engine initialized with worker ID: {self.worker_id}"
+        )
 
     def _initialize_ml_components(self):
         """Initialize machine learning and NLP components."""
@@ -177,7 +179,10 @@ class TetragnosCoreEngine:
 
         try:
             # Vectorize texts
-            if hasattr(self, "sentence_transformer") and SENTENCE_TRANSFORMERS_AVAILABLE:
+            if (
+                hasattr(self, "sentence_transformer")
+                and SENTENCE_TRANSFORMERS_AVAILABLE
+            ):
                 # Use sentence transformers for better semantic representation
                 embeddings = self.sentence_transformer.encode(texts)
             else:
@@ -188,7 +193,9 @@ class TetragnosCoreEngine:
 
             # Perform clustering
             if method == "kmeans" and SKLEARN_AVAILABLE:
-                clusterer = KMeans(n_clusters=min(n_clusters, len(texts)), random_state=42)
+                clusterer = KMeans(
+                    n_clusters=min(n_clusters, len(texts)), random_state=42
+                )
                 cluster_labels = clusterer.fit_predict(embeddings)
             elif method == "dbscan" and SKLEARN_AVAILABLE:
                 clusterer = DBSCAN(eps=0.5, min_samples=2)
@@ -209,8 +216,11 @@ class TetragnosCoreEngine:
             for label, items in clusters.items():
                 cluster_stats[label] = {
                     "size": len(items),
-                    "representative_text": items[0]["text"],  # First text as representative
-                    "coherence_score": len(items) / len(texts),  # Simple coherence metric
+                    "representative_text": items[0][
+                        "text"
+                    ],  # First text as representative
+                    "coherence_score": len(items)
+                    / len(texts),  # Simple coherence metric
                 }
 
             return {
@@ -223,7 +233,11 @@ class TetragnosCoreEngine:
             }
 
         except Exception as e:
-            return {"status": "error", "error": f"Clustering failed: {str(e)}", "method": method}
+            return {
+                "status": "error",
+                "error": f"Clustering failed: {str(e)}",
+                "method": method,
+            }
 
     def _translate_text(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """Translate between natural language and formal representations."""
@@ -243,7 +257,9 @@ class TetragnosCoreEngine:
                     "confidence": 0.85,
                 }
 
-            elif source_format == "logical_form" and target_format == "natural_language":
+            elif (
+                source_format == "logical_form" and target_format == "natural_language"
+            ):
                 # Convert logical form to natural language
                 natural_text = self._logical_to_natural(text)
                 return {
@@ -312,7 +328,9 @@ class TetragnosCoreEngine:
             consequent = parts[1].strip() if len(parts) > 1 else ""
             return f"If {antecedent}, then {consequent}"
         elif form.startswith("¬"):
-            return f"It is not the case that {form[1:].replace('(', '').replace(')', '')}"
+            return (
+                f"It is not the case that {form[1:].replace('(', '').replace(')', '')}"
+            )
         else:
             return form.replace("_", " ").replace("P(", "").replace(")", "")
 
@@ -330,7 +348,9 @@ class TetragnosCoreEngine:
                 # Extract semantic features from text
                 if hasattr(self, "sentence_transformer"):
                     features = self.sentence_transformer.encode(data)
-                    feature_names = [f"semantic_dim_{i}" for i in range(features.shape[1])]
+                    feature_names = [
+                        f"semantic_dim_{i}" for i in range(features.shape[1])
+                    ]
                 else:
                     # Fallback to simple text features
                     features = []
@@ -341,14 +361,23 @@ class TetragnosCoreEngine:
                                 len(words),  # word count
                                 len(text),  # character count
                                 len(set(words)),  # unique words
-                                sum(1 for word in words if len(word) > 6),  # complex words
+                                sum(
+                                    1 for word in words if len(word) > 6
+                                ),  # complex words
                             ]
                         )
-                    feature_names = ["word_count", "char_count", "unique_words", "complex_words"]
+                    feature_names = [
+                        "word_count",
+                        "char_count",
+                        "unique_words",
+                        "complex_words",
+                    ]
 
                 return {
                     "status": "success",
-                    "features": features.tolist() if hasattr(features, "tolist") else features,
+                    "features": (
+                        features.tolist() if hasattr(features, "tolist") else features
+                    ),
                     "feature_names": feature_names,
                     "feature_dimensions": len(feature_names),
                     "data_points": len(data),
@@ -376,7 +405,9 @@ class TetragnosCoreEngine:
         try:
             if analysis_type == "frequency":
                 # Frequency analysis
-                if isinstance(data, list) and all(isinstance(item, str) for item in data):
+                if isinstance(data, list) and all(
+                    isinstance(item, str) for item in data
+                ):
                     # Text frequency analysis
                     word_freq = {}
                     for text in data:
@@ -385,7 +416,9 @@ class TetragnosCoreEngine:
                             word_freq[word] = word_freq.get(word, 0) + 1
 
                     # Sort by frequency
-                    sorted_freq = sorted(word_freq.items(), key=lambda x: x[1], reverse=True)
+                    sorted_freq = sorted(
+                        word_freq.items(), key=lambda x: x[1], reverse=True
+                    )
 
                     return {
                         "status": "success",
@@ -402,7 +435,9 @@ class TetragnosCoreEngine:
                     for item in data:
                         item_freq[str(item)] = item_freq.get(str(item), 0) + 1
 
-                    sorted_freq = sorted(item_freq.items(), key=lambda x: x[1], reverse=True)
+                    sorted_freq = sorted(
+                        item_freq.items(), key=lambda x: x[1], reverse=True
+                    )
 
                     return {
                         "status": "success",
@@ -464,12 +499,16 @@ class TetragnosCoreEngine:
                 # Return full similarity matrix
                 return {
                     "status": "success",
-                    "similarity_matrix": similarities.tolist()
-                    if hasattr(similarities, "tolist")
-                    else similarities,
+                    "similarity_matrix": (
+                        similarities.tolist()
+                        if hasattr(similarities, "tolist")
+                        else similarities
+                    ),
                     "texts": texts,
                     "comparison_type": "pairwise",
-                    "most_similar_pair": self._find_most_similar_pair(similarities, texts),
+                    "most_similar_pair": self._find_most_similar_pair(
+                        similarities, texts
+                    ),
                 }
 
             else:
@@ -564,7 +603,9 @@ class TetragnosWorker:
                     self.logger.info(f"Retrying in {retry_delay} seconds...")
                     time.sleep(retry_delay)
                 else:
-                    self.logger.error("Could not connect to RabbitMQ after all attempts. Exiting.")
+                    self.logger.error(
+                        "Could not connect to RabbitMQ after all attempts. Exiting."
+                    )
                     sys.exit(1)
             except Exception as e:
                 self.logger.error(f"Unexpected error connecting to RabbitMQ: {e}")
@@ -602,7 +643,9 @@ class TetragnosWorker:
 
             # Execute task using core engine
             result_payload = self.core_engine.execute(task_type, payload)
-            status = "success" if result_payload.get("status") == "success" else "failure"
+            status = (
+                "success" if result_payload.get("status") == "success" else "failure"
+            )
 
             processing_time = time.time() - start_time
 
@@ -667,7 +710,9 @@ class TetragnosWorker:
     def start_consuming(self):
         """Start consuming messages from the task queue."""
         try:
-            self.channel.basic_consume(queue=TASK_QUEUE, on_message_callback=self.process_task)
+            self.channel.basic_consume(
+                queue=TASK_QUEUE, on_message_callback=self.process_task
+            )
 
             self.is_running = True
             self.logger.info(

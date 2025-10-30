@@ -11,13 +11,13 @@ Version: 2.0.0
 Date: 2025-01-28
 """
 
-import time
-import json
 import hashlib
+import json
+import time
 import uuid
-from typing import Dict, List, Tuple, Any, Optional, Union
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 # =========================================================================
 # I. FOUNDATIONAL ENUMS
@@ -116,7 +116,9 @@ class SystemMessage:
             timestamp=data.get("timestamp", time.time()),
             payload=data.get("payload", {}),
             correlation_id=data.get("correlation_id"),
-            priority=ProcessingPriority(data.get("priority", ProcessingPriority.NORMAL.value)),
+            priority=ProcessingPriority(
+                data.get("priority", ProcessingPriority.NORMAL.value)
+            ),
         )
 
 
@@ -274,7 +276,9 @@ class LogosQuery:
             context=data.get("context", {}),
             requester_id=data.get("requester_id", ""),
             created_at=data.get("created_at", time.time()),
-            priority=ProcessingPriority(data.get("priority", ProcessingPriority.NORMAL.value)),
+            priority=ProcessingPriority(
+                data.get("priority", ProcessingPriority.NORMAL.value)
+            ),
             timeout=data.get("timeout", 30.0),
             metadata=data.get("metadata", {}),
         )

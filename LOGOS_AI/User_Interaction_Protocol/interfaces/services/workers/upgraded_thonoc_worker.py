@@ -13,28 +13,29 @@ Core Capabilities:
 Dependencies: z3-solver, sympy, networkx, numpy
 """
 
-import os
-import sys
 import json
-import time
 import logging
+import os
 import signal
-import uuid
-from typing import Dict, List, Any, Optional, Tuple, Union
-from datetime import datetime
+import sys
 import threading
+import time
+import uuid
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import networkx as nx
+import numpy as np
 
 # RabbitMQ messaging
 import pika
+import sympy as sp
 
 # Symbolic reasoning libraries
 import z3
-import sympy as sp
-from sympy import symbols, solve, simplify, expand, factor
+from sympy import expand, factor, simplify, solve, symbols
 from sympy.logic import satisfiable, valid
-from sympy.logic.boolalg import And, Or, Not, Implies
-import networkx as nx
-import numpy as np
+from sympy.logic.boolalg import And, Implies, Not, Or
 
 # Configuration
 SUBSYSTEM_NAME = "THONOC"
@@ -94,7 +95,9 @@ class AdvancedTheoremProver:
             self.logger.error(f"Proof construction failed: {e}")
             return {"status": "failed", "error": str(e), "proof_found": False}
 
-    def _prove_propositional(self, premises: List[str], conclusion: str) -> Dict[str, Any]:
+    def _prove_propositional(
+        self, premises: List[str], conclusion: str
+    ) -> Dict[str, Any]:
         """Propositional logic proof using Z3."""
         solver = z3.Solver()
         solver.set("timeout", MAX_SOLVER_TIMEOUT * 1000)
@@ -156,7 +159,9 @@ class AdvancedTheoremProver:
                 # Counterexample exists
                 model = solver.model()
                 counterexample = {
-                    str(var): str(model[var]) for var in z3_vars.values() if var in model
+                    str(var): str(model[var])
+                    for var in z3_vars.values()
+                    if var in model
                 }
                 return {
                     "status": "disproven",
@@ -166,7 +171,11 @@ class AdvancedTheoremProver:
                     "conclusion": conclusion,
                 }
             else:
-                return {"status": "unknown", "proof_found": False, "reason": "timeout_or_error"}
+                return {
+                    "status": "unknown",
+                    "proof_found": False,
+                    "reason": "timeout_or_error",
+                }
 
         except Exception as e:
             return {"status": "failed", "error": str(e), "proof_found": False}
@@ -244,7 +253,9 @@ class AdvancedTheoremProver:
                 worlds_graph.add_edge(f"w{i}", f"w{i+1}")
 
             # Evaluate modal formulas (simplified)
-            modal_evaluation = self._evaluate_modal_formulas(premises, conclusion, worlds_graph)
+            modal_evaluation = self._evaluate_modal_formulas(
+                premises, conclusion, worlds_graph
+            )
 
             return {
                 "status": "analyzed",
@@ -275,12 +286,18 @@ class AdvancedTheoremProver:
             # Handle negation
             if formula.startswith("~") or formula.startswith("not "):
                 inner = formula[1:] if formula.startswith("~") else formula[4:]
-                inner_formula = self._parse_propositional_formula(inner.strip(), z3_vars)
+                inner_formula = self._parse_propositional_formula(
+                    inner.strip(), z3_vars
+                )
                 return z3.Not(inner_formula) if inner_formula else None
 
             # Handle conjunction
             if " and " in formula or " & " in formula:
-                parts = formula.split(" and ") if " and " in formula else formula.split(" & ")
+                parts = (
+                    formula.split(" and ")
+                    if " and " in formula
+                    else formula.split(" & ")
+                )
                 if len(parts) == 2:
                     left = self._parse_propositional_formula(parts[0].strip(), z3_vars)
                     right = self._parse_propositional_formula(parts[1].strip(), z3_vars)
@@ -289,7 +306,9 @@ class AdvancedTheoremProver:
 
             # Handle disjunction
             if " or " in formula or " | " in formula:
-                parts = formula.split(" or ") if " or " in formula else formula.split(" | ")
+                parts = (
+                    formula.split(" or ") if " or " in formula else formula.split(" | ")
+                )
                 if len(parts) == 2:
                     left = self._parse_propositional_formula(parts[0].strip(), z3_vars)
                     right = self._parse_propositional_formula(parts[1].strip(), z3_vars)
@@ -298,7 +317,11 @@ class AdvancedTheoremProver:
 
             # Handle implication
             if " -> " in formula or " implies " in formula:
-                parts = formula.split(" -> ") if " -> " in formula else formula.split(" implies ")
+                parts = (
+                    formula.split(" -> ")
+                    if " -> " in formula
+                    else formula.split(" implies ")
+                )
                 if len(parts) == 2:
                     left = self._parse_propositional_formula(parts[0].strip(), z3_vars)
                     right = self._parse_propositional_formula(parts[1].strip(), z3_vars)
@@ -314,7 +337,11 @@ class AdvancedTheoremProver:
         """Extract proof steps from Z3 solver."""
         # Z3's proof extraction is complex - simplified version
         return [
-            {"step": 1, "rule": "assumption", "description": "Premises assumed as given"},
+            {
+                "step": 1,
+                "rule": "assumption",
+                "description": "Premises assumed as given",
+            },
             {
                 "step": 2,
                 "rule": "resolution",
@@ -347,7 +374,9 @@ class AdvancedSymbolicEngine:
         self.logger = logging.getLogger("SYMBOLIC_ENGINE")
         self.symbol_cache = {}
 
-    def evaluate_lambda(self, expression: str, variables: Dict[str, Any]) -> Dict[str, Any]:
+    def evaluate_lambda(
+        self, expression: str, variables: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Evaluate lambda calculus expression symbolically.
 
         Args:
@@ -383,7 +412,9 @@ class AdvancedSymbolicEngine:
         except Exception as e:
             return {"error": str(e), "evaluation_type": "symbolic", "success": False}
 
-    def solve_equation_system(self, equations: List[str], variables: List[str]) -> Dict[str, Any]:
+    def solve_equation_system(
+        self, equations: List[str], variables: List[str]
+    ) -> Dict[str, Any]:
         """Solve system of symbolic equations.
 
         Args:
@@ -433,7 +464,9 @@ class AdvancedSymbolicEngine:
                 "solvable": False,
             }
 
-    def symbolic_differentiation(self, expression: str, variable: str) -> Dict[str, Any]:
+    def symbolic_differentiation(
+        self, expression: str, variable: str
+    ) -> Dict[str, Any]:
         """Perform symbolic differentiation."""
         try:
             expr = sp.sympify(expression)
@@ -478,7 +511,9 @@ class AdvancedModalEngine:
     def __init__(self):
         self.logger = logging.getLogger("MODAL_ENGINE")
 
-    def modal_reasoning(self, formula: str, modality: str = "necessity") -> Dict[str, Any]:
+    def modal_reasoning(
+        self, formula: str, modality: str = "necessity"
+    ) -> Dict[str, Any]:
         """Perform modal logic reasoning.
 
         Args:
@@ -525,7 +560,11 @@ class AdvancedModalEngine:
                 "r": world in ["w0", "w4"],
             }
 
-        return {"worlds": worlds, "accessibility": accessibility, "valuation": valuation}
+        return {
+            "worlds": worlds,
+            "accessibility": accessibility,
+            "valuation": valuation,
+        }
 
     def _evaluate_modal_formula(
         self, formula: str, modality: str, worlds_model: Dict[str, Any]
@@ -537,10 +576,14 @@ class AdvancedModalEngine:
         for world in worlds_model["worlds"]:
             if modality == "necessity":
                 # Necessarily p: p is true in all accessible worlds
-                truth_values[world] = self._evaluate_necessity(formula, world, worlds_model)
+                truth_values[world] = self._evaluate_necessity(
+                    formula, world, worlds_model
+                )
             elif modality == "possibility":
                 # Possibly p: p is true in some accessible world
-                truth_values[world] = self._evaluate_possibility(formula, world, worlds_model)
+                truth_values[world] = self._evaluate_possibility(
+                    formula, world, worlds_model
+                )
             else:
                 truth_values[world] = False
 
@@ -550,7 +593,9 @@ class AdvancedModalEngine:
             "satisfiable": any(truth_values.values()),
         }
 
-    def _evaluate_necessity(self, formula: str, world: str, model: Dict[str, Any]) -> bool:
+    def _evaluate_necessity(
+        self, formula: str, world: str, model: Dict[str, Any]
+    ) -> bool:
         """Evaluate necessity operator."""
         accessible_worlds = model["accessibility"].get(world, [])
 
@@ -560,7 +605,9 @@ class AdvancedModalEngine:
                 return False
         return True
 
-    def _evaluate_possibility(self, formula: str, world: str, model: Dict[str, Any]) -> bool:
+    def _evaluate_possibility(
+        self, formula: str, world: str, model: Dict[str, Any]
+    ) -> bool:
         """Evaluate possibility operator."""
         accessible_worlds = model["accessibility"].get(world, [])
 
@@ -725,7 +772,11 @@ class ThonocCore:
 
         except Exception as e:
             return {
-                "consistency_check": {"error": str(e), "formulas": formulas, "consistent": False}
+                "consistency_check": {
+                    "error": str(e),
+                    "formulas": formulas,
+                    "consistent": False,
+                }
             }
 
     def _theorem_proving_advanced(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -741,7 +792,9 @@ class ThonocCore:
         proof_results = []
 
         # Strategy 1: Direct proof
-        direct_proof = self.theorem_prover.construct_proof(axioms, theorem, "propositional")
+        direct_proof = self.theorem_prover.construct_proof(
+            axioms, theorem, "propositional"
+        )
         proof_results.append({"strategy": "direct_proof", "result": direct_proof})
 
         # Strategy 2: Proof by contradiction
@@ -749,7 +802,9 @@ class ThonocCore:
         contradiction_proof = self.theorem_prover.construct_proof(
             axioms + [contradiction_premise], "false", "propositional"
         )
-        proof_results.append({"strategy": "proof_by_contradiction", "result": contradiction_proof})
+        proof_results.append(
+            {"strategy": "proof_by_contradiction", "result": contradiction_proof}
+        )
 
         # Select best proof
         best_proof = None
@@ -789,7 +844,9 @@ class ThonocCore:
                     "consequence": consequence,
                     "entailed": entailment_check.get("proof_found", False),
                     "proof_method": entailment_check.get("proof_method", "unknown"),
-                    "confidence": 1.0 if entailment_check.get("proof_found", False) else 0.0,
+                    "confidence": (
+                        1.0 if entailment_check.get("proof_found", False) else 0.0
+                    ),
                 }
             )
 
@@ -798,7 +855,9 @@ class ThonocCore:
                 "premises": premises,
                 "entailment_results": entailment_results,
                 "total_consequences_checked": len(candidate_consequences),
-                "valid_consequences": sum(1 for r in entailment_results if r["entailed"]),
+                "valid_consequences": sum(
+                    1 for r in entailment_results if r["entailed"]
+                ),
             }
         }
 

@@ -12,18 +12,19 @@ Combines:
 - Proof-gated semantic transformations
 """
 
+import json
 import logging
-import numpy as np
-from typing import Dict, List, Optional, Any, Tuple, Union
 from dataclasses import dataclass
 from datetime import datetime
-import json
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import numpy as np
 
 # Safe imports with fallback handling
 try:
-    from sentence_transformers import SentenceTransformer
     import torch
     import torch.nn.functional as F
+    from sentence_transformers import SentenceTransformer
 
     TRANSFORMERS_AVAILABLE = True
 except ImportError:
@@ -109,7 +110,9 @@ class UnifiedSemanticTransformer:
         if TRANSFORMERS_AVAILABLE:
             try:
                 self.sentence_model = SentenceTransformer(model_name)
-                self.embedding_dim = self.sentence_model.get_sentence_embedding_dimension()
+                self.embedding_dim = (
+                    self.sentence_model.get_sentence_embedding_dimension()
+                )
             except Exception as e:
                 logging.warning(f"Failed to load transformer model {model_name}: {e}")
                 self.sentence_model = None
@@ -133,7 +136,9 @@ class UnifiedSemanticTransformer:
         self.logger = logging.getLogger(f"LOGOS.{self.__class__.__name__}")
         self.logger.setLevel(logging.INFO)
 
-        self.logger.info(f"UnifiedSemanticTransformer initialized with model: {model_name}")
+        self.logger.info(
+            f"UnifiedSemanticTransformer initialized with model: {model_name}"
+        )
         self.logger.info(f"Transformers available: {TRANSFORMERS_AVAILABLE}")
 
     def _generate_embedding_id(self) -> str:
@@ -147,7 +152,10 @@ class UnifiedSemanticTransformer:
         return f"sem_trans_{self.transformation_counter}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
     def encode_text(
-        self, text: str, include_trinity_vector: bool = True, verify_semantics: bool = True
+        self,
+        text: str,
+        include_trinity_vector: bool = True,
+        verify_semantics: bool = True,
     ) -> SemanticEmbedding:
         """
         Encode text into semantic embedding with trinity vector integration.
@@ -190,8 +198,13 @@ class UnifiedSemanticTransformer:
         semantic_similarity = 0.5
 
         if verify_semantics and trinity_vector:
-            semantic_similarity = self._calculate_semantic_coherence(embedding, trinity_vector)
-            if semantic_similarity >= self.verification_bounds["semantic_coherence_threshold"]:
+            semantic_similarity = self._calculate_semantic_coherence(
+                embedding, trinity_vector
+            )
+            if (
+                semantic_similarity
+                >= self.verification_bounds["semantic_coherence_threshold"]
+            ):
                 verification_status = "verified"
             else:
                 verification_status = "low_coherence"
@@ -298,7 +311,11 @@ class UnifiedSemanticTransformer:
         """Calculate semantic coherence between embedding and trinity vector"""
         # Create trinity embedding from vector components
         trinity_embedding = np.array(
-            [trinity_vector.e_identity, trinity_vector.g_experience, trinity_vector.t_logos]
+            [
+                trinity_vector.e_identity,
+                trinity_vector.g_experience,
+                trinity_vector.t_logos,
+            ]
         )
 
         # Pad trinity embedding to match sentence embedding dimension
@@ -333,15 +350,25 @@ class UnifiedSemanticTransformer:
             Semantic similarity score [0,1]
         """
         # Encode both texts
-        embedding1 = self.encode_text(text1, include_trinity_vector=use_trinity_alignment)
-        embedding2 = self.encode_text(text2, include_trinity_vector=use_trinity_alignment)
+        embedding1 = self.encode_text(
+            text1, include_trinity_vector=use_trinity_alignment
+        )
+        embedding2 = self.encode_text(
+            text2, include_trinity_vector=use_trinity_alignment
+        )
 
         # Calculate embedding similarity
-        embedding_sim = self._cosine_similarity(embedding1.embedding, embedding2.embedding)
+        embedding_sim = self._cosine_similarity(
+            embedding1.embedding, embedding2.embedding
+        )
 
         # Calculate trinity vector similarity if available
         trinity_sim = 0.5
-        if use_trinity_alignment and embedding1.trinity_vector and embedding2.trinity_vector:
+        if (
+            use_trinity_alignment
+            and embedding1.trinity_vector
+            and embedding2.trinity_vector
+        ):
             trinity_sim = self._trinity_similarity(
                 embedding1.trinity_vector, embedding2.trinity_vector
             )
@@ -360,12 +387,16 @@ class UnifiedSemanticTransformer:
     def _cosine_similarity(self, vec1: np.ndarray, vec2: np.ndarray) -> float:
         """Calculate cosine similarity between two vectors"""
         try:
-            similarity = np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
+            similarity = np.dot(vec1, vec2) / (
+                np.linalg.norm(vec1) * np.linalg.norm(vec2)
+            )
             return max(0, min(1, float(similarity)))
         except:
             return 0.5
 
-    def _trinity_similarity(self, trinity1: TrinityVector, trinity2: TrinityVector) -> float:
+    def _trinity_similarity(
+        self, trinity1: TrinityVector, trinity2: TrinityVector
+    ) -> float:
         """Calculate similarity between two trinity vectors"""
         # Component-wise similarity
         e_sim = 1 - abs(trinity1.e_identity - trinity2.e_identity)
@@ -404,24 +435,33 @@ class UnifiedSemanticTransformer:
         source_embedding = self.encode_text(source_text, include_trinity_vector=True)
 
         # Generate target text based on semantics
-        target_text = self._generate_target_text(source_text, target_semantics, transformation_type)
+        target_text = self._generate_target_text(
+            source_text, target_semantics, transformation_type
+        )
 
         # Encode target text
         target_embedding = self.encode_text(target_text, include_trinity_vector=True)
 
         # Calculate semantic distance
-        semantic_distance = 1 - self.compute_semantic_similarity(source_text, target_text)
+        semantic_distance = 1 - self.compute_semantic_similarity(
+            source_text, target_text
+        )
 
         # Verify truth preservation
         truth_preservation = 1.0
         verification_proof = {"status": "assumed_valid"}
 
         if verify_truth_preservation:
-            truth_preservation = self._verify_truth_preservation(source_embedding, target_embedding)
+            truth_preservation = self._verify_truth_preservation(
+                source_embedding, target_embedding
+            )
             verification_proof = {
-                "status": "verified"
-                if truth_preservation >= self.verification_bounds["truth_preservation_threshold"]
-                else "failed",
+                "status": (
+                    "verified"
+                    if truth_preservation
+                    >= self.verification_bounds["truth_preservation_threshold"]
+                    else "failed"
+                ),
                 "truth_score": truth_preservation,
                 "semantic_distance": semantic_distance,
                 "transformation_type": transformation_type,
@@ -439,7 +479,10 @@ class UnifiedSemanticTransformer:
         )
 
     def _generate_target_text(
-        self, source_text: str, target_semantics: Dict[str, Any], transformation_type: str
+        self,
+        source_text: str,
+        target_semantics: Dict[str, Any],
+        transformation_type: str,
     ) -> str:
         """Generate target text based on semantic transformation requirements"""
         # Simple template-based transformation (could be enhanced with language models)
@@ -501,7 +544,11 @@ class UnifiedSemanticTransformer:
         return max(0, min(1, truth_preservation))
 
     def semantic_search(
-        self, query: str, corpus: List[str], top_k: int = 5, use_trinity_ranking: bool = True
+        self,
+        query: str,
+        corpus: List[str],
+        top_k: int = 5,
+        use_trinity_ranking: bool = True,
     ) -> List[Tuple[str, float, Dict[str, Any]]]:
         """
         Perform semantic search with trinity vector ranking.
@@ -516,7 +563,9 @@ class UnifiedSemanticTransformer:
             List of (text, similarity_score, metadata) tuples
         """
         # Encode query
-        query_embedding = self.encode_text(query, include_trinity_vector=use_trinity_ranking)
+        query_embedding = self.encode_text(
+            query, include_trinity_vector=use_trinity_ranking
+        )
 
         # Score all corpus texts
         results = []
@@ -525,7 +574,10 @@ class UnifiedSemanticTransformer:
                 query, text, use_trinity_alignment=use_trinity_ranking
             )
 
-            metadata = {"verification_status": "scored", "trinity_alignment": use_trinity_ranking}
+            metadata = {
+                "verification_status": "scored",
+                "trinity_alignment": use_trinity_ranking,
+            }
 
             results.append((text, similarity, metadata))
 
@@ -551,21 +603,21 @@ class UnifiedSemanticTransformer:
 def encode_semantics(trinity_vector: Dict[str, Any], iel_bundle: Dict[str, Any]) -> Any:
     """
     Encode semantics from Trinity vector and IEL bundle into embedding representation.
-    
+
     Args:
         trinity_vector: Trinity reasoning output with existence/goodness/truth values
         iel_bundle: IEL unified bundle with reasoning chains
-        
+
     Returns:
         Embedding-like object with shape attribute for semantic representation
     """
     try:
         # Initialize transformer
         transformer = UnifiedSemanticTransformer()
-        
+
         # Extract semantic content from trinity vector and IEL bundle
         semantic_texts = []
-        
+
         # Extract from trinity vector metadata/content
         if isinstance(trinity_vector, dict):
             for key, value in trinity_vector.items():
@@ -573,7 +625,7 @@ def encode_semantics(trinity_vector: Dict[str, Any], iel_bundle: Dict[str, Any])
                     semantic_texts.append(value)
                 elif key in ["description", "content", "text", "reasoning"]:
                     semantic_texts.append(str(value))
-        
+
         # Extract from IEL bundle reasoning chains
         if isinstance(iel_bundle, dict) and "reasoning_chains" in iel_bundle:
             chains = iel_bundle["reasoning_chains"]
@@ -584,66 +636,77 @@ def encode_semantics(trinity_vector: Dict[str, Any], iel_bundle: Dict[str, Any])
                             semantic_texts.append(str(chain["content"]))
                         if "reasoning" in chain:
                             semantic_texts.append(str(chain["reasoning"]))
-        
+
         # Fallback semantic content if none found
         if not semantic_texts:
             trinity_str = f"existence:{trinity_vector.get('existence', 0.5)} goodness:{trinity_vector.get('goodness', 0.5)} truth:{trinity_vector.get('truth', 0.5)}"
             semantic_texts = [trinity_str]
-        
+
         # Combine semantic texts for encoding
         combined_text = " ".join(semantic_texts[:3])  # Limit to first 3 for performance
-        
+
         # Create embedding with Trinity vector integration
         try:
-            embedding_result = transformer.encode_text(combined_text, include_trinity_vector=True)
-            
+            embedding_result = transformer.encode_text(
+                combined_text, include_trinity_vector=True
+            )
+
             # Create wrapper object with shape attribute
             class SemanticEmbedding:
                 def __init__(self, embedding_data):
                     self.embedding_data = embedding_data
-                    if hasattr(embedding_data, 'embedding_vector') and embedding_data.embedding_vector is not None:
+                    if (
+                        hasattr(embedding_data, "embedding_vector")
+                        and embedding_data.embedding_vector is not None
+                    ):
                         self.shape = embedding_data.embedding_vector.shape
                     else:
                         # Estimate shape based on text content
-                        self.shape = (min(384, len(combined_text.split())), )  # Typical transformer dimension
-                    
+                        self.shape = (
+                            min(384, len(combined_text.split())),
+                        )  # Typical transformer dimension
+
                 def __repr__(self):
                     return f"SemanticEmbedding(shape={self.shape})"
-            
+
             return SemanticEmbedding(embedding_result)
-            
+
         except Exception as e:
             # Fallback embedding representation
             class FallbackEmbedding:
                 def __init__(self, text_length):
-                    self.shape = (text_length % 384 + 1, )  # Fallback shape based on text
+                    self.shape = (
+                        text_length % 384 + 1,
+                    )  # Fallback shape based on text
                     self.fallback = True
-                
+
                 def __repr__(self):
                     return f"FallbackEmbedding(shape={self.shape})"
-            
+
             return FallbackEmbedding(len(combined_text))
-            
+
     except Exception as e:
         logging.error(f"Semantic encoding failed: {e}")
+
         # Return minimal fallback embedding
         class ErrorEmbedding:
             def __init__(self):
-                self.shape = (64, )  # Minimal default shape
+                self.shape = (64,)  # Minimal default shape
                 self.error = True
-            
+
             def __repr__(self):
                 return f"ErrorEmbedding(shape={self.shape})"
-        
+
         return ErrorEmbedding()
+
 
 def detect_concept_drift(embeddings: Any) -> Dict[str, Any]:
     """
     Detect concept drift in semantic embeddings.
-    
+
     Args:
         embeddings: Embedding representation from encode_semantics
-        
+
     Returns:
         Dictionary with drift_detected boolean and drift metrics
     """
@@ -652,12 +715,12 @@ def detect_concept_drift(embeddings: Any) -> Dict[str, Any]:
         embedding_shape = getattr(embeddings, "shape", (0,))
         is_fallback = getattr(embeddings, "fallback", False)
         is_error = getattr(embeddings, "error", False)
-        
+
         # Basic drift detection heuristics
         drift_detected = False
         drift_delta = 0.0
         drift_confidence = 1.0
-        
+
         # Check for error conditions that indicate drift
         if is_error:
             drift_detected = True
@@ -670,7 +733,7 @@ def detect_concept_drift(embeddings: Any) -> Dict[str, Any]:
         else:
             # Analyze embedding characteristics for drift indicators
             embedding_size = embedding_shape[0] if embedding_shape else 0
-            
+
             # Drift heuristics based on embedding properties
             if embedding_size < 32:  # Very small embeddings indicate potential issues
                 drift_detected = True
@@ -685,12 +748,12 @@ def detect_concept_drift(embeddings: Any) -> Dict[str, Any]:
                 # Use embedding size variance as drift signal
                 expected_size = 384  # Typical transformer embedding size
                 size_variance = abs(embedding_size - expected_size) / expected_size
-                
+
                 if size_variance > 0.2:  # 20% variance threshold
                     drift_detected = True
                     drift_delta = min(0.5, size_variance)
                     drift_confidence = 0.7
-        
+
         # Compile drift report
         drift_report = {
             "drift_detected": drift_detected,
@@ -700,26 +763,32 @@ def detect_concept_drift(embeddings: Any) -> Dict[str, Any]:
                 "shape": embedding_shape,
                 "size": embedding_shape[0] if embedding_shape else 0,
                 "is_fallback": is_fallback,
-                "is_error": is_error
+                "is_error": is_error,
             },
             "drift_indicators": {
-                "size_anomaly": embedding_shape[0] < 32 or embedding_shape[0] > 512 if embedding_shape else False,
+                "size_anomaly": (
+                    embedding_shape[0] < 32 or embedding_shape[0] > 512
+                    if embedding_shape
+                    else False
+                ),
                 "fallback_mode": is_fallback,
-                "error_mode": is_error
+                "error_mode": is_error,
             },
             "meta": {
                 "detection_method": "heuristic_analysis",
-                "detection_timestamp": datetime.now().isoformat()
-            }
+                "detection_timestamp": datetime.now().isoformat(),
+            },
         }
-        
+
         if drift_detected:
-            logging.warning(f"Concept drift detected: delta={drift_delta:.3f}, confidence={drift_confidence:.3f}")
+            logging.warning(
+                f"Concept drift detected: delta={drift_delta:.3f}, confidence={drift_confidence:.3f}"
+            )
         else:
             logging.info("No concept drift detected")
-        
+
         return drift_report
-        
+
     except Exception as e:
         logging.error(f"Concept drift detection failed: {e}")
         # Return error drift report
@@ -730,11 +799,12 @@ def detect_concept_drift(embeddings: Any) -> Dict[str, Any]:
             "error": str(e),
             "meta": {
                 "detection_method": "error_fallback",
-                "detection_timestamp": datetime.now().isoformat()
-            }
+                "detection_timestamp": datetime.now().isoformat(),
+            },
         }
 
-# Example usage and testing functions  
+
+# Example usage and testing functions
 def example_semantic_transformation():
     """Example of unified semantic transformation with trinity integration"""
 
@@ -798,7 +868,8 @@ def example_semantic_transformation():
 if __name__ == "__main__":
     # Configure logging
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     # Run example

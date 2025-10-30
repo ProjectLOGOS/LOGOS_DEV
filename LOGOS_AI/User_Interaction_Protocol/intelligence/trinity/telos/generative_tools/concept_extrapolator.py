@@ -3,11 +3,13 @@
 import random
 from typing import Any, Dict, List
 
+
 class Extrapolator:
     """
     Lightweight synthetic node generator:
     samples existing nodes, recombines payload text.
     """
+
     def __init__(self, generator):
         self.generator = generator
 
@@ -20,10 +22,10 @@ class Extrapolator:
         """Combine text from sampled node payloads to form a new payload."""
         words = []
         for node in samples:
-            payload = node.get('payload')
+            payload = node.get("payload")
             if isinstance(payload, str):
                 words.extend(payload.split())
         random.shuffle(words)
         # Take first 10 words or all
-        text = ' '.join(words[:10])
-        return {'text': text or 'synthetic_node'}
+        text = " ".join(words[:10])
+        return {"text": text or "synthetic_node"}

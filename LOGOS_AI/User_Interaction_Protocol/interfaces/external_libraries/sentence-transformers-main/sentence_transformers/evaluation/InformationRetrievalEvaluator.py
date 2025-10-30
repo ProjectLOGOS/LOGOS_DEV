@@ -175,8 +175,12 @@ class InformationRetrievalEvaluator(SentenceEvaluator):
         self.name = name
         self.write_csv = write_csv
         self.score_functions = score_functions
-        self.score_function_names = sorted(list(self.score_functions.keys())) if score_functions else []
-        self.main_score_function = SimilarityFunction(main_score_function) if main_score_function else None
+        self.score_function_names = (
+            sorted(list(self.score_functions.keys())) if score_functions else []
+        )
+        self.main_score_function = (
+            SimilarityFunction(main_score_function) if main_score_function else None
+        )
         self.truncate_dim = truncate_dim
 
         if name:
@@ -188,7 +192,9 @@ class InformationRetrievalEvaluator(SentenceEvaluator):
         self._append_csv_headers(self.score_function_names)
         self.write_predictions = write_predictions
         if self.write_predictions:
-            self.predictions_file = "Information-Retrieval_evaluation" + name + "_predictions.jsonl"
+            self.predictions_file = (
+                "Information-Retrieval_evaluation" + name + "_predictions.jsonl"
+            )
 
     def _append_csv_headers(self, score_function_names):
         for score_name in score_function_names:
@@ -227,7 +233,9 @@ class InformationRetrievalEvaluator(SentenceEvaluator):
         if self.truncate_dim is not None:
             out_txt += f" (truncated to {self.truncate_dim})"
 
-        logger.info(f"Information Retrieval Evaluation of the model on the {self.name} dataset{out_txt}:")
+        logger.info(
+            f"Information Retrieval Evaluation of the model on the {self.name} dataset{out_txt}:"
+        )
 
         if self.score_functions is None:
             self.score_functions = {model.similarity_fn_name: model.similarity}
@@ -272,12 +280,17 @@ class InformationRetrievalEvaluator(SentenceEvaluator):
         if not self.primary_metric:
             if self.main_score_function is None:
                 score_function = max(
-                    [(name, scores[name]["ndcg@k"][max(self.ndcg_at_k)]) for name in self.score_function_names],
+                    [
+                        (name, scores[name]["ndcg@k"][max(self.ndcg_at_k)])
+                        for name in self.score_function_names
+                    ],
                     key=lambda x: x[1],
                 )[0]
                 self.primary_metric = f"{score_function}_ndcg@{max(self.ndcg_at_k)}"
             else:
-                self.primary_metric = f"{self.main_score_function.value}_ndcg@{max(self.ndcg_at_k)}"
+                self.primary_metric = (
+                    f"{self.main_score_function.value}_ndcg@{max(self.ndcg_at_k)}"
+                )
 
         metrics = {
             f"{score_function}_{metric_name.replace('@k', '@' + str(k))}": value
@@ -322,9 +335,15 @@ class InformationRetrievalEvaluator(SentenceEvaluator):
 
         # Iterate over chunks of the corpus
         for corpus_start_idx in trange(
-            0, len(self.corpus), self.corpus_chunk_size, desc="Corpus Chunks", disable=not self.show_progress_bar
+            0,
+            len(self.corpus),
+            self.corpus_chunk_size,
+            desc="Corpus Chunks",
+            disable=not self.show_progress_bar,
         ):
-            corpus_end_idx = min(corpus_start_idx + self.corpus_chunk_size, len(self.corpus))
+            corpus_end_idx = min(
+                corpus_start_idx + self.corpus_chunk_size, len(self.corpus)
+            )
 
             # Encode chunk of corpus
             if corpus_embeddings is None:
@@ -336,7 +355,9 @@ class InformationRetrievalEvaluator(SentenceEvaluator):
                     prompt=self.corpus_prompt,
                 )
             else:
-                sub_corpus_embeddings = corpus_embeddings[corpus_start_idx:corpus_end_idx]
+                sub_corpus_embeddings = corpus_embeddings[
+                    corpus_start_idx:corpus_end_idx
+                ]
 
             # Compute cosine similarites
             for name, score_function in self.score_functions.items():
@@ -344,14 +365,19 @@ class InformationRetrievalEvaluator(SentenceEvaluator):
 
                 # Get top-k values
                 pair_scores_top_k_values, pair_scores_top_k_idx = torch.topk(
-                    pair_scores, min(max_k, len(pair_scores[0])), dim=1, largest=True, sorted=False
+                    pair_scores,
+                    min(max_k, len(pair_scores[0])),
+                    dim=1,
+                    largest=True,
+                    sorted=False,
                 )
                 pair_scores_top_k_values = pair_scores_top_k_values.cpu().tolist()
                 pair_scores_top_k_idx = pair_scores_top_k_idx.cpu().tolist()
 
                 for query_itr in range(len(query_embeddings)):
                     for sub_corpus_id, score in zip(
-                        pair_scores_top_k_idx[query_itr], pair_scores_top_k_values[query_itr]
+                        pair_scores_top_k_idx[query_itr],
+                        pair_scores_top_k_values[query_itr],
                     ):
                         corpus_id = self.corpus_ids[corpus_start_idx + sub_corpus_id]
                         # NOTE: TREC/BEIR/MTEB skips cases where the corpus_id is the same as the query_id, e.g.:
@@ -361,19 +387,28 @@ class InformationRetrievalEvaluator(SentenceEvaluator):
                         # sets of integers from 0 as query_ids and corpus_ids.
                         if len(queries_result_list[name][query_itr]) < max_k:
                             # heaqp tracks the quantity of the first element in the tuple
-                            heapq.heappush(queries_result_list[name][query_itr], (score, corpus_id))
+                            heapq.heappush(
+                                queries_result_list[name][query_itr], (score, corpus_id)
+                            )
                         else:
-                            heapq.heappushpop(queries_result_list[name][query_itr], (score, corpus_id))
+                            heapq.heappushpop(
+                                queries_result_list[name][query_itr], (score, corpus_id)
+                            )
 
         for name in queries_result_list:
             for query_itr in range(len(queries_result_list[name])):
                 for doc_itr in range(len(queries_result_list[name][query_itr])):
                     score, corpus_id = queries_result_list[name][query_itr][doc_itr]
-                    queries_result_list[name][query_itr][doc_itr] = {"corpus_id": corpus_id, "score": score}
+                    queries_result_list[name][query_itr][doc_itr] = {
+                        "corpus_id": corpus_id,
+                        "score": score,
+                    }
 
         if self.write_predictions and output_path is not None:
             for name in queries_result_list:
-                base_filename = self.predictions_file.replace(".jsonl", f"_{name}.jsonl")
+                base_filename = self.predictions_file.replace(
+                    ".jsonl", f"_{name}.jsonl"
+                )
                 json_path = os.path.join(output_path, base_filename)
                 mode = "w"  # Always create a new file for each score function
 
@@ -384,7 +419,9 @@ class InformationRetrievalEvaluator(SentenceEvaluator):
                         results = queries_result_list[name][query_itr]
 
                         # Sort results by score in descending order
-                        results = sorted(results, key=lambda x: x["score"], reverse=True)
+                        results = sorted(
+                            results, key=lambda x: x["score"], reverse=True
+                        )
 
                         prediction = {
                             "query_id": query_id,
@@ -398,7 +435,10 @@ class InformationRetrievalEvaluator(SentenceEvaluator):
         logger.info(f"Corpus: {len(self.corpus)}\n")
 
         # Compute scores
-        scores = {name: self.compute_metrics(queries_result_list[name]) for name in self.score_functions}
+        scores = {
+            name: self.compute_metrics(queries_result_list[name])
+            for name in self.score_functions
+        }
 
         # Output
         for name in self.score_function_names:
@@ -447,7 +487,9 @@ class InformationRetrievalEvaluator(SentenceEvaluator):
             query_id = self.queries_ids[query_itr]
 
             # Sort scores
-            top_hits = sorted(queries_result_list[query_itr], key=lambda x: x["score"], reverse=True)
+            top_hits = sorted(
+                queries_result_list[query_itr], key=lambda x: x["score"], reverse=True
+            )
             query_relevant_docs = self.relevant_docs[query_id]
 
             # Accuracy@k - We count the result correct, if at least one relevant doc is across the top-k documents
@@ -477,13 +519,14 @@ class InformationRetrievalEvaluator(SentenceEvaluator):
             # NDCG@k
             for k_val in self.ndcg_at_k:
                 predicted_relevance = [
-                    1 if top_hit["corpus_id"] in query_relevant_docs else 0 for top_hit in top_hits[0:k_val]
+                    1 if top_hit["corpus_id"] in query_relevant_docs else 0
+                    for top_hit in top_hits[0:k_val]
                 ]
                 true_relevances = [1] * len(query_relevant_docs)
 
-                ndcg_value = self.compute_dcg_at_k(predicted_relevance, k_val) / self.compute_dcg_at_k(
-                    true_relevances, k_val
-                )
+                ndcg_value = self.compute_dcg_at_k(
+                    predicted_relevance, k_val
+                ) / self.compute_dcg_at_k(true_relevances, k_val)
                 ndcg[k_val].append(ndcg_value)
 
             # MAP@k
@@ -531,7 +574,9 @@ class InformationRetrievalEvaluator(SentenceEvaluator):
             logger.info("Accuracy@{}: {:.2f}%".format(k, scores["accuracy@k"][k] * 100))
 
         for k in scores["precision@k"]:
-            logger.info("Precision@{}: {:.2f}%".format(k, scores["precision@k"][k] * 100))
+            logger.info(
+                "Precision@{}: {:.2f}%".format(k, scores["precision@k"][k] * 100)
+            )
 
         for k in scores["recall@k"]:
             logger.info("Recall@{}: {:.2f}%".format(k, scores["recall@k"][k] * 100))

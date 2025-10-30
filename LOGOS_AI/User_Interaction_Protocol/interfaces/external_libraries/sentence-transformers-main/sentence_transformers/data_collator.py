@@ -24,13 +24,21 @@ class SentenceTransformerDataCollator:
 
     tokenize_fn: Callable
     valid_label_columns: list[str] = field(default_factory=lambda: ["label", "score"])
-    router_mapping: dict[str, str] | dict[str, dict[str, str]] | None = field(default_factory=dict, repr=False)
-    prompts: dict[str, str] | dict[str, dict[str, str]] | None = field(default_factory=dict, repr=False)
+    router_mapping: dict[str, str] | dict[str, dict[str, str]] | None = field(
+        default_factory=dict, repr=False
+    )
+    prompts: dict[str, str] | dict[str, dict[str, str]] | None = field(
+        default_factory=dict, repr=False
+    )
     include_prompt_lengths: bool = field(default=False, repr=False)
     all_special_ids: set[int] = field(default_factory=set, repr=False)
 
-    _prompt_length_mapping: dict[str, int] = field(default_factory=dict, init=False, repr=False)
-    _warned_columns: set[tuple[str]] = field(default_factory=set, init=False, repr=False)
+    _prompt_length_mapping: dict[str, int] = field(
+        default_factory=dict, init=False, repr=False
+    )
+    _warned_columns: set[tuple[str]] = field(
+        default_factory=set, init=False, repr=False
+    )
 
     def __call__(self, features: list[dict[str, Any]]) -> dict[str, torch.Tensor]:
         column_names = list(features[0].keys())
@@ -153,7 +161,10 @@ class SentenceTransformerDataCollator:
             "contradiction": 2,
         }
         for column_name, expected_idx in column_name_to_expected_idx.items():
-            if column_name in column_names and column_names.index(column_name) != expected_idx:
+            if (
+                column_name in column_names
+                and column_names.index(column_name) != expected_idx
+            ):
                 if column_name in ("anchor", "positive", "negative"):
                     proposed_fix_columns = ["anchor", "positive", "negative"]
                 elif column_name in ("question", "answer"):

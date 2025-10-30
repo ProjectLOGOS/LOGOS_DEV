@@ -62,7 +62,9 @@ def semantic_search_qdrant(
         from qdrant_client import QdrantClient
         from qdrant_client.http import models
     except ImportError:
-        raise ImportError("Please install the Qdrant client with `pip install qdrant-client` to use this function.")
+        raise ImportError(
+            "Please install the Qdrant client with `pip install qdrant-client` to use this function."
+        )
 
     # Validate input sparse tensors
     if not query_embeddings.is_sparse or query_embeddings.layout != torch.sparse_coo:
@@ -70,9 +72,14 @@ def semantic_search_qdrant(
 
     if corpus_index is None:
         if corpus_embeddings is None:
-            raise ValueError("Either corpus_embeddings or corpus_index must be provided")
+            raise ValueError(
+                "Either corpus_embeddings or corpus_index must be provided"
+            )
 
-        if not corpus_embeddings.is_sparse or corpus_embeddings.layout != torch.sparse_coo:
+        if (
+            not corpus_embeddings.is_sparse
+            or corpus_embeddings.layout != torch.sparse_coo
+        ):
             raise ValueError("Corpus embeddings must be a sparse COO tensor")
 
         # Create new Qdrant client and collection
@@ -82,7 +89,11 @@ def semantic_search_qdrant(
         client.create_collection(
             collection_name=f"{collection_name}",
             vectors_config={},
-            sparse_vectors_config={"text": models.SparseVectorParams(index=models.SparseIndexParams(on_disk=False))},
+            sparse_vectors_config={
+                "text": models.SparseVectorParams(
+                    index=models.SparseIndexParams(on_disk=False)
+                )
+            },
         )
 
         corpus = corpus_embeddings.coalesce()
@@ -105,7 +116,9 @@ def semantic_search_qdrant(
             vec_indices = indices_arr[1][start:end].tolist()
             vec_values = values_arr[start:end].tolist()
 
-            vector_data = {"text": models.SparseVector(indices=vec_indices, values=vec_values)}
+            vector_data = {
+                "text": models.SparseVector(indices=vec_indices, values=vec_values)
+            }
             vectors_batch.append(vector_data)
 
             if len(vectors_batch) >= batch_size or i == num_vectors - 1:
@@ -134,7 +147,9 @@ def semantic_search_qdrant(
             q_values = query_embeddings.coalesce().values().cpu().numpy().tolist()
         else:
             mask = query_embeddings.coalesce().indices()[0].cpu().numpy() == q_idx
-            q_indices = query_embeddings.coalesce().indices()[1][mask].cpu().numpy().tolist()
+            q_indices = (
+                query_embeddings.coalesce().indices()[1][mask].cpu().numpy().tolist()
+            )
             q_values = query_embeddings.coalesce().values()[mask].cpu().numpy().tolist()
 
         # Perform search
@@ -146,7 +161,9 @@ def semantic_search_qdrant(
         ).points
 
         # Format results
-        formatted_results = [{"corpus_id": hit.id, "score": hit.score} for hit in search_results]
+        formatted_results = [
+            {"corpus_id": hit.id, "score": hit.score} for hit in search_results
+        ]
         all_results.append(formatted_results)
 
     search_time = time.time() - search_start_time
@@ -202,20 +219,28 @@ def semantic_search_elasticsearch(
 
     # Validate input sparse tensors
     if not isinstance(query_embeddings_decoded, list) or not all(
-        isinstance(item, list) and all(isinstance(t, tuple) and len(t) == 2 for t in item)
+        isinstance(item, list)
+        and all(isinstance(t, tuple) and len(t) == 2 for t in item)
         for item in query_embeddings_decoded
     ):
-        raise ValueError("Query embeddings must be a list of lists in the format [[('token', value), ...], ...]")
+        raise ValueError(
+            "Query embeddings must be a list of lists in the format [[('token', value), ...], ...]"
+        )
 
     if corpus_index is None:
         if corpus_embeddings_decoded is None:
-            raise ValueError("Either corpus_embeddings_decoded or corpus_index must be provided")
+            raise ValueError(
+                "Either corpus_embeddings_decoded or corpus_index must be provided"
+            )
 
         if not isinstance(corpus_embeddings_decoded, list) or not all(
-            isinstance(item, list) and all(isinstance(t, tuple) and len(t) == 2 for t in item)
+            isinstance(item, list)
+            and all(isinstance(t, tuple) and len(t) == 2 for t in item)
             for item in corpus_embeddings_decoded
         ):
-            raise ValueError("Corpus embeddings must be a list of lists in the format [[('token', value), ...], ...]")
+            raise ValueError(
+                "Corpus embeddings must be a list of lists in the format [[('token', value), ...], ...]"
+            )
 
         es = Elasticsearch("http://localhost:9200", **kwargs)
         index_name = f"sparse_index_{int(time.time())}"
@@ -240,7 +265,9 @@ def semantic_search_elasticsearch(
         num_docs = len(corpus_embeddings_decoded)
 
         batch_size = 1000
-        for start_idx in tqdm(range(0, num_docs, batch_size), desc="Upserting embeddings"):
+        for start_idx in tqdm(
+            range(0, num_docs, batch_size), desc="Upserting embeddings"
+        ):
             end_idx = min(start_idx + batch_size, num_docs)
             actions = []
 
@@ -280,12 +307,26 @@ def semantic_search_elasticsearch(
         # Build query using rank_feature queries
         should_clauses = []
         for token, weight in query_tokens.items():
-            should_clauses.append({"rank_feature": {"field": f"tokens.{token}", "saturation": {}, "boost": weight}})
-        query = {"size": top_k, "query": {"bool": {"should": should_clauses, "minimum_should_match": 1}}}
+            should_clauses.append(
+                {
+                    "rank_feature": {
+                        "field": f"tokens.{token}",
+                        "saturation": {},
+                        "boost": weight,
+                    }
+                }
+            )
+        query = {
+            "size": top_k,
+            "query": {"bool": {"should": should_clauses, "minimum_should_match": 1}},
+        }
         result = es.search(index=index_name, body=query)
 
         # Format results
-        formatted = [{"corpus_id": int(hit["_id"]), "score": hit["_score"]} for hit in result["hits"]["hits"]]
+        formatted = [
+            {"corpus_id": int(hit["_id"]), "score": hit["_score"]}
+            for hit in result["hits"]["hits"]
+        ]
         all_results.append(formatted)
 
     search_time = time.time() - search_start_time
@@ -341,7 +382,9 @@ def semantic_search_seismic(
     try:
         from seismic import SeismicDataset, SeismicIndex, get_seismic_string
     except ImportError:
-        raise ImportError("Please install Seismic with `pip install pyseismic-lsr` to use this function.")
+        raise ImportError(
+            "Please install Seismic with `pip install pyseismic-lsr` to use this function."
+        )
 
     if index_kwargs is None:
         index_kwargs = {}
@@ -352,20 +395,28 @@ def semantic_search_seismic(
 
     # Validate input sparse tensors
     if not isinstance(query_embeddings_decoded, list) or not all(
-        isinstance(item, list) and all(isinstance(t, tuple) and len(t) == 2 for t in item)
+        isinstance(item, list)
+        and all(isinstance(t, tuple) and len(t) == 2 for t in item)
         for item in query_embeddings_decoded
     ):
-        raise ValueError("Query embeddings must be a list of lists in the format [[('token', value), ...], ...]")
+        raise ValueError(
+            "Query embeddings must be a list of lists in the format [[('token', value), ...], ...]"
+        )
 
     if corpus_index is None:
         if corpus_embeddings_decoded is None:
-            raise ValueError("Either corpus_embeddings_decoded or corpus_index must be provided")
+            raise ValueError(
+                "Either corpus_embeddings_decoded or corpus_index must be provided"
+            )
 
         if not isinstance(corpus_embeddings_decoded, list) or not all(
-            isinstance(item, list) and all(isinstance(t, tuple) and len(t) == 2 for t in item)
+            isinstance(item, list)
+            and all(isinstance(t, tuple) and len(t) == 2 for t in item)
             for item in corpus_embeddings_decoded
         ):
-            raise ValueError("Corpus embeddings must be a list of lists in the format [[('token', value), ...], ...]")
+            raise ValueError(
+                "Corpus embeddings must be a list of lists in the format [[('token', value), ...], ...]"
+            )
 
         # Create new Seismic dataset
         dataset = SeismicDataset()
@@ -413,7 +464,10 @@ def semantic_search_seismic(
 
     # Format results
     all_results = [
-        [{"corpus_id": int(corpus_id), "score": score} for query_idx, score, corpus_id in query_result]
+        [
+            {"corpus_id": int(corpus_id), "score": score}
+            for query_idx, score, corpus_id in query_result
+        ]
         for query_result in results
     ]
 
@@ -471,20 +525,28 @@ def semantic_search_opensearch(
 
     # Validate input sparse tensors
     if not isinstance(query_embeddings_decoded, list) or not all(
-        isinstance(item, list) and all(isinstance(t, tuple) and len(t) == 2 for t in item)
+        isinstance(item, list)
+        and all(isinstance(t, tuple) and len(t) == 2 for t in item)
         for item in query_embeddings_decoded
     ):
-        raise ValueError("Query embeddings must be a list of lists in the format [[('token', value), ...], ...]")
+        raise ValueError(
+            "Query embeddings must be a list of lists in the format [[('token', value), ...], ...]"
+        )
 
     if corpus_index is None:
         if corpus_embeddings_decoded is None:
-            raise ValueError("Either corpus_embeddings_decoded or corpus_index must be provided")
+            raise ValueError(
+                "Either corpus_embeddings_decoded or corpus_index must be provided"
+            )
 
         if not isinstance(corpus_embeddings_decoded, list) or not all(
-            isinstance(item, list) and all(isinstance(t, tuple) and len(t) == 2 for t in item)
+            isinstance(item, list)
+            and all(isinstance(t, tuple) and len(t) == 2 for t in item)
             for item in corpus_embeddings_decoded
         ):
-            raise ValueError("Corpus embeddings must be a list of lists in the format [[('token', value), ...], ...]")
+            raise ValueError(
+                "Corpus embeddings must be a list of lists in the format [[('token', value), ...], ...]"
+            )
 
         os_client = OpenSearch("http://localhost:9200", **kwargs)
         index_name = f"sparse_index_{int(time.time())}"
@@ -509,7 +571,9 @@ def semantic_search_opensearch(
         num_docs = len(corpus_embeddings_decoded)
 
         batch_size = 1000
-        for start_idx in tqdm(range(0, num_docs, batch_size), desc="Upserting embeddings"):
+        for start_idx in tqdm(
+            range(0, num_docs, batch_size), desc="Upserting embeddings"
+        ):
             end_idx = min(start_idx + batch_size, num_docs)
             actions = []
 
@@ -539,12 +603,18 @@ def semantic_search_opensearch(
     for q_idx in range(len(query_embeddings_decoded)):
         # Build the neural_sparse query
         query_tokens = dict(query_embeddings_decoded[q_idx])
-        query = {"size": top_k, "query": {"neural_sparse": {"tokens": {"query_tokens": query_tokens}}}}
+        query = {
+            "size": top_k,
+            "query": {"neural_sparse": {"tokens": {"query_tokens": query_tokens}}},
+        }
 
         result = os_client.search(index=index_name, body=query)
 
         # Format results
-        formatted = [{"corpus_id": int(hit["_id"]), "score": hit["_score"]} for hit in result["hits"]["hits"]]
+        formatted = [
+            {"corpus_id": int(hit["_id"]), "score": hit["_score"]}
+            for hit in result["hits"]["hits"]
+        ]
         all_results.append(formatted)
 
     search_time = time.time() - search_start_time

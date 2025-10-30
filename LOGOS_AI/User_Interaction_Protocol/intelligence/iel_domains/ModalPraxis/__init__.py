@@ -12,4 +12,4 @@ from .modal_logic import ModalLogic
 from .modal_reasoner import ModalReasoner
 from .multi_modal_system import MultiModalSystem
 
-__all__ = ['ModalLogic', 'ModalReasoner', 'MultiModalSystem']
+__all__ = ["ModalLogic", "ModalReasoner", "MultiModalSystem"]

@@ -5,7 +5,7 @@ import json
 import math
 import os
 from datetime import datetime
-from typing import List, Dict, Tuple, Optional
+from typing import Dict, List, Optional, Tuple
 
 # Threshold for report acceptance (matches EGTC threshold logic at 3/4 = 0.75)
 CONFIDENCE_THRESHOLD = 0.755

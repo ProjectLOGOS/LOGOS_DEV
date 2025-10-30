@@ -20,7 +20,9 @@ class PXLClient:
         """
         try:
             response = requests.post(
-                f"{self.prover_url}/prove", json={"goal": goal}, timeout=self.timeout_sec
+                f"{self.prover_url}/prove",
+                json={"goal": goal},
+                timeout=self.timeout_sec,
             )
             response.raise_for_status()
             return response.json()
@@ -29,7 +31,11 @@ class PXLClient:
         except requests.exceptions.RequestException as e:
             return {"ok": False, "error": f"Network error: {str(e)}", "goal": goal}
         except json.JSONDecodeError:
-            return {"ok": False, "error": "Invalid JSON response from prover", "goal": goal}
+            return {
+                "ok": False,
+                "error": "Invalid JSON response from prover",
+                "goal": goal,
+            }
 
     def countermodel(self, goal: str) -> dict[str, Any]:
         """
@@ -38,7 +44,9 @@ class PXLClient:
         """
         try:
             response = requests.post(
-                f"{self.prover_url}/countermodel", json={"goal": goal}, timeout=self.timeout_sec
+                f"{self.prover_url}/countermodel",
+                json={"goal": goal},
+                timeout=self.timeout_sec,
             )
             response.raise_for_status()
             return response.json()
@@ -49,7 +57,11 @@ class PXLClient:
                 "goal": goal,
             }
         except requests.exceptions.RequestException as e:
-            return {"countermodel_found": False, "error": f"Network error: {str(e)}", "goal": goal}
+            return {
+                "countermodel_found": False,
+                "error": f"Network error: {str(e)}",
+                "goal": goal,
+            }
         except json.JSONDecodeError:
             return {
                 "countermodel_found": False,
@@ -60,7 +72,9 @@ class PXLClient:
     def health_check(self) -> dict[str, Any]:
         """Check if PXL server is healthy and get kernel hash"""
         try:
-            response = requests.get(f"{self.prover_url}/health", timeout=self.timeout_sec)
+            response = requests.get(
+                f"{self.prover_url}/health", timeout=self.timeout_sec
+            )
             response.raise_for_status()
             return response.json()
         except Exception as e:

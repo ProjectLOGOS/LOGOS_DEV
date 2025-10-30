@@ -7,4 +7,4 @@ Renamed from tests/ per refactor requirements.
 
 from test_pipeline import run_validation, validate_workflow_integration
 
-__all__ = ['run_validation', 'validate_workflow_integration']
+__all__ = ["run_validation", "validate_workflow_integration"]

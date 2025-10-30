@@ -23,7 +23,7 @@ __version__ = "1.0.0"
 __author__ = "LOGOS AGI Development Team"
 __subsystem__ = "TELOS"
 
-from .telos_worker import TelosWorker, TelosCoreEngine
+from .telos_worker import TelosCoreEngine, TelosWorker
 
 __all__ = ["TelosWorker", "TelosCoreEngine"]
 

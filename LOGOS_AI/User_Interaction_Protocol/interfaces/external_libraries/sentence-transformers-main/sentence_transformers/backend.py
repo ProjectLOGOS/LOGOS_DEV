@@ -20,7 +20,10 @@ if TYPE_CHECKING:
     except ImportError:
         pass
     try:
-        from optimum.onnxruntime.configuration import OptimizationConfig, QuantizationConfig
+        from optimum.onnxruntime.configuration import (
+            OptimizationConfig,
+            QuantizationConfig,
+        )
     except ImportError:
         pass
 
@@ -71,7 +74,11 @@ def export_optimized_onnx_model(
     from sentence_transformers import CrossEncoder, SentenceTransformer
 
     try:
-        from optimum.onnxruntime import ORTModelForFeatureExtraction, ORTModelForSequenceClassification, ORTOptimizer
+        from optimum.onnxruntime import (
+            ORTModelForFeatureExtraction,
+            ORTModelForSequenceClassification,
+            ORTOptimizer,
+        )
         from optimum.onnxruntime.configuration import AutoOptimizationConfig
     except ImportError:
         raise ImportError(
@@ -86,7 +93,9 @@ def export_optimized_onnx_model(
         and hasattr(model[0], "auto_model")
         and isinstance(model[0].auto_model, ORTModelForFeatureExtraction)
     )
-    viable_ce_model = isinstance(model, CrossEncoder) and isinstance(model.model, ORTModelForSequenceClassification)
+    viable_ce_model = isinstance(model, CrossEncoder) and isinstance(
+        model.model, ORTModelForSequenceClassification
+    )
     if not (viable_st_model or viable_ce_model):
         raise ValueError(
             'The model must be a Transformer-based SentenceTransformer or CrossEncoder model loaded with `backend="onnx"`.'
@@ -111,7 +120,9 @@ def export_optimized_onnx_model(
         file_suffix = "optimized"
 
     save_or_push_to_hub_model(
-        export_function=lambda save_dir: optimizer.optimize(optimization_config, save_dir, file_suffix=file_suffix),
+        export_function=lambda save_dir: optimizer.optimize(
+            optimization_config, save_dir, file_suffix=file_suffix
+        ),
         export_function_name="export_optimized_onnx_model",
         config=optimization_config,
         model_name_or_path=model_name_or_path,
@@ -125,7 +136,9 @@ def export_optimized_onnx_model(
 
 def export_dynamic_quantized_onnx_model(
     model: SentenceTransformer | CrossEncoder,
-    quantization_config: QuantizationConfig | Literal["arm64", "avx2", "avx512", "avx512_vnni"],
+    quantization_config: (
+        QuantizationConfig | Literal["arm64", "avx2", "avx512", "avx512_vnni"]
+    ),
     model_name_or_path: str,
     push_to_hub: bool = False,
     create_pr: bool = False,
@@ -163,7 +176,11 @@ def export_dynamic_quantized_onnx_model(
     from sentence_transformers import CrossEncoder, SentenceTransformer
 
     try:
-        from optimum.onnxruntime import ORTModelForFeatureExtraction, ORTModelForSequenceClassification, ORTQuantizer
+        from optimum.onnxruntime import (
+            ORTModelForFeatureExtraction,
+            ORTModelForSequenceClassification,
+            ORTQuantizer,
+        )
         from optimum.onnxruntime.configuration import AutoQuantizationConfig
     except ImportError:
         raise ImportError(
@@ -178,7 +195,9 @@ def export_dynamic_quantized_onnx_model(
         and hasattr(model[0], "auto_model")
         and isinstance(model[0].auto_model, ORTModelForFeatureExtraction)
     )
-    viable_ce_model = isinstance(model, CrossEncoder) and isinstance(model.model, ORTModelForSequenceClassification)
+    viable_ce_model = isinstance(model, CrossEncoder) and isinstance(
+        model.model, ORTModelForSequenceClassification
+    )
     if not (viable_st_model or viable_ce_model):
         raise ValueError(
             'The model must be a Transformer-based SentenceTransformer or CrossEncoder model loaded with `backend="onnx"`.'
@@ -197,14 +216,21 @@ def export_dynamic_quantized_onnx_model(
             )
 
         quantization_config_name = quantization_config[:]
-        quantization_config = getattr(AutoQuantizationConfig, quantization_config)(is_static=False)
-        file_suffix = file_suffix or f"{quantization_config.weights_dtype.name.lower()}_{quantization_config_name}"
+        quantization_config = getattr(AutoQuantizationConfig, quantization_config)(
+            is_static=False
+        )
+        file_suffix = (
+            file_suffix
+            or f"{quantization_config.weights_dtype.name.lower()}_{quantization_config_name}"
+        )
 
     if file_suffix is None:
         file_suffix = f"{quantization_config.weights_dtype.name.lower()}_quantized"
 
     save_or_push_to_hub_model(
-        export_function=lambda save_dir: quantizer.quantize(quantization_config, save_dir, file_suffix=file_suffix),
+        export_function=lambda save_dir: quantizer.quantize(
+            quantization_config, save_dir, file_suffix=file_suffix
+        ),
         export_function_name="export_dynamic_quantized_onnx_model",
         config=quantization_config,
         model_name_or_path=model_name_or_path,
@@ -288,7 +314,9 @@ def export_static_quantized_openvino_model(
         and hasattr(model[0], "auto_model")
         and isinstance(model[0].auto_model, OVModelForFeatureExtraction)
     )
-    viable_ce_model = isinstance(model, CrossEncoder) and isinstance(model.model, OVModelForSequenceClassification)
+    viable_ce_model = isinstance(model, CrossEncoder) and isinstance(
+        model.model, OVModelForSequenceClassification
+    )
     if not (viable_st_model or viable_ce_model):
         raise ValueError(
             'The model must be a Transformer-based SentenceTransformer or CrossEncoder model loaded with `backend="openvino"`.'
@@ -304,26 +332,40 @@ def export_static_quantized_openvino_model(
     ov_config = OVConfig(quantization_config=quantization_config)
     quantizer = OVQuantizer.from_pretrained(ov_model)
 
-    if any(param is not None for param in [dataset_name, dataset_config_name, dataset_split, column_name]) and not all(
-        param is not None for param in [dataset_name, dataset_config_name, dataset_split, column_name]
+    if any(
+        param is not None
+        for param in [dataset_name, dataset_config_name, dataset_split, column_name]
+    ) and not all(
+        param is not None
+        for param in [dataset_name, dataset_config_name, dataset_split, column_name]
     ):
         raise ValueError(
             "Either specify all of `dataset_name`, `dataset_config_name`, `dataset_split`, and `column_name`, or leave them all unspecified."
         )
 
     def preprocess_function(examples):
-        return model.tokenizer(examples, padding="max_length", max_length=384, truncation=True)
+        return model.tokenizer(
+            examples, padding="max_length", max_length=384, truncation=True
+        )
 
     dataset_name = dataset_name if dataset_name is not None else "glue"
-    dataset_config_name = dataset_config_name if dataset_config_name is not None else "sst2"
+    dataset_config_name = (
+        dataset_config_name if dataset_config_name is not None else "sst2"
+    )
     dataset_split = dataset_split if dataset_split is not None else "train"
     column_name = column_name if column_name is not None else "sentence"
     with disable_datasets_caching():
         calibration_dataset = quantizer.get_calibration_dataset(
             dataset_name=dataset_name,
             dataset_config_name=dataset_config_name,
-            preprocess_function=lambda examples: preprocess_function(examples[column_name]),
-            num_samples=quantization_config.num_samples if quantization_config is not None else 300,
+            preprocess_function=lambda examples: preprocess_function(
+                examples[column_name]
+            ),
+            num_samples=(
+                quantization_config.num_samples
+                if quantization_config is not None
+                else 300
+            ),
             dataset_split=dataset_split,
         )
 
@@ -368,7 +410,10 @@ def save_or_push_to_hub_model(
             save_dir = Path(save_dir) / backend
             # and we need to attach the file_suffix for both the .xml and .bin files
             shutil.move(save_dir / "openvino_model.xml", save_dir / file_name)
-            shutil.move(save_dir / "openvino_model.bin", (save_dir / file_name).with_suffix(".bin"))
+            shutil.move(
+                save_dir / "openvino_model.bin",
+                (save_dir / file_name).with_suffix(".bin"),
+            )
             save_dir = save_dir.as_posix()
 
         # Because we upload folders and save_dir now has unnecessary files (tokenizer.json, config.json, etc.),
@@ -384,7 +429,12 @@ def save_or_push_to_hub_model(
         if push_to_hub:
             commit_description = ""
             if create_pr:
-                opt_config_string = repr(config).replace("(", "(\n\t").replace(", ", ",\n\t").replace(")", "\n)")
+                opt_config_string = (
+                    repr(config)
+                    .replace("(", "(\n\t")
+                    .replace(", ", ",\n\t")
+                    .replace(")", "\n)")
+                )
                 if model is None or isinstance(model, SentenceTransformer):
                     commit_description = f"""\
 Hello!

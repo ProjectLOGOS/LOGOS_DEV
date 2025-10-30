@@ -265,7 +265,12 @@ def floatX(X):
         return np.asarray(X, dtype=pytensor.config.floatX)
 
 
-_conversion_map = {"float64": "int32", "float32": "int16", "float16": "int8", "float8": "int8"}
+_conversion_map = {
+    "float64": "int32",
+    "float32": "int16",
+    "float16": "int8",
+    "float8": "int8",
+}
 
 
 def intX(X):
@@ -346,7 +351,11 @@ def jacobian_diag(f, x):
         return grad(f[i], x)[i]
 
     return pytensor.scan(
-        grad_ii, sequences=[idx], n_steps=f.shape[0], non_sequences=[f, x], name="jacobian_diag"
+        grad_ii,
+        sequences=[idx],
+        n_steps=f.shape[0],
+        non_sequences=[f, x],
+        name="jacobian_diag",
     )[0]
 
 
@@ -414,7 +423,9 @@ def make_shared_replacements(point, vars, model):
     """
     othervars = set(model.value_vars) - set(vars)
     return {
-        var: pytensor.shared(point[var.name], var.name + "_shared", shape=var.type.shape)
+        var: pytensor.shared(
+            point[var.name], var.name + "_shared", shape=var.type.shape
+        )
         for var in othervars
     }
 
@@ -570,7 +581,9 @@ def join_nonshared_inputs(
         shape = point[var.name].shape
         arr_len = np.prod(shape, dtype=int)
         replacement_var = (
-            joined_inputs[last_idx : last_idx + arr_len].reshape(shape).astype(var.dtype)
+            joined_inputs[last_idx : last_idx + arr_len]
+            .reshape(shape)
+            .astype(var.dtype)
         )
         replace[var] = var.type.filter_variable(replacement_var)
         last_idx += arr_len
@@ -579,7 +592,8 @@ def join_nonshared_inputs(
         replace.update(shared_inputs)
 
     new_outputs = [
-        pytensor.clone_replace(output, replace, rebuild_strict=False) for output in outputs
+        pytensor.clone_replace(output, replace, rebuild_strict=False)
+        for output in outputs
     ]
     return new_outputs, joined_inputs
 
@@ -613,7 +627,9 @@ class CallableTensor:
         input: TensorVariable
         """
         (oldinput,) = inputvars(self.tensor)
-        return pytensor.clone_replace(self.tensor, {oldinput: input}, rebuild_strict=False)
+        return pytensor.clone_replace(
+            self.tensor, {oldinput: input}, rebuild_strict=False
+        )
 
 
 def ix_(*args):
@@ -637,7 +653,8 @@ def ix_(*args):
 
 def largest_common_dtype(tensors):
     dtypes = {
-        str(t.dtype) if hasattr(t, "dtype") else smartfloatX(np.asarray(t)).dtype for t in tensors
+        str(t.dtype) if hasattr(t, "dtype") else smartfloatX(np.asarray(t)).dtype
+        for t in tensors
     }
     return np.stack([np.ones((), dtype=dtype) for dtype in dtypes]).dtype
 
@@ -647,7 +664,9 @@ def find_rng_nodes(
 ) -> list[RandomGeneratorSharedVariable]:
     """Return shared RNG variables in a graph."""
     return [
-        node for node in graph_inputs(variables) if isinstance(node, RandomGeneratorSharedVariable)
+        node
+        for node in graph_inputs(variables)
+        if isinstance(node, RandomGeneratorSharedVariable)
     ]
 
 
@@ -664,7 +683,9 @@ def replace_rng_nodes(outputs: Sequence[TensorVariable]) -> list[TensorVariable]
         return outputs
 
     graph = FunctionGraph(outputs=outputs, clone=False)
-    new_rng_nodes = [pytensor.shared(np.random.Generator(np.random.PCG64())) for _ in rng_nodes]
+    new_rng_nodes = [
+        pytensor.shared(np.random.Generator(np.random.PCG64())) for _ in rng_nodes
+    ]
     graph.replace_all(zip(rng_nodes, new_rng_nodes), import_missing=True)
     return cast(list[TensorVariable], graph.outputs)
 
@@ -678,7 +699,8 @@ def reseed_rngs(
 ) -> None:
     """Create a new set of RandomState/Generator for each rng based on a seed."""
     bit_generators = [
-        np.random.PCG64(sub_seed) for sub_seed in np.random.SeedSequence(seed).spawn(len(rngs))
+        np.random.PCG64(sub_seed)
+        for sub_seed in np.random.SeedSequence(seed).spawn(len(rngs))
     ]
     for rng, bit_generator in zip(rngs, bit_generators):
         rng.set_value(np.random.Generator(bit_generator), borrow=True)
@@ -773,7 +795,8 @@ def collect_default_updates(
             else:
                 update, *other_updates = updates
                 if all(
-                    equal_computations([update], [other_update]) for other_update in other_updates
+                    equal_computations([update], [other_update])
+                    for other_update in other_updates
                 ):
                     return update
 
@@ -802,11 +825,15 @@ def collect_default_updates(
                 # RandomVariable is a subclass of RNGConsumerOp, but we specialize above for speedup
                 next_rng = client_op.update(client).get(rng)
                 if next_rng is None:
-                    raise ValueError(f"No update found for at least one RNG used in {client_op}")
+                    raise ValueError(
+                        f"No update found for at least one RNG used in {client_op}"
+                    )
             case Scan():
                 # Check if any shared output corresponds to the RNG
                 rng_idx = client.inputs.index(rng)
-                io_map = client_op.get_oinp_iinp_iout_oout_mappings()["outer_out_from_outer_inp"]
+                io_map = client_op.get_oinp_iinp_iout_oout_mappings()[
+                    "outer_out_from_outer_inp"
+                ]
                 out_idx = io_map.get(rng_idx, -1)
                 if out_idx != -1:
                     next_rng = client.outputs[out_idx]
@@ -860,7 +887,10 @@ def collect_default_updates(
         default_update = find_default_update(clients, input_rng)
 
         # Respect default update if provided
-        if hasattr(input_rng, "default_update") and input_rng.default_update is not None:
+        if (
+            hasattr(input_rng, "default_update")
+            and input_rng.default_update is not None
+        ):
             rng_updates[input_rng] = input_rng.default_update
         else:
             if default_update is not None:
@@ -913,9 +943,12 @@ def compile(
     # Create an update mapping of RandomVariable's RNG so that it is automatically
     # updated after every function call
     rng_updates = collect_default_updates(
-        inputs=[inp.variable if isinstance(inp, pytensor.In) else inp for inp in inputs],
+        inputs=[
+            inp.variable if isinstance(inp, pytensor.In) else inp for inp in inputs
+        ],
         outputs=[
-            out.variable if isinstance(out, pytensor.Out) else out for out in makeiter(outputs)
+            out.variable if isinstance(out, pytensor.Out) else out
+            for out in makeiter(outputs)
         ],
     )
 
@@ -933,11 +966,15 @@ def compile(
     except TypeError:
         check_bounds = True
     check_parameter_opt = (
-        "local_check_parameter_to_ninf_switch" if check_bounds else "local_remove_check_parameter"
+        "local_check_parameter_to_ninf_switch"
+        if check_bounds
+        else "local_remove_check_parameter"
     )
 
     mode = get_mode(mode)
-    opt_qry = mode.provided_optimizer.including("random_make_inplace", check_parameter_opt)
+    opt_qry = mode.provided_optimizer.including(
+        "random_make_inplace", check_parameter_opt
+    )
     mode = Mode(linker=mode.linker, optimizer=opt_qry)
     pytensor_function = pytensor.function(
         inputs,
@@ -964,7 +1001,9 @@ def constant_fold(
         attempting constant folding, and any old non-shared inputs will not work with
         the returned outputs
     """
-    fg = FunctionGraph(outputs=xs, features=[ShapeFeature()], copy_inputs=False, clone=True)
+    fg = FunctionGraph(
+        outputs=xs, features=[ShapeFeature()], copy_inputs=False, clone=True
+    )
 
     # The default rewrite_graph includes a constant_folding that is not always applied.
     # We use an unconditional constant_folding as the last pass to ensure a thorough constant folding.
@@ -973,11 +1012,14 @@ def constant_fold(
 
     folded_xs = fg.outputs
 
-    if raise_not_constant and not all(isinstance(folded_x, Constant) for folded_x in folded_xs):
+    if raise_not_constant and not all(
+        isinstance(folded_x, Constant) for folded_x in folded_xs
+    ):
         raise NotConstantValueError
 
     return tuple(
-        folded_x.data if isinstance(folded_x, Constant) else folded_x for folded_x in folded_xs
+        folded_x.data if isinstance(folded_x, Constant) else folded_x
+        for folded_x in folded_xs
     )
 
 

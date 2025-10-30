@@ -1,27 +1,35 @@
+import json
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import Dict, List, Optional, Any
-import json
-from datetime import datetime
 
-app = FastAPI(title="LOGOS Core API", version="2.0.0", description="Enhanced with falsifiability framework")
+app = FastAPI(
+    title="LOGOS Core API",
+    version="2.0.0",
+    description="Enhanced with falsifiability framework",
+)
+
 
 class FalsifiabilityRequest(BaseModel):
     formula: str
     logic: str = "K"
     generate_countermodel: bool = True
 
+
 class CounterModel(BaseModel):
     worlds: List[str]
     relations: List[List[str]]
     valuation: Dict[str, Dict[str, bool]]
+
 
 class FalsifiabilityResponse(BaseModel):
     falsifiable: bool
     countermodel: Optional[CounterModel] = None
     safety_validated: bool = True
     reasoning_trace: List[str] = []
+
 
 @app.get("/")
 async def root():
@@ -33,10 +41,11 @@ async def root():
             "Falsifiability Framework",
             "Modal Logic Validation",
             "Kripke Countermodel Generation",
-            "Eschatological Safety Integration"
+            "Eschatological Safety Integration",
         ],
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
     }
+
 
 @app.get("/health")
 async def health_check():
@@ -45,10 +54,11 @@ async def health_check():
         "services": {
             "falsifiability_engine": "operational",
             "modal_logic_evaluator": "operational",
-            "safety_validator": "operational"
+            "safety_validator": "operational",
         },
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
     }
+
 
 @app.post("/api/v1/falsifiability/validate", response_model=FalsifiabilityResponse)
 async def validate_falsifiability(request: FalsifiabilityRequest):
@@ -59,7 +69,7 @@ async def validate_falsifiability(request: FalsifiabilityRequest):
         f"Parsing formula: {request.formula}",
         f"Using logic system: {request.logic}",
         "Analyzing modal operators...",
-        "Searching for countermodel..."
+        "Searching for countermodel...",
     ]
 
     # Simple heuristic for demonstration
@@ -68,23 +78,18 @@ async def validate_falsifiability(request: FalsifiabilityRequest):
         countermodel = CounterModel(
             worlds=["w0", "w1"],
             relations=[["w0", "w1"]],
-            valuation={
-                "w0": {"P": True, "Q": False},
-                "w1": {"P": False, "Q": False}
-            }
+            valuation={"w0": {"P": True, "Q": False}, "w1": {"P": False, "Q": False}},
         )
         reasoning_trace.append("Countermodel found!")
         return FalsifiabilityResponse(
-            falsifiable=True,
-            countermodel=countermodel,
-            reasoning_trace=reasoning_trace
+            falsifiable=True, countermodel=countermodel, reasoning_trace=reasoning_trace
         )
     else:
         reasoning_trace.append("No countermodel exists - formula is valid")
         return FalsifiabilityResponse(
-            falsifiable=False,
-            reasoning_trace=reasoning_trace
+            falsifiable=False, reasoning_trace=reasoning_trace
         )
+
 
 @app.post("/api/v1/reasoning/query")
 async def reasoning_query(query: Dict[str, Any]):
@@ -95,8 +100,9 @@ async def reasoning_query(query: Dict[str, Any]):
         "falsifiability_checked": True,
         "safety_validated": True,
         "confidence": 0.95,
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
     }
+
 
 @app.get("/api/v1/status")
 async def system_status():
@@ -107,15 +113,17 @@ async def system_status():
             "status": "operational",
             "validation_level": "100%",
             "countermodel_generation": "enabled",
-            "safety_integration": "active"
+            "safety_integration": "active",
         },
         "performance": {
             "uptime": "system_started",
             "requests_processed": 0,
-            "average_response_time": "< 50ms"
-        }
+            "average_response_time": "< 50ms",
+        },
     }
+
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="127.0.0.1", port=8090)

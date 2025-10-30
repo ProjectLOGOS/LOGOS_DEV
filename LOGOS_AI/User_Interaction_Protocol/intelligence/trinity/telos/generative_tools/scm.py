@@ -26,9 +26,9 @@ class SCM:
         In a full implementation, this would use a causal discovery algorithm.
         For now, it calculates conditional probabilities based on the given DAG.
         """
+        import pandas as pd
         from causallearn.search.ConstraintBased.PC import pc
         from causallearn.utils.cit import fisherz
-        import pandas as pd
 
         if len(data) > 50 and not self.dag:
             print("[SCM] Performing causal discovery...")

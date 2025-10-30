@@ -15,16 +15,24 @@ from sentence_transformers import SentenceTransformer
 @pytest.mark.parametrize("normalize_embeddings", (False, True))
 @pytest.mark.parametrize("prompt_name", (None, "retrieval"))
 def test_encode_multi_process(
-    stsb_bert_tiny_model: SentenceTransformer, normalize_embeddings: bool, prompt_name: str | None
+    stsb_bert_tiny_model: SentenceTransformer,
+    normalize_embeddings: bool,
+    prompt_name: str | None,
 ) -> None:
     model = stsb_bert_tiny_model
-    model.prompts = {"retrieval": "Represent this sentence for searching relevant passages: "}
+    model.prompts = {
+        "retrieval": "Represent this sentence for searching relevant passages: "
+    }
     sentences = [f"This is sentence {i}" for i in range(40)]
 
     # Start the multi-process pool on e.g. two CPU devices & compute the embeddings using the pool
     pool = model.start_multi_process_pool(["cpu", "cpu"])
     emb = model.encode(
-        sentences, normalize_embeddings=normalize_embeddings, prompt_name=prompt_name, pool=pool, chunk_size=10
+        sentences,
+        normalize_embeddings=normalize_embeddings,
+        prompt_name=prompt_name,
+        pool=pool,
+        chunk_size=10,
     )
     model.stop_multi_process_pool(pool)
     assert emb.shape == (len(sentences), 128)
@@ -33,7 +41,9 @@ def test_encode_multi_process(
     assert emb.sum() != 0.0
 
     # Compare against normal embeddings
-    emb_normal = model.encode(sentences, normalize_embeddings=normalize_embeddings, prompt_name=prompt_name)
+    emb_normal = model.encode(
+        sentences, normalize_embeddings=normalize_embeddings, prompt_name=prompt_name
+    )
     diff = np.max(np.abs(emb - emb_normal))
     assert diff < 0.001
 
@@ -42,7 +52,9 @@ def test_encode_multi_process(
 
 
 @pytest.mark.slow
-def test_multi_process_encode_same_as_standard_encode(stsb_bert_tiny_model: SentenceTransformer):
+def test_multi_process_encode_same_as_standard_encode(
+    stsb_bert_tiny_model: SentenceTransformer,
+):
     model = stsb_bert_tiny_model
     # Test that multi-process encoding gives the same result as standard encoding
     texts = ["First sentence.", "Second sentence.", "Third sentence."] * 5
@@ -76,7 +88,10 @@ def test_multi_process_pool(stsb_bert_tiny_model: SentenceTransformer):
 
     # Should be numpy array with correct shape and the same embeddings
     assert isinstance(embeddings_multi, np.ndarray)
-    assert embeddings_multi.shape == (len(texts), model.get_sentence_embedding_dimension())
+    assert embeddings_multi.shape == (
+        len(texts),
+        model.get_sentence_embedding_dimension(),
+    )
     assert np.allclose(embeddings_standard, embeddings_multi, atol=1e-6)
 
 
@@ -91,7 +106,9 @@ def test_multi_process_with_args(stsb_bert_tiny_model: SentenceTransformer):
 
     try:
         # Test with normalize_embeddings and convert_to_tensor
-        embeddings = model.encode(texts, pool=pool, normalize_embeddings=True, convert_to_tensor=True)
+        embeddings = model.encode(
+            texts, pool=pool, normalize_embeddings=True, convert_to_tensor=True
+        )
 
         # Should be a tensor with normalized vectors
         assert isinstance(embeddings, torch.Tensor)
@@ -155,17 +172,23 @@ def test_multi_process_chunk_size(stsb_bert_tiny_model: SentenceTransformer):
 def test_multi_process_with_prompt(stsb_bert_tiny_model: SentenceTransformer):
     # Test multi-process encoding with prompts
     model = stsb_bert_tiny_model
-    model.prompts = {"retrieval": "Represent this sentence for searching relevant passages: "}
+    model.prompts = {
+        "retrieval": "Represent this sentence for searching relevant passages: "
+    }
     texts = ["First sentence.", "Second sentence."] * 5
 
-    standard_embeddings = model.encode(texts, prompt_name="retrieval", normalize_embeddings=True)
+    standard_embeddings = model.encode(
+        texts, prompt_name="retrieval", normalize_embeddings=True
+    )
 
     # Create a pool
     pool = model.start_multi_process_pool(["cpu"] * 2)
 
     try:
         # Encode with prompt
-        multi_embeddings = model.encode(texts, pool=pool, prompt_name="retrieval", normalize_embeddings=True)
+        multi_embeddings = model.encode(
+            texts, pool=pool, prompt_name="retrieval", normalize_embeddings=True
+        )
     finally:
         model.stop_multi_process_pool(pool)
 
@@ -184,7 +207,9 @@ def test_multi_process_with_prompt(stsb_bert_tiny_model: SentenceTransformer):
 @pytest.mark.slow
 @pytest.mark.parametrize("convert_to_tensor", [True, False])
 @pytest.mark.parametrize("convert_to_numpy", [True, False])
-@pytest.mark.parametrize("output_value", [None, "sentence_embedding", "token_embeddings"])
+@pytest.mark.parametrize(
+    "output_value", [None, "sentence_embedding", "token_embeddings"]
+)
 def test_multi_process_with_empty_texts(
     stsb_bert_tiny_model: SentenceTransformer,
     convert_to_tensor: bool,
@@ -197,7 +222,10 @@ def test_multi_process_with_empty_texts(
 
     # Encode with empty texts
     standard_embeddings = model.encode(
-        texts, convert_to_tensor=convert_to_tensor, convert_to_numpy=convert_to_numpy, output_value=output_value
+        texts,
+        convert_to_tensor=convert_to_tensor,
+        convert_to_numpy=convert_to_numpy,
+        output_value=output_value,
     )
     multi_embeddings = model.encode(
         texts,
@@ -216,7 +244,9 @@ def test_multi_process_with_empty_texts(
 @pytest.mark.slow
 @pytest.mark.parametrize("convert_to_tensor", [True, False])
 @pytest.mark.parametrize("convert_to_numpy", [True, False])
-@pytest.mark.parametrize("output_value", [None, "sentence_embedding", "token_embeddings"])
+@pytest.mark.parametrize(
+    "output_value", [None, "sentence_embedding", "token_embeddings"]
+)
 def test_multi_process_with_one_single_string(
     stsb_bert_tiny_model: SentenceTransformer,
     convert_to_tensor: bool,
@@ -229,7 +259,10 @@ def test_multi_process_with_one_single_string(
 
     # Encode with single text
     standard_embeddings = model.encode(
-        texts, convert_to_tensor=convert_to_tensor, convert_to_numpy=convert_to_numpy, output_value=output_value
+        texts,
+        convert_to_tensor=convert_to_tensor,
+        convert_to_numpy=convert_to_numpy,
+        output_value=output_value,
     )
     multi_embeddings = model.encode(
         texts,
@@ -250,9 +283,13 @@ def test_multi_process_with_one_single_string(
             assert standard_embeddings.keys() == multi_embeddings.keys()
             for key in standard_embeddings:
                 if isinstance(standard_embeddings[key], torch.Tensor):
-                    assert torch.allclose(standard_embeddings[key].cpu(), multi_embeddings[key], atol=1e-5)
+                    assert torch.allclose(
+                        standard_embeddings[key].cpu(), multi_embeddings[key], atol=1e-5
+                    )
                 elif isinstance(standard_embeddings[key], np.ndarray):
-                    assert np.allclose(standard_embeddings[key], multi_embeddings[key], atol=1e-5)
+                    assert np.allclose(
+                        standard_embeddings[key], multi_embeddings[key], atol=1e-5
+                    )
                 else:
                     assert standard_embeddings[key] == multi_embeddings[key]
         elif isinstance(standard_embeddings, list) and len(standard_embeddings) > 0:
@@ -260,7 +297,9 @@ def test_multi_process_with_one_single_string(
                 assert set(std_item.keys()) == set(multi_item.keys())
                 for key in std_item:
                     if isinstance(std_item[key], torch.Tensor):
-                        assert torch.allclose(std_item[key].cpu(), multi_item[key], atol=1e-5)
+                        assert torch.allclose(
+                            std_item[key].cpu(), multi_item[key], atol=1e-5
+                        )
                     elif isinstance(std_item[key], np.ndarray):
                         assert np.allclose(std_item[key], multi_item[key], atol=1e-5)
                     else:
@@ -268,7 +307,9 @@ def test_multi_process_with_one_single_string(
 
 
 @pytest.mark.slow
-def test_multi_process_more_workers_than_texts(stsb_bert_tiny_model: SentenceTransformer):
+def test_multi_process_more_workers_than_texts(
+    stsb_bert_tiny_model: SentenceTransformer,
+):
     # Test with more workers than texts
     model = stsb_bert_tiny_model
     texts = ["First sentence.", "Second sentence."]

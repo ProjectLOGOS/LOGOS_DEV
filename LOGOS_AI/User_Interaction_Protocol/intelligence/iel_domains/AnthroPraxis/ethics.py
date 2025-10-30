@@ -5,6 +5,7 @@ Provides tools for ensuring AI systems align with human values,
 including bias detection, fairness assessment, and ethical decision-making.
 """
 
+
 class EthicalAlignment:
     """
     Framework for ethical alignment in AI systems.
@@ -15,11 +16,11 @@ class EthicalAlignment:
 
     def __init__(self):
         self.ethical_principles = [
-            'beneficence',      # Do good
-            'non-maleficence',  # Do no harm
-            'autonomy',         # Respect autonomy
-            'justice',          # Fairness and justice
-            'transparency'      # Explainability
+            "beneficence",  # Do good
+            "non-maleficence",  # Do no harm
+            "autonomy",  # Respect autonomy
+            "justice",  # Fairness and justice
+            "transparency",  # Explainability
         ]
         self.alignment_score = 0.0
 
@@ -38,22 +39,26 @@ class EthicalAlignment:
         recommendations = []
 
         # Check for potential issues
-        if 'harm' in action.get('description', '').lower():
-            violations.append('non-maleficence')
-            recommendations.append('Consider alternative approaches that minimize harm')
+        if "harm" in action.get("description", "").lower():
+            violations.append("non-maleficence")
+            recommendations.append("Consider alternative approaches that minimize harm")
 
-        if not action.get('explanation'):
-            violations.append('transparency')
-            recommendations.append('Provide clear explanation of decision-making process')
+        if not action.get("explanation"):
+            violations.append("transparency")
+            recommendations.append(
+                "Provide clear explanation of decision-making process"
+            )
 
         alignment_score = 1.0 - (len(violations) * 0.2)
         self.alignment_score = max(0.0, alignment_score)
 
         return {
-            'alignment_score': self.alignment_score,
-            'violations': violations,
-            'recommendations': recommendations,
-            'overall_assessment': 'aligned' if self.alignment_score > 0.7 else 'needs_review'
+            "alignment_score": self.alignment_score,
+            "violations": violations,
+            "recommendations": recommendations,
+            "overall_assessment": (
+                "aligned" if self.alignment_score > 0.7 else "needs_review"
+            ),
         }
 
     def detect_bias(self, data: list, protected_attributes: list) -> dict:
@@ -73,15 +78,15 @@ class EthicalAlignment:
         for attr in protected_attributes:
             # Simple bias check - in real implementation would use statistical tests
             bias_indicators[attr] = {
-                'detected': False,
-                'severity': 0.0,
-                'recommendations': ['Monitor for bias in future data']
+                "detected": False,
+                "severity": 0.0,
+                "recommendations": ["Monitor for bias in future data"],
             }
 
         return {
-            'bias_detected': any(b['detected'] for b in bias_indicators.values()),
-            'bias_indicators': bias_indicators,
-            'overall_risk': 'low'
+            "bias_detected": any(b["detected"] for b in bias_indicators.values()),
+            "bias_indicators": bias_indicators,
+            "overall_risk": "low",
         }
 
     def ensure_fairness(self, decision_process: dict) -> dict:
@@ -96,7 +101,10 @@ class EthicalAlignment:
         """
         # Placeholder fairness check
         return {
-            'fairness_score': 0.85,
-            'issues_identified': [],
-            'improvements': ['Consider diverse training data', 'Implement fairness constraints']
+            "fairness_score": 0.85,
+            "issues_identified": [],
+            "improvements": [
+                "Consider diverse training data",
+                "Implement fairness constraints",
+            ],
         }

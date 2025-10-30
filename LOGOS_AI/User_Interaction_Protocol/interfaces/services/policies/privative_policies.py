@@ -95,7 +95,9 @@ class PrivativePolicies:
             "commutation": "commutes(g_name,h_name) and preserves_coherence_chain(g_name,h_name)",
         }
 
-    def obligation_for(self, action: str, state: dict[str, Any], properties: dict[str, Any]) -> str:
+    def obligation_for(
+        self, action: str, state: dict[str, Any], properties: dict[str, Any]
+    ) -> str:
         """
         Generate BOX obligation for a given action, state, and properties
 
@@ -126,7 +128,9 @@ class PrivativePolicies:
                     property_assertions.append(f"TrueP(valid_{key})")
 
             if property_assertions:
-                enhanced_obligation = base_obligation + " and " + " and ".join(property_assertions)
+                enhanced_obligation = (
+                    base_obligation + " and " + " and ".join(property_assertions)
+                )
                 return enhanced_obligation
 
         return base_obligation
@@ -151,7 +155,9 @@ class PrivativePolicies:
 
         return specific_preservation
 
-    def system_consistency_obligation(self, system_id: str, context: dict[str, Any] = None) -> str:
+    def system_consistency_obligation(
+        self, system_id: str, context: dict[str, Any] = None
+    ) -> str:
         """
         Generate system-level consistency obligation
 
@@ -162,7 +168,9 @@ class PrivativePolicies:
         Returns:
             String representation of the consistency obligation
         """
-        base_obligation = f"consistency(semantics,axioms) and coherent_system({system_id})"
+        base_obligation = (
+            f"consistency(semantics,axioms) and coherent_system({system_id})"
+        )
 
         if context:
             if context.get("drift_detected"):
@@ -185,9 +193,7 @@ class PrivativePolicies:
         Returns:
             String representation of the preservation obligation
         """
-        base_obligation = (
-            f"preserves_good({bijection_name},x) and preserves_coherence({bijection_name})"
-        )
+        base_obligation = f"preserves_good({bijection_name},x) and preserves_coherence({bijection_name})"
 
         if operation_context:
             if operation_context.get("structural"):
@@ -211,9 +217,7 @@ class PrivativePolicies:
         Returns:
             String representation of the commutation obligation
         """
-        base_obligation = (
-            f"commutes({g_name},{h_name}) and preserves_coherence_chain({g_name},{h_name})"
-        )
+        base_obligation = f"commutes({g_name},{h_name}) and preserves_coherence_chain({g_name},{h_name})"
 
         if commutativity_context:
             if commutativity_context.get("associative"):

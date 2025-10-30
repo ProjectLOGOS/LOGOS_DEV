@@ -80,7 +80,9 @@ class TestExceptions:
         assert "(5,6)" in exinfo.value.args[0]
 
         with pytest.raises(pm.exceptions.ShapeError) as exinfo:
-            raise pm.exceptions.ShapeError("With shapes.", actual=(), expected="(5,4) or (?,?,6)")
+            raise pm.exceptions.ShapeError(
+                "With shapes.", actual=(), expected="(5,4) or (?,?,6)"
+            )
         assert "(?,?,6)" in exinfo.value.args[0]
 
     def test_dtype_error(self):

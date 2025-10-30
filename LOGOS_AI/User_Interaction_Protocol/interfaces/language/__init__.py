@@ -4,13 +4,9 @@ Natural language processing and communication capabilities
 """
 
 from .natural_language_processor import (
-    NaturalLanguageProcessor,
+    ConversationContext,
     LogicTranslator,
-    ConversationContext
+    NaturalLanguageProcessor,
 )
 
-__all__ = [
-    "NaturalLanguageProcessor",
-    "LogicTranslator", 
-    "ConversationContext"
-]
+__all__ = ["NaturalLanguageProcessor", "LogicTranslator", "ConversationContext"]

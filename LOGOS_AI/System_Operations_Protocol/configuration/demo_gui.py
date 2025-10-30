@@ -4,49 +4,54 @@ LOGOS AGI Demo GUI
 Simple Gradio-based interface for demonstrating LOGOS safety and alignment systems
 """
 
-import gradio as gr
 import json
-import time
-import threading
-import speech_recognition as sr
-from pathlib import Path
-import sys
 import os
+import sys
+import threading
+import time
+from pathlib import Path
+
+import gradio as gr
+import speech_recognition as sr
 
 # Add LOGOS to path
 sys.path.insert(0, str(Path(__file__).parent))
 
 try:
-    from entry import get_logos_core, initialize_logos_core, evaluate_modal
+    from entry import evaluate_modal, get_logos_core, initialize_logos_core
+
     LOGOS_AVAILABLE = True
 except ImportError as e:
     print(f"LOGOS not available: {e}")
     LOGOS_AVAILABLE = False
-    
+
     # Create mock functions to prevent runtime errors
     def get_logos_core():
         return None
-    
+
     def initialize_logos_core():
-        return type('MockCore', (), {
-            'get_system_status': lambda: {
-                'safety_halted': False,
-                'iel': {'active_domains': ['mock_domain']},
-                'status': 'mock_active'
-            }
-        })()
-    
+        return type(
+            "MockCore",
+            (),
+            {
+                "get_system_status": lambda: {
+                    "safety_halted": False,
+                    "iel": {"active_domains": ["mock_domain"]},
+                    "status": "mock_active",
+                }
+            },
+        )()
+
     def evaluate_modal(message):
-        return {
-            'result': f'Mock evaluation of: {message}',
-            'status': 'mock_success'
-        }
+        return {"result": f"Mock evaluation of: {message}", "status": "mock_success"}
+
 
 # Initialize LOGOS
 if LOGOS_AVAILABLE:
     core = initialize_logos_core()
 else:
     core = None
+
 
 def chat_with_logos(message, history):
     """Process text chat with LOGOS"""
@@ -63,7 +68,7 @@ def chat_with_logos(message, history):
         response += f"Input: `{message}`\n\n"
         response += f"Result: {result.get('result', 'Unknown')}\n\n"
 
-        if 'error' in result:
+        if "error" in result:
             response += f"Error: {result['error']}\n\n"
 
         # Add safety status
@@ -74,6 +79,7 @@ def chat_with_logos(message, history):
 
     except Exception as e:
         return f"Error processing request: {str(e)}"
+
 
 def voice_to_text(audio_file):
     """Convert voice audio to text using speech recognition"""
@@ -98,6 +104,7 @@ def voice_to_text(audio_file):
     except Exception as e:
         return f"Error processing audio: {e}"
 
+
 def get_system_diagnostics():
     """Get system diagnostics for monitoring"""
     if not LOGOS_AVAILABLE or not core:
@@ -108,17 +115,21 @@ def get_system_diagnostics():
         return {
             "timestamp": time.time(),
             "system_status": status,
-            "safety_active": not status.get('safety_halted', True),
-            "iel_domains_loaded": status.get('iel', {}).get('active_domains', []),
-            "audit_logs": "Available via /logs directory"
+            "safety_active": not status.get("safety_halted", True),
+            "iel_domains_loaded": status.get("iel", {}).get("active_domains", []),
+            "audit_logs": "Available via /logs directory",
         }
     except Exception as e:
         return {"error": str(e)}
 
+
 def create_demo_gui():
     """Create the Gradio demo interface"""
 
-    with gr.Blocks(title="LOGOS AGI Demo", theme=gr.themes.Soft(primary_hue="slate", secondary_hue="gray")) as demo:
+    with gr.Blocks(
+        title="LOGOS AGI Demo",
+        theme=gr.themes.Soft(primary_hue="slate", secondary_hue="gray"),
+    ) as demo:
 
         gr.Markdown("# 🤖 LOGOS AGI Demo")
         gr.Markdown("*Demonstrating Advanced Safety and Alignment Systems*")
@@ -133,7 +144,7 @@ def create_demo_gui():
                 msg = gr.Textbox(
                     label="Enter your message or logical proposition",
                     placeholder="Try: □(P → Q) ∧ ◇(Q → R) → □(P → R)",
-                    lines=2
+                    lines=2,
                 )
 
                 with gr.Row():
@@ -144,9 +155,9 @@ def create_demo_gui():
                     examples=[
                         "□(P → Q) ∧ ◇(Q → R) → □(P → R)",
                         "∀x∃y(P(x) → Q(y))",
-                        "Hello LOGOS, how are your safety systems functioning?"
+                        "Hello LOGOS, how are your safety systems functioning?",
                     ],
-                    inputs=msg
+                    inputs=msg,
                 )
 
             # Voice Chat Tab
@@ -156,20 +167,18 @@ def create_demo_gui():
                 voice_input = gr.Audio(
                     label="Record or upload audio",
                     type="filepath",
-                    sources=["microphone", "upload"]
+                    sources=["microphone", "upload"],
                 )
 
                 voice_text = gr.Textbox(
                     label="Transcribed Text",
                     placeholder="Your speech will appear here...",
                     lines=3,
-                    interactive=False
+                    interactive=False,
                 )
 
                 voice_response = gr.Textbox(
-                    label="LOGOS Response",
-                    lines=5,
-                    interactive=False
+                    label="LOGOS Response", lines=5, interactive=False
                 )
 
                 transcribe_btn = gr.Button("Transcribe & Process", variant="primary")
@@ -190,7 +199,7 @@ def create_demo_gui():
                     label="Activity Log",
                     lines=10,
                     interactive=False,
-                    value="System initialized. Monitoring active."
+                    value="System initialized. Monitoring active.",
                 )
 
         # Event handlers
@@ -210,7 +219,11 @@ def create_demo_gui():
                 return "", ""
 
             text = voice_to_text(audio)
-            if text and not text.startswith("Could not") and not text.startswith("Error"):
+            if (
+                text
+                and not text.startswith("Could not")
+                and not text.startswith("Error")
+            ):
                 response = chat_with_logos(text, [])
                 return text, response
             else:
@@ -225,7 +238,12 @@ def create_demo_gui():
             safety = "🟢 Active" if diagnostics.get("safety_active") else "🔴 Halted"
             iel_domains = ", ".join(diagnostics.get("iel_domains_loaded", []))
 
-            return diagnostics, safety, iel_domains, f"Last updated: {time.strftime('%H:%M:%S')}"
+            return (
+                diagnostics,
+                safety,
+                iel_domains,
+                f"Last updated: {time.strftime('%H:%M:%S')}",
+            )
 
         # Connect events
         msg.submit(respond, [msg, chatbot], [chatbot]).then(lambda: "", None, msg)
@@ -234,18 +252,29 @@ def create_demo_gui():
 
         transcribe_btn.click(process_voice, voice_input, [voice_text, voice_response])
 
-        refresh_btn.click(update_monitor, None, [status_indicator, safety_status, iel_status, activity_log])
+        refresh_btn.click(
+            update_monitor,
+            None,
+            [status_indicator, safety_status, iel_status, activity_log],
+        )
 
         # Initialize monitor
-        demo.load(update_monitor, None, [status_indicator, safety_status, iel_status, activity_log])
+        demo.load(
+            update_monitor,
+            None,
+            [status_indicator, safety_status, iel_status, activity_log],
+        )
 
     return demo
+
 
 if __name__ == "__main__":
     import os
 
     # Check if we're in a codespace environment
-    is_codespace = os.environ.get('CODESPACES', '').lower() == 'true' or 'github.dev' in os.environ.get('GITHUB_SERVER_URL', '')
+    is_codespace = os.environ.get(
+        "CODESPACES", ""
+    ).lower() == "true" or "github.dev" in os.environ.get("GITHUB_SERVER_URL", "")
 
     demo = create_demo_gui()
     demo.launch(
@@ -253,12 +282,12 @@ if __name__ == "__main__":
         server_port=7860,
         show_api=False,
         share=False,
-        inbrowser=not is_codespace  # Don't auto-open browser in codespace
+        inbrowser=not is_codespace,  # Don't auto-open browser in codespace
     )
 
     if is_codespace:
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("🌐 LOGOS Demo Interface Running!")
         print("📱 Access the interface at: http://localhost:7860")
         print("💡 In codespace, you may need to open this URL manually")
-        print("="*60 + "\n")
+        print("=" * 60 + "\n")

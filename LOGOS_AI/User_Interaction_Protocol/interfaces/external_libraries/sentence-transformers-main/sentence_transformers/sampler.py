@@ -112,7 +112,9 @@ class GroupByLabelBatchSampler(DefaultBatchSampler):
         self.dataset = dataset
 
         if self.batch_size % 2 == 1:
-            raise ValueError("The batch size for `GroupByLabelBatchSampler` must be divisible by 2.")
+            raise ValueError(
+                "The batch size for `GroupByLabelBatchSampler` must be divisible by 2."
+            )
 
         labels = self._determine_labels_to_use(dataset, self.valid_label_columns)
         groups = defaultdict(list)
@@ -126,7 +128,9 @@ class GroupByLabelBatchSampler(DefaultBatchSampler):
         }
 
     @staticmethod
-    def _determine_labels_to_use(dataset: Dataset, valid_label_columns: list[str] | None) -> list[Any]:
+    def _determine_labels_to_use(
+        dataset: Dataset, valid_label_columns: list[str] | None
+    ) -> list[Any]:
         for column_name in valid_label_columns or []:
             if column_name in dataset.column_names:
                 return dataset[column_name]
@@ -197,7 +201,9 @@ class NoDuplicatesBatchSampler(DefaultBatchSampler):
             generator=generator,
             seed=seed,
         )
-        if label_columns := set(dataset.column_names) & set(self.valid_label_columns or []):
+        if label_columns := set(dataset.column_names) & set(
+            self.valid_label_columns or []
+        ):
             dataset = dataset.remove_columns(list(label_columns))
         self.dataset = dataset
 
@@ -213,12 +219,18 @@ class NoDuplicatesBatchSampler(DefaultBatchSampler):
         # We create a dictionary to None because we need a data structure that:
         # 1. Allows for cheap removal of elements
         # 2. Preserves the order of elements, i.e. remains random
-        remaining_indices = dict.fromkeys(torch.randperm(len(self.dataset), generator=self.generator).tolist())
+        remaining_indices = dict.fromkeys(
+            torch.randperm(len(self.dataset), generator=self.generator).tolist()
+        )
         while remaining_indices:
             batch_values = set()
             batch_indices = []
             for index in remaining_indices:
-                sample_values = {str(value) for key, value in self.dataset[index].items() if key != "dataset_name"}
+                sample_values = {
+                    str(value)
+                    for key, value in self.dataset[index].items()
+                    if key != "dataset_name"
+                }
                 if sample_values & batch_values:
                     continue
 
@@ -265,8 +277,14 @@ class MultiDatasetDefaultBatchSampler(SetEpochMixin, BatchSampler, ABC):
         seed: int = 0,
     ) -> None:
         if len(dataset.datasets) != len(batch_samplers):
-            raise ValueError("The number of batch samplers must match the number of datasets in the ConcatDataset.")
-        super().__init__(dataset, batch_size=batch_samplers[0].batch_size, drop_last=batch_samplers[0].drop_last)
+            raise ValueError(
+                "The number of batch samplers must match the number of datasets in the ConcatDataset."
+            )
+        super().__init__(
+            dataset,
+            batch_size=batch_samplers[0].batch_size,
+            drop_last=batch_samplers[0].drop_last,
+        )
         self.dataset = dataset
         self.batch_samplers = batch_samplers
         self.generator = generator
@@ -313,7 +331,9 @@ class RoundRobinBatchSampler(MultiDatasetDefaultBatchSampler):
                 break
 
     def __len__(self) -> int:
-        return min(len(sampler) for sampler in self.batch_samplers) * len(self.batch_samplers)
+        return min(len(sampler) for sampler in self.batch_samplers) * len(
+            self.batch_samplers
+        )
 
 
 class ProportionalBatchSampler(MultiDatasetDefaultBatchSampler):
@@ -335,8 +355,12 @@ class ProportionalBatchSampler(MultiDatasetDefaultBatchSampler):
         sample_offsets = [0] + list(accumulate(num_samples))
 
         num_batches = [len(sampler) for sampler in self.batch_samplers]
-        dataset_indices = [idx for idx, length in enumerate(num_batches) for _ in range(length)]
-        dataset_idx_sampler = SubsetRandomSampler(dataset_indices, generator=self.generator)
+        dataset_indices = [
+            idx for idx, length in enumerate(num_batches) for _ in range(length)
+        ]
+        dataset_idx_sampler = SubsetRandomSampler(
+            dataset_indices, generator=self.generator
+        )
 
         batch_samplers = [iter(sampler) for sampler in self.batch_samplers]
         for dataset_idx in dataset_idx_sampler:

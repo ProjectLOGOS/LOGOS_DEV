@@ -5,21 +5,24 @@ This module provides a Python interface to the formally verified modal logic
 and IEL (Identity-Experiential Logic) evaluation engine extracted from Coq proofs.
 """
 
+import ctypes
 import json
 import logging
 import os
 import subprocess
 import tempfile
-from typing import Dict, List, Tuple, Any, Optional, Union
+from ctypes import c_bool, c_char_p, c_int, cdll
 from pathlib import Path
-import ctypes
-from ctypes import cdll, c_char_p, c_int, c_bool
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 logger = logging.getLogger(__name__)
 
+
 class ProofBridgeError(Exception):
     """Raised when proof bridge operations fail"""
+
     pass
+
 
 class ModalLogicEvaluator:
     """
@@ -62,7 +65,10 @@ class ModalLogicEvaluator:
 
             # Configure function signatures
             self._bridge_lib.eval_modal_string.argtypes = [
-                c_char_p, c_char_p, c_char_p, c_char_p
+                c_char_p,
+                c_char_p,
+                c_char_p,
+                c_char_p,
             ]
             self._bridge_lib.eval_modal_string.restype = c_char_p
 
@@ -79,7 +85,7 @@ class ModalLogicEvaluator:
         world: str = "w0",
         accessible_worlds: Optional[List[str]] = None,
         valuations: Optional[Dict[str, bool]] = None,
-        generate_countermodel: bool = True
+        generate_countermodel: bool = True,
     ) -> Dict[str, Any]:
         """
         Evaluate a modal logic proposition in a given Kripke model
@@ -120,10 +126,12 @@ class ModalLogicEvaluator:
                 )
 
             # Generate countermodel if evaluation failed and countermodel generation is enabled
-            if (not result.get("result", False) and
-                result.get("success", False) and
-                generate_countermodel and
-                self.countermodel_generation_enabled):
+            if (
+                not result.get("result", False)
+                and result.get("success", False)
+                and generate_countermodel
+                and self.countermodel_generation_enabled
+            ):
                 countermodel = self._generate_countermodel(
                     proposition, world, accessible_worlds, valuations
                 )
@@ -134,24 +142,20 @@ class ModalLogicEvaluator:
 
         except Exception as e:
             logger.error(f"Modal logic evaluation failed: {e}")
-            return {
-                "success": False,
-                "error": str(e),
-                "proposition": proposition
-            }
+            return {"success": False, "error": str(e), "proposition": proposition}
 
     def _evaluate_via_library(
         self,
         proposition: str,
         world: str,
         accessible_worlds: List[str],
-        valuations: Dict[str, bool]
+        valuations: Dict[str, bool],
     ) -> Dict[str, Any]:
         """Evaluate using direct library calls"""
-        world_c = c_char_p(world.encode('utf-8'))
-        accessible_c = c_char_p(json.dumps(accessible_worlds).encode('utf-8'))
-        valuations_c = c_char_p(json.dumps(valuations).encode('utf-8'))
-        proposition_c = c_char_p(proposition.encode('utf-8'))
+        world_c = c_char_p(world.encode("utf-8"))
+        accessible_c = c_char_p(json.dumps(accessible_worlds).encode("utf-8"))
+        valuations_c = c_char_p(json.dumps(valuations).encode("utf-8"))
+        proposition_c = c_char_p(proposition.encode("utf-8"))
 
         result_ptr = self._bridge_lib.eval_modal_string(
             world_c, accessible_c, valuations_c, proposition_c
@@ -160,7 +164,7 @@ class ModalLogicEvaluator:
         if not result_ptr:
             raise ProofBridgeError("Bridge library returned null result")
 
-        result_json = ctypes.string_at(result_ptr).decode('utf-8')
+        result_json = ctypes.string_at(result_ptr).decode("utf-8")
         return json.loads(result_json)
 
     def _evaluate_via_subprocess(
@@ -168,7 +172,7 @@ class ModalLogicEvaluator:
         proposition: str,
         world: str,
         accessible_worlds: List[str],
-        valuations: Dict[str, bool]
+        valuations: Dict[str, bool],
     ) -> Dict[str, Any]:
         """Evaluate using subprocess call to OCaml executable"""
         # Create temporary input file
@@ -176,24 +180,21 @@ class ModalLogicEvaluator:
             "proposition": proposition,
             "world": world,
             "accessible_worlds": accessible_worlds,
-            "valuations": valuations
+            "valuations": valuations,
         }
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(input_data, f)
             input_file = f.name
 
         try:
             # Call OCaml evaluator
-            bridge_exe = self.bridge_path.replace('.so', '.exe')
+            bridge_exe = self.bridge_path.replace(".so", ".exe")
             if not os.path.exists(bridge_exe):
                 bridge_exe = str(Path(__file__).parent / "proof_bridge_cli.exe")
 
             result = subprocess.run(
-                [bridge_exe, input_file],
-                capture_output=True,
-                text=True,
-                timeout=30
+                [bridge_exe, input_file], capture_output=True, text=True, timeout=30
             )
 
             if result.returncode != 0:
@@ -209,7 +210,7 @@ class ModalLogicEvaluator:
         proposition: str,
         world: str,
         accessible_worlds: List[str],
-        valuations: Dict[str, bool]
+        valuations: Dict[str, bool],
     ) -> Dict[str, Any]:
         """
         Generate a countermodel (falsifying Kripke model) for a false proposition
@@ -236,39 +237,52 @@ class ModalLogicEvaluator:
             "falsifying_world": world,
             "kripke_structure": {
                 "worlds": accessible_worlds,
-                "accessibility_relation": self._generate_accessibility_relation(accessible_worlds),
-                "valuation_function": {}
+                "accessibility_relation": self._generate_accessibility_relation(
+                    accessible_worlds
+                ),
+                "valuation_function": {},
             },
             "falsification_trace": [],
             "proposition": proposition,
-            "countermodel_type": "kripke_systematic"
+            "countermodel_type": "kripke_systematic",
         }
 
         # Try different valuations to find falsifying assignment
         for valuation_attempt in self._generate_valuation_space(atomic_props):
             try:
                 test_result = self.evaluate_modal_proposition(
-                    proposition, world, accessible_worlds, valuation_attempt,
-                    generate_countermodel=False  # Avoid recursion
+                    proposition,
+                    world,
+                    accessible_worlds,
+                    valuation_attempt,
+                    generate_countermodel=False,  # Avoid recursion
                 )
 
-                if test_result.get("success", False) and not test_result.get("result", True):
+                if test_result.get("success", False) and not test_result.get(
+                    "result", True
+                ):
                     # Found falsifying valuation
-                    countermodel["kripke_structure"]["valuation_function"] = valuation_attempt
-                    countermodel["falsification_trace"].append({
-                        "step": "falsifying_valuation_found",
-                        "valuation": valuation_attempt,
-                        "result": test_result.get("result"),
-                        "world": world
-                    })
+                    countermodel["kripke_structure"][
+                        "valuation_function"
+                    ] = valuation_attempt
+                    countermodel["falsification_trace"].append(
+                        {
+                            "step": "falsifying_valuation_found",
+                            "valuation": valuation_attempt,
+                            "result": test_result.get("result"),
+                            "world": world,
+                        }
+                    )
                     break
 
             except Exception as e:
-                countermodel["falsification_trace"].append({
-                    "step": "valuation_test_error",
-                    "valuation": valuation_attempt,
-                    "error": str(e)
-                })
+                countermodel["falsification_trace"].append(
+                    {
+                        "step": "valuation_test_error",
+                        "valuation": valuation_attempt,
+                        "error": str(e),
+                    }
+                )
                 continue
 
         # Generate specific countermodel for modal operators
@@ -278,10 +292,12 @@ class ModalLogicEvaluator:
             )
             countermodel["modal_specific"] = modal_countermodel
 
-        countermodel["falsification_trace"].append({
-            "step": "countermodel_complete",
-            "verification": "countermodel_generation_finished"
-        })
+        countermodel["falsification_trace"].append(
+            {
+                "step": "countermodel_complete",
+                "verification": "countermodel_generation_finished",
+            }
+        )
 
         return countermodel
 
@@ -290,18 +306,20 @@ class ModalLogicEvaluator:
         import re
 
         # Remove modal operators and logical connectives
-        cleaned = re.sub(r'(\[\]|<>|Box|Diamond|&&|\|\||->|~|\(|\))', ' ', proposition)
+        cleaned = re.sub(r"(\[\]|<>|Box|Diamond|&&|\|\||->|~|\(|\))", " ", proposition)
 
         # Extract potential atomic propositions (letters/words)
-        atoms = re.findall(r'[a-zA-Z][a-zA-Z0-9_]*', cleaned)
+        atoms = re.findall(r"[a-zA-Z][a-zA-Z0-9_]*", cleaned)
 
         # Filter out keywords
-        keywords = {'true', 'false', 'True', 'False', 'Box', 'Diamond'}
+        keywords = {"true", "false", "True", "False", "Box", "Diamond"}
         atoms = [atom for atom in atoms if atom not in keywords]
 
         return list(set(atoms))  # Remove duplicates
 
-    def _generate_accessibility_relation(self, worlds: List[str]) -> Dict[str, List[str]]:
+    def _generate_accessibility_relation(
+        self, worlds: List[str]
+    ) -> Dict[str, List[str]]:
         """Generate accessibility relation for Kripke model"""
         # Default: each world accessible to itself and others
         relation = {}
@@ -309,7 +327,9 @@ class ModalLogicEvaluator:
             relation[world] = worlds.copy()  # Reflexive and complete
         return relation
 
-    def _generate_valuation_space(self, atomic_props: List[str]) -> List[Dict[str, bool]]:
+    def _generate_valuation_space(
+        self, atomic_props: List[str]
+    ) -> List[Dict[str, bool]]:
         """Generate all possible truth value assignments for atomic propositions"""
         if not atomic_props:
             return [{}]
@@ -329,13 +349,13 @@ class ModalLogicEvaluator:
         proposition: str,
         world: str,
         accessible_worlds: List[str],
-        atomic_props: List[str]
+        atomic_props: List[str],
     ) -> Dict[str, Any]:
         """Generate modal-specific countermodel for Box/Diamond operators"""
         modal_countermodel = {
             "type": "modal_operator_countermodel",
             "proposition": proposition,
-            "strategy": "accessibility_manipulation"
+            "strategy": "accessibility_manipulation",
         }
 
         # For Box (□) propositions: find world where inner formula is false
@@ -349,18 +369,20 @@ class ModalLogicEvaluator:
                 "accessibility": {
                     world: accessible_worlds + [f"counter_w{i}" for i in range(2)]
                 },
-                "target_false_world": "counter_w0"
+                "target_false_world": "counter_w0",
             }
 
         # For Diamond (◊) propositions: make all accessible worlds false for inner formula
         elif "<>" in proposition or "Diamond" in proposition:
             modal_countermodel["strategy"] = "diamond_falsification"
-            modal_countermodel["technique"] = "make_all_accessible_worlds_false_for_inner"
+            modal_countermodel["technique"] = (
+                "make_all_accessible_worlds_false_for_inner"
+            )
 
             modal_countermodel["falsifying_structure"] = {
                 "worlds": accessible_worlds,
                 "accessibility": {world: accessible_worlds},
-                "all_worlds_false_for_inner": True
+                "all_worlds_false_for_inner": True,
             }
 
         return modal_countermodel
@@ -370,7 +392,7 @@ class ModalLogicEvaluator:
         propositions: List[str],
         world: str = "w0",
         accessible_worlds: Optional[List[str]] = None,
-        valuations: Optional[Dict[str, bool]] = None
+        valuations: Optional[Dict[str, bool]] = None,
     ) -> Dict[str, Any]:
         """
         Evaluate multiple modal propositions in batch
@@ -403,8 +425,8 @@ class ModalLogicEvaluator:
             "context": {
                 "world": world,
                 "accessible_worlds": accessible_worlds,
-                "valuations": valuations
-            }
+                "valuations": valuations,
+            },
         }
 
     def validate_syntax(self, proposition: str) -> Dict[str, Any]:
@@ -420,29 +442,20 @@ class ModalLogicEvaluator:
         try:
             # Attempt to parse without evaluation
             result = self.evaluate_modal_proposition(
-                proposition,
-                world="dummy",
-                accessible_worlds=["dummy"],
-                valuations={}
+                proposition, world="dummy", accessible_worlds=["dummy"], valuations={}
             )
 
             if "error" in result and "Parse error" in result["error"]:
                 return {
                     "valid": False,
                     "error": result["error"],
-                    "proposition": proposition
+                    "proposition": proposition,
                 }
             else:
-                return {
-                    "valid": True,
-                    "proposition": proposition
-                }
+                return {"valid": True, "proposition": proposition}
         except Exception as e:
-            return {
-                "valid": False,
-                "error": str(e),
-                "proposition": proposition
-            }
+            return {"valid": False, "error": str(e), "proposition": proposition}
+
 
 class IELEvaluator(ModalLogicEvaluator):
     """
@@ -460,7 +473,7 @@ class IELEvaluator(ModalLogicEvaluator):
         valuations: Optional[Dict[str, bool]] = None,
         identity_context: Optional[Dict[str, Any]] = None,
         experience_context: Optional[Dict[str, Any]] = None,
-        generate_countermodel: bool = True
+        generate_countermodel: bool = True,
     ) -> Dict[str, Any]:
         """
         Evaluate an IEL proposition with identity and experience operators
@@ -503,8 +516,11 @@ class IELEvaluator(ModalLogicEvaluator):
 
         # Evaluate using base modal logic evaluator
         result = self.evaluate_modal_proposition(
-            transformed_formula, world, accessible_worlds, valuations,
-            generate_countermodel=generate_countermodel
+            transformed_formula,
+            world,
+            accessible_worlds,
+            valuations,
+            generate_countermodel=generate_countermodel,
         )
 
         # Add IEL-specific metadata
@@ -513,7 +529,7 @@ class IELEvaluator(ModalLogicEvaluator):
                 "original_formula": iel_formula,
                 "transformed_formula": transformed_formula,
                 "identity_context": identity_context,
-                "experience_context": experience_context
+                "experience_context": experience_context,
             }
 
             # Enhance countermodel with IEL-specific information
@@ -530,8 +546,8 @@ class IELEvaluator(ModalLogicEvaluator):
                         "original": iel_formula,
                         "transformed": transformed_formula,
                         "identity_mappings": identity_context,
-                        "experience_mappings": experience_context
-                    }
+                        "experience_mappings": experience_context,
+                    },
                 }
 
         return result
@@ -540,7 +556,7 @@ class IELEvaluator(ModalLogicEvaluator):
         self,
         iel_formula: str,
         identity_context: Dict[str, Any],
-        experience_context: Dict[str, Any]
+        experience_context: Dict[str, Any],
     ) -> str:
         """
         Transform IEL formula with I() and E() operators to pure modal logic
@@ -561,52 +577,57 @@ class IELEvaluator(ModalLogicEvaluator):
         return formula
 
     def _analyze_identity_falsification(
-        self,
-        iel_formula: str,
-        identity_context: Dict[str, Any]
+        self, iel_formula: str, identity_context: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Analyze how identity operators contribute to formula falsification"""
         identity_analysis = {
             "identity_operators_found": [],
-            "falsification_strategy": "identity_contradiction"
+            "falsification_strategy": "identity_contradiction",
         }
 
         import re
-        identity_matches = re.findall(r'I\(([^)]+)\)', iel_formula)
+
+        identity_matches = re.findall(r"I\(([^)]+)\)", iel_formula)
 
         for identity in identity_matches:
-            identity_analysis["identity_operators_found"].append({
-                "operator": f"I({identity})",
-                "context_value": identity_context.get(identity, "undefined"),
-                "falsification_method": "contradict_identity_binding"
-            })
+            identity_analysis["identity_operators_found"].append(
+                {
+                    "operator": f"I({identity})",
+                    "context_value": identity_context.get(identity, "undefined"),
+                    "falsification_method": "contradict_identity_binding",
+                }
+            )
 
         return identity_analysis
 
     def _analyze_experience_falsification(
-        self,
-        iel_formula: str,
-        experience_context: Dict[str, Any]
+        self, iel_formula: str, experience_context: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Analyze how experience operators contribute to formula falsification"""
         experience_analysis = {
             "experience_operators_found": [],
-            "falsification_strategy": "experience_unavailability"
+            "falsification_strategy": "experience_unavailability",
         }
 
         import re
-        experience_matches = re.findall(r'E\(([^)]+)\)', iel_formula)
+
+        experience_matches = re.findall(r"E\(([^)]+)\)", iel_formula)
 
         for experience in experience_matches:
-            experience_analysis["experience_operators_found"].append({
-                "operator": f"E({experience})",
-                "context_value": experience_context.get(experience, "undefined"),
-                "falsification_method": "make_experience_inaccessible"
-            })
+            experience_analysis["experience_operators_found"].append(
+                {
+                    "operator": f"E({experience})",
+                    "context_value": experience_context.get(experience, "undefined"),
+                    "falsification_method": "make_experience_inaccessible",
+                }
+            )
 
         return experience_analysis
 
-def create_evaluator(evaluator_type: str = "modal") -> Union[ModalLogicEvaluator, IELEvaluator]:
+
+def create_evaluator(
+    evaluator_type: str = "modal",
+) -> Union[ModalLogicEvaluator, IELEvaluator]:
     """
     Factory function to create appropriate evaluator instance
 
@@ -622,6 +643,7 @@ def create_evaluator(evaluator_type: str = "modal") -> Union[ModalLogicEvaluator
         return ModalLogicEvaluator()
     else:
         raise ValueError(f"Unknown evaluator type: {evaluator_type}")
+
 
 # Runtime validation helper
 def verify_bridge_consistency() -> bool:
@@ -645,14 +667,14 @@ def verify_bridge_consistency() -> bool:
         ]
 
         for prop, vals, expected in test_cases:
-            result = evaluator.evaluate_modal_proposition(
-                prop, valuations=vals
-            )
+            result = evaluator.evaluate_modal_proposition(prop, valuations=vals)
             if not result.get("success", False):
                 logger.error(f"Bridge test failed for {prop}: {result}")
                 return False
             if result["result"] != expected:
-                logger.error(f"Bridge test wrong result for {prop}: got {result['result']}, expected {expected}")
+                logger.error(
+                    f"Bridge test wrong result for {prop}: got {result['result']}, expected {expected}"
+                )
                 return False
 
         logger.info("Proof bridge consistency verification passed")
@@ -661,6 +683,7 @@ def verify_bridge_consistency() -> bool:
     except Exception as e:
         logger.error(f"Bridge consistency check failed: {e}")
         return False
+
 
 if __name__ == "__main__":
     # Demo usage
@@ -672,10 +695,7 @@ if __name__ == "__main__":
     # Test basic modal logic
     test_prop = "[]p -> p"
     result = evaluator.evaluate_modal_proposition(
-        test_prop,
-        world="w0",
-        accessible_worlds=["w0", "w1"],
-        valuations={"p": True}
+        test_prop, world="w0", accessible_worlds=["w0", "w1"], valuations={"p": True}
     )
 
     print(f"Evaluating: {test_prop}")
@@ -686,7 +706,7 @@ if __name__ == "__main__":
     iel_result = iel_evaluator.evaluate_iel_proposition(
         "I(self) && E(input) -> []action",
         identity_context={"self": "agent"},
-        experience_context={"input": "sensory"}
+        experience_context={"input": "sensory"},
     )
 
     print(f"\nIEL Evaluation Result: {json.dumps(iel_result, indent=2)}")

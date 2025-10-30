@@ -12,6 +12,7 @@ that exhibit seasonality, non-stationarity, and other time series nuances.
 
    <br/>
 """
+
 print(__doc__)
 
 # Author: Taylor Smith <taylor.smith@alkaline-ml.com>

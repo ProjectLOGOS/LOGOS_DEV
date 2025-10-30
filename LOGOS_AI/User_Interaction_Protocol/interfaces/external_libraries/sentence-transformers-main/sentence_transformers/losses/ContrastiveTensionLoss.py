@@ -75,11 +75,15 @@ class ContrastiveTensionLoss(nn.Module):
 
     def __init__(self, model: SentenceTransformer) -> None:
         super().__init__()
-        self.model2 = model  # This will be the final model used during the inference time.
+        self.model2 = (
+            model  # This will be the final model used during the inference time.
+        )
         self.model1 = copy.deepcopy(model)
         self.criterion = nn.BCEWithLogitsLoss(reduction="sum")
 
-    def forward(self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor) -> Tensor:
+    def forward(
+        self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor
+    ) -> Tensor:
         sentence_features1, sentence_features2 = tuple(sentence_features)
         reps_1 = self.model1(sentence_features1)["sentence_embedding"]  # (bsz, hdim)
         reps_2 = self.model2(sentence_features2)["sentence_embedding"]
@@ -105,7 +109,9 @@ class ContrastiveTensionLoss(nn.Module):
 
 
 class ContrastiveTensionLossInBatchNegatives(nn.Module):
-    def __init__(self, model: SentenceTransformer, scale: float = 20.0, similarity_fct=cos_sim) -> None:
+    def __init__(
+        self, model: SentenceTransformer, scale: float = 20.0, similarity_fct=cos_sim
+    ) -> None:
         """
         This loss expects only single sentences, without any labels. Positive and negative pairs are automatically created via random sampling,
         such that a positive pair consists of two identical sentences and a negative pair consists of two different sentences. An independent
@@ -167,20 +173,31 @@ class ContrastiveTensionLossInBatchNegatives(nn.Module):
                 )
         """
         super().__init__()
-        self.model2 = model  # This will be the final model used during the inference time.
+        self.model2 = (
+            model  # This will be the final model used during the inference time.
+        )
         self.model1 = copy.deepcopy(model)
         self.similarity_fct = similarity_fct
         self.cross_entropy_loss = nn.CrossEntropyLoss()
         self.logit_scale = nn.Parameter(torch.ones([]) * np.log(scale))
 
-    def forward(self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor) -> Tensor:
+    def forward(
+        self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor
+    ) -> Tensor:
         sentence_features1, sentence_features2 = tuple(sentence_features)
-        embeddings_a = self.model1(sentence_features1)["sentence_embedding"]  # (bsz, hdim)
+        embeddings_a = self.model1(sentence_features1)[
+            "sentence_embedding"
+        ]  # (bsz, hdim)
         embeddings_b = self.model2(sentence_features2)["sentence_embedding"]
 
-        scores = self.similarity_fct(embeddings_a, embeddings_b) * self.logit_scale.exp()  # self.scale
+        scores = (
+            self.similarity_fct(embeddings_a, embeddings_b) * self.logit_scale.exp()
+        )  # self.scale
         labels = torch.arange(len(scores), dtype=torch.long, device=scores.device)
-        return (self.cross_entropy_loss(scores, labels) + self.cross_entropy_loss(scores.t(), labels)) / 2
+        return (
+            self.cross_entropy_loss(scores, labels)
+            + self.cross_entropy_loss(scores.t(), labels)
+        ) / 2
 
     @property
     def citation(self) -> str:

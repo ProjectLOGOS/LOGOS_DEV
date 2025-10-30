@@ -4,13 +4,19 @@ import torch
 
 from sentence_transformers.models import Router
 from sentence_transformers.sparse_encoder import SparseEncoder
-from sentence_transformers.sparse_encoder.models import MLMTransformer, SparseStaticEmbedding, SpladePooling
+from sentence_transformers.sparse_encoder.models import (
+    MLMTransformer,
+    SparseStaticEmbedding,
+    SpladePooling,
+)
 
 
 def test_opensearch_v2_distill_similarity():
     """Test OpenSearch v2 distill model produces expected similarity scores."""
     # Setup the model
-    doc_encoder = MLMTransformer("opensearch-project/opensearch-neural-sparse-encoding-doc-v2-distill")
+    doc_encoder = MLMTransformer(
+        "opensearch-project/opensearch-neural-sparse-encoding-doc-v2-distill"
+    )
     router = Router.for_query_document(
         query_modules=[
             SparseStaticEmbedding.from_json(
@@ -67,7 +73,9 @@ def test_opensearch_v2_distill_similarity():
 
     for token, expected in expected_tokens.items():
         assert token in query_token_scores, f"Token '{token}' not found in query scores"
-        assert token in document_token_scores, f"Token '{token}' not found in document scores"
+        assert (
+            token in document_token_scores
+        ), f"Token '{token}' not found in document scores"
 
         query_score = query_token_scores[token]
         document_score = document_token_scores[token]
@@ -83,7 +91,9 @@ def test_opensearch_v2_distill_similarity():
 def test_opensearch_v3_distill_similarity():
     """Test OpenSearch v3 distill model produces expected similarity scores."""
     # Setup the model
-    doc_encoder = MLMTransformer("opensearch-project/opensearch-neural-sparse-encoding-doc-v3-distill")
+    doc_encoder = MLMTransformer(
+        "opensearch-project/opensearch-neural-sparse-encoding-doc-v3-distill"
+    )
     router = Router.for_query_document(
         query_modules=[
             SparseStaticEmbedding.from_json(
@@ -146,7 +156,9 @@ def test_opensearch_v3_distill_similarity():
 
     for token, expected in expected_tokens.items():
         assert token in query_token_scores, f"Token '{token}' not found in query scores"
-        assert token in document_token_scores, f"Token '{token}' not found in document scores"
+        assert (
+            token in document_token_scores
+        ), f"Token '{token}' not found in document scores"
 
         query_score = query_token_scores[token]
         document_score = document_token_scores[token]

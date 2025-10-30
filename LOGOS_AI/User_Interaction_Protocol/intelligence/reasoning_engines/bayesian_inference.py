@@ -14,16 +14,17 @@ Combines:
 
 import json
 import logging
-import numpy as np
-from typing import Dict, List, Optional, Any, Tuple, Union
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import numpy as np
 
 # Safe imports with fallback handling
 try:
-    import pymc as pm
     import arviz as az
+    import pymc as pm
     import pytensor.tensor as pt
 
     PYMC_AVAILABLE = True
@@ -37,10 +38,12 @@ except ImportError:
 try:
     from LOGOS_AGI.v5.reasoning.bayesian_interface import (
         BayesianInterface,
-        TrueP,
         ProbabilisticResult,
+        TrueP,
     )
-    from PXL_IEL_overlay_system.modules.infra.adaptive.ModalProbabilistic import ModalProbabilistic
+    from PXL_IEL_overlay_system.modules.infra.adaptive.ModalProbabilistic import (
+        ModalProbabilistic,
+    )
 except ImportError:
     # Mock for development
     class BayesianInterface:
@@ -49,10 +52,12 @@ except ImportError:
     def TrueP(p, threshold):
         return True
 
+
 # Translation Engine Enhancement
 try:
-    from .translation.translation_engine import TranslationEngine
     from .translation.pdn_bridge import PDNBottleneckSolver
+    from .translation.translation_engine import TranslationEngine
+
     TRANSLATION_ENGINE_AVAILABLE = True
 except ImportError:
     TRANSLATION_ENGINE_AVAILABLE = False
@@ -114,14 +119,18 @@ class UnifiedBayesianInferencer:
 
         # Initialize v5 Bayesian interface for advanced operations
         if BayesianInterface:
-            self.advanced_interface = BayesianInterface(verification_context=verification_context)
+            self.advanced_interface = BayesianInterface(
+                verification_context=verification_context
+            )
         else:
             self.advanced_interface = None
 
         # Initialize Translation Engine for semantic enhancement
         if TRANSLATION_ENGINE_AVAILABLE:
             self.translation_engine = TranslationEngine()
-            self.pdn_solver = PDNBottleneckSolver(None)  # Will initialize bridge separately
+            self.pdn_solver = PDNBottleneckSolver(
+                None
+            )  # Will initialize bridge separately
         else:
             self.translation_engine = None
             self.pdn_solver = None
@@ -138,7 +147,9 @@ class UnifiedBayesianInferencer:
             "epistemic_certainty_threshold": 0.8,
         }
 
-        self.logger.info(f"UnifiedBayesianInferencer initialized with PyMC: {PYMC_AVAILABLE}")
+        self.logger.info(
+            f"UnifiedBayesianInferencer initialized with PyMC: {PYMC_AVAILABLE}"
+        )
 
     def _load_priors(self, config_path: str) -> Dict[str, Dict[str, float]]:
         """Load Bayesian priors from configuration file"""
@@ -148,7 +159,9 @@ class UnifiedBayesianInferencer:
                 with open(config_file) as f:
                     return json.load(f)
             else:
-                self.logger.warning(f"Prior config not found at {config_path}, using defaults")
+                self.logger.warning(
+                    f"Prior config not found at {config_path}, using defaults"
+                )
                 return self._default_priors()
         except Exception as e:
             self.logger.error(f"Failed to load priors: {e}")
@@ -259,9 +272,18 @@ class UnifiedBayesianInferencer:
         # Create PyMC model for trinity inference
         model_spec = {
             "priors": {
-                "e_prior": {"distribution": "beta", "parameters": {"alpha": 2.0, "beta": 2.0}},
-                "g_prior": {"distribution": "beta", "parameters": {"alpha": 2.0, "beta": 2.0}},
-                "t_prior": {"distribution": "beta", "parameters": {"alpha": 2.0, "beta": 2.0}},
+                "e_prior": {
+                    "distribution": "beta",
+                    "parameters": {"alpha": 2.0, "beta": 2.0},
+                },
+                "g_prior": {
+                    "distribution": "beta",
+                    "parameters": {"alpha": 2.0, "beta": 2.0},
+                },
+                "t_prior": {
+                    "distribution": "beta",
+                    "parameters": {"alpha": 2.0, "beta": 2.0},
+                },
             },
             "likelihood": {
                 "distribution": "normal",
@@ -300,13 +322,19 @@ class UnifiedBayesianInferencer:
             timestamp=datetime.now(),
         )
 
-    def _prepare_observation_data(self, keywords: List[str], weights: List[float]) -> np.ndarray:
+    def _prepare_observation_data(
+        self, keywords: List[str], weights: List[float]
+    ) -> np.ndarray:
         """Prepare observation data for PyMC inference"""
         observations = []
         for i, keyword in enumerate(keywords):
             entry = self.priors.get(keyword, {"E": 0.5, "G": 0.5, "T": 0.5})
             # Create observation vector
-            obs = [entry["E"] * weights[i], entry["G"] * weights[i], entry["T"] * weights[i]]
+            obs = [
+                entry["E"] * weights[i],
+                entry["G"] * weights[i],
+                entry["T"] * weights[i],
+            ]
             observations.append(obs)
 
         return np.array(observations)
@@ -325,7 +353,10 @@ class UnifiedBayesianInferencer:
         verified_confidence = self._calculate_verified_confidence(trinity_vector)
 
         # Determine epistemic certainty level
-        if verified_confidence >= self.verification_bounds["epistemic_certainty_threshold"]:
+        if (
+            verified_confidence
+            >= self.verification_bounds["epistemic_certainty_threshold"]
+        ):
             epistemic_certainty = "certain"
         elif verified_confidence >= 0.5:
             epistemic_certainty = "probable"
@@ -362,7 +393,9 @@ class UnifiedBayesianInferencer:
         """Calculate verified confidence using modal probabilistic framework"""
         # Combine trinity components with inference confidence
         trinity_strength = (
-            trinity_vector.e_identity + trinity_vector.g_experience + trinity_vector.t_logos
+            trinity_vector.e_identity
+            + trinity_vector.g_experience
+            + trinity_vector.t_logos
         ) / 3
         verified_conf = trinity_strength * trinity_vector.confidence
 
@@ -393,12 +426,18 @@ class UnifiedBayesianInferencer:
         """Calculate Trinity coherence measure"""
         # Coherence based on balance and interaction of components
         balance_factor = 1 - np.std(
-            [trinity_vector.e_identity, trinity_vector.g_experience, trinity_vector.t_logos]
+            [
+                trinity_vector.e_identity,
+                trinity_vector.g_experience,
+                trinity_vector.t_logos,
+            ]
         )
 
         interaction_factor = abs(trinity_vector.complex_repr) / np.sqrt(2)
 
-        coherence = (balance_factor + interaction_factor + trinity_vector.confidence) / 3
+        coherence = (
+            balance_factor + interaction_factor + trinity_vector.confidence
+        ) / 3
 
         return max(0, min(1, coherence))
 
@@ -445,19 +484,19 @@ class UnifiedBayesianInferencer:
         }
 
     def translation_enhanced_inference(
-        self, 
+        self,
         natural_language_query: str,
         use_pdn_optimization: bool = True,
-        semantic_context: Optional[Dict[str, Any]] = None
+        semantic_context: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
         Enhanced Bayesian inference using Translation Engine for semantic processing.
-        
+
         Args:
             natural_language_query: Natural language input for inference
             use_pdn_optimization: Whether to apply PDN bottleneck optimization
             semantic_context: Additional semantic context
-            
+
         Returns:
             Enhanced inference results with translation layer
         """
@@ -468,55 +507,59 @@ class UnifiedBayesianInferencer:
             return {
                 "trinity_vector": trinity_result,
                 "translation_enhanced": False,
-                "fallback_method": "keyword_split"
+                "fallback_method": "keyword_split",
             }
-        
+
         try:
             # Step 1: Translation Engine processing
-            translation_result = self.translation_engine.translate(natural_language_query)
-            
+            translation_result = self.translation_engine.translate(
+                natural_language_query
+            )
+
             # Step 2: Extract semantic features for Bayesian inference
             mind_layer = translation_result.get("mind_layer", {})
             bridge_layer = translation_result.get("bridge_layer", {})
-            
+
             # Step 3: Convert semantic features to keyword weights
             semantic_keywords = []
             semantic_weights = []
-            
+
             # Map ontological dimensions to keywords
             for dimension, value in bridge_layer.items():
                 if value > 0.1:  # Only include significant dimensions
                     semantic_keywords.append(dimension)
                     semantic_weights.append(value)
-            
+
             # Map mind categories to keywords
             for category, value in mind_layer.items():
                 if value > 0.1:
                     semantic_keywords.append(category)
                     semantic_weights.append(value)
-            
+
             # Step 4: Enhanced Bayesian inference
             if semantic_keywords:
                 trinity_result = self.infer_trinity_vector(
-                    semantic_keywords, 
-                    semantic_weights, 
-                    use_advanced_inference=True
+                    semantic_keywords, semantic_weights, use_advanced_inference=True
                 )
             else:
                 # Fallback if no semantic features extracted
                 fallback_keywords = natural_language_query.split()
                 trinity_result = self.infer_trinity_vector(fallback_keywords)
-            
+
             # Step 5: PDN optimization if requested
             if use_pdn_optimization and self.pdn_solver:
                 try:
-                    optimized_result = self.pdn_solver.optimize_translation_path(natural_language_query)
-                    optimization_metrics = optimized_result.get("improvement_metrics", {})
+                    optimized_result = self.pdn_solver.optimize_translation_path(
+                        natural_language_query
+                    )
+                    optimization_metrics = optimized_result.get(
+                        "improvement_metrics", {}
+                    )
                 except Exception as e:
                     optimization_metrics = {"error": str(e)}
             else:
                 optimization_metrics = {}
-            
+
             return {
                 "trinity_vector": trinity_result,
                 "translation_enhanced": True,
@@ -524,9 +567,9 @@ class UnifiedBayesianInferencer:
                 "semantic_keywords": semantic_keywords,
                 "semantic_weights": semantic_weights,
                 "pdn_optimization": optimization_metrics,
-                "original_query": natural_language_query
+                "original_query": natural_language_query,
             }
-            
+
         except Exception as e:
             # Fallback on error
             fallback_keywords = natural_language_query.split()
@@ -535,39 +578,41 @@ class UnifiedBayesianInferencer:
                 "trinity_vector": trinity_result,
                 "translation_enhanced": False,
                 "error": str(e),
-                "fallback_method": "error_recovery"
+                "fallback_method": "error_recovery",
             }
 
 
 # UIP Step 5 Integration Functions
-def update_posteriors(trinity_vector: Dict[str, Any], iel_bundle: Dict[str, Any]) -> Dict[str, Any]:
+def update_posteriors(
+    trinity_vector: Dict[str, Any], iel_bundle: Dict[str, Any]
+) -> Dict[str, Any]:
     """
     Update Bayesian posterior beliefs based on Trinity vector and IEL bundle.
-    
+
     Args:
         trinity_vector: Trinity reasoning output with existence/goodness/truth values
         iel_bundle: IEL unified bundle with reasoning chains and frame coherence
-        
+
     Returns:
         Dictionary with updated beliefs, confidence, and variance metrics
     """
     try:
         # Initialize inferencer
         inferencer = UnifiedBayesianInferencer()
-        
+
         # Extract trinity values with fallbacks
         existence = trinity_vector.get("existence", 0.5)
-        goodness = trinity_vector.get("goodness", 0.5)  
+        goodness = trinity_vector.get("goodness", 0.5)
         truth = trinity_vector.get("truth", 0.5)
-        
+
         # Create trinity vector for inference
         trinity_vec = TrinityVector(
             existence_strength=existence,
             goodness_strength=goodness,
             truth_strength=truth,
-            metadata={"source": "adaptive_inference_layer"}
+            metadata={"source": "adaptive_inference_layer"},
         )
-        
+
         # Extract keywords from IEL bundle for inference
         keywords = []
         if "reasoning_chains" in iel_bundle:
@@ -575,45 +620,49 @@ def update_posteriors(trinity_vector: Dict[str, Any], iel_bundle: Dict[str, Any]
             if isinstance(chains, list):
                 for chain in chains[:3]:  # Limit to first 3 chains
                     if isinstance(chain, dict) and "keywords" in chain:
-                        keywords.extend(chain["keywords"][:2])  # Max 2 keywords per chain
-        
+                        keywords.extend(
+                            chain["keywords"][:2]
+                        )  # Max 2 keywords per chain
+
         # Fallback keywords if none found
         if not keywords:
             keywords = ["reasoning", "inference", "adaptation"]
-        
+
         # Perform Bayesian inference
         inference_result = inferencer.inference_with_trinity(keywords, trinity_vec)
-        
+
         # Map to IEL epistemic state
         iel_state = inferencer.map_to_iel_epistemic(inference_result)
-        
+
         # Calculate confidence and variance metrics
         base_confidence = inference_result.confidence
         epistemic_confidence = iel_state.verified_confidence
         combined_confidence = (base_confidence + epistemic_confidence) / 2.0
-        
+
         # Calculate variance based on trinity vector spread
         trinity_values = [existence, goodness, truth]
         trinity_mean = sum(trinity_values) / len(trinity_values)
-        trinity_variance = sum((v - trinity_mean) ** 2 for v in trinity_values) / len(trinity_values)
-        
+        trinity_variance = sum((v - trinity_mean) ** 2 for v in trinity_values) / len(
+            trinity_values
+        )
+
         # Posterior beliefs structure
         posterior_beliefs = {
             "trinity_inference": {
                 "existence": existence,
                 "goodness": goodness,
                 "truth": truth,
-                "confidence": base_confidence
+                "confidence": base_confidence,
             },
             "iel_epistemic": {
                 "verified_confidence": epistemic_confidence,
                 "epistemic_certainty": iel_state.epistemic_certainty,
-                "coherence_status": iel_state.coherence_status
+                "coherence_status": iel_state.coherence_status,
             },
             "keywords_processed": keywords,
-            "inference_timestamp": inference_result.timestamp
+            "inference_timestamp": inference_result.timestamp,
         }
-        
+
         return {
             "beliefs": posterior_beliefs,
             "confidence": combined_confidence,
@@ -623,26 +672,24 @@ def update_posteriors(trinity_vector: Dict[str, Any], iel_bundle: Dict[str, Any]
             "meta": {
                 "inference_method": "unified_bayesian_trinity",
                 "keywords_count": len(keywords),
-                "trinity_balance": max(trinity_values) - min(trinity_values)
-            }
+                "trinity_balance": max(trinity_values) - min(trinity_values),
+            },
         }
-        
+
     except Exception as e:
         logging.error(f"Posterior update failed: {e}")
         # Return fallback posterior with error information
         return {
             "beliefs": {"error": str(e)},
             "confidence": 0.5,  # Neutral confidence on error
-            "variance": 0.8,    # High variance indicates uncertainty
+            "variance": 0.8,  # High variance indicates uncertainty
             "epistemic_state": "uncertain",
             "coherence_level": "degraded",
-            "meta": {
-                "inference_method": "fallback",
-                "error": str(e)
-            }
+            "meta": {"inference_method": "fallback", "error": str(e)},
         }
 
-# Example usage and integration functions  
+
+# Example usage and integration functions
 def example_unified_inference():
     """Example of unified Bayesian inference with IEL mapping"""
 
@@ -676,7 +723,9 @@ def example_unified_inference():
 
     # Test epistemic truth verification
     proposition = "System demonstrates rational learning capabilities"
-    is_verified = inferencer.verify_epistemic_truth(proposition, trinity_result, threshold=0.6)
+    is_verified = inferencer.verify_epistemic_truth(
+        proposition, trinity_result, threshold=0.6
+    )
 
     print(f"\nEpistemic Truth Verification:")
     print(f"  Proposition: {proposition}")
@@ -688,7 +737,8 @@ def example_unified_inference():
 if __name__ == "__main__":
     # Configure logging
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     # Run example

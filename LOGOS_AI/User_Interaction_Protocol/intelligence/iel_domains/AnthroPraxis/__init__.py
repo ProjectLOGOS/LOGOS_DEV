@@ -8,8 +8,8 @@ This domain focuses on the praxis of human-AI interaction, including:
 - User experience design for AI systems
 """
 
-from .interaction_models import HumanAIInterface
 from .collaboration import CollaborativeReasoning
 from .ethics import EthicalAlignment
+from .interaction_models import HumanAIInterface
 
-__all__ = ['HumanAIInterface', 'CollaborativeReasoning', 'EthicalAlignment']
+__all__ = ["HumanAIInterface", "CollaborativeReasoning", "EthicalAlignment"]

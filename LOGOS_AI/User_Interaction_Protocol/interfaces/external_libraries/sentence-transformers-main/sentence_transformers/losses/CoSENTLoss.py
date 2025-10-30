@@ -11,7 +11,12 @@ from sentence_transformers.SentenceTransformer import SentenceTransformer
 
 
 class CoSENTLoss(nn.Module):
-    def __init__(self, model: SentenceTransformer, scale: float = 20.0, similarity_fct=util.pairwise_cos_sim) -> None:
+    def __init__(
+        self,
+        model: SentenceTransformer,
+        scale: float = 20.0,
+        similarity_fct=util.pairwise_cos_sim,
+    ) -> None:
         """
         This class implements CoSENT (Cosine Sentence) loss.
         It expects that each of the InputExamples consists of a pair of texts and a float valued label, representing
@@ -78,12 +83,19 @@ class CoSENTLoss(nn.Module):
         self.similarity_fct = similarity_fct
         self.scale = scale
 
-    def forward(self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor) -> Tensor:
-        embeddings = [self.model(sentence_feature)["sentence_embedding"] for sentence_feature in sentence_features]
+    def forward(
+        self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor
+    ) -> Tensor:
+        embeddings = [
+            self.model(sentence_feature)["sentence_embedding"]
+            for sentence_feature in sentence_features
+        ]
 
         return self.compute_loss_from_embeddings(embeddings, labels)
 
-    def compute_loss_from_embeddings(self, embeddings: list[Tensor], labels: Tensor) -> Tensor:
+    def compute_loss_from_embeddings(
+        self, embeddings: list[Tensor], labels: Tensor
+    ) -> Tensor:
         """
         Compute the CoSENT loss from embeddings.
 

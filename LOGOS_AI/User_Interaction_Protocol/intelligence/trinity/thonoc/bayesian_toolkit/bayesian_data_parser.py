@@ -3,11 +3,13 @@ bayesian_data_parser.py
 
 Handles loading/saving of Bayesian prediction data.
 """
-import pandas as pd
-from pathlib import Path
+
 import json
-from typing import Dict, Optional
 from datetime import datetime
+from pathlib import Path
+from typing import Dict, Optional
+
+import pandas as pd
 
 
 class BayesianDataHandler:
@@ -48,7 +50,9 @@ class BayesianDataHandler:
             "hypothesis": hypothesis,
             "evidence": json.dumps(prediction.metadata["evidence"]),
         }
-        pd.DataFrame([row]).to_csv(self.predictions_file, mode="a", header=False, index=False)
+        pd.DataFrame([row]).to_csv(
+            self.predictions_file, mode="a", header=False, index=False
+        )
 
     def get_predictions(
         self,

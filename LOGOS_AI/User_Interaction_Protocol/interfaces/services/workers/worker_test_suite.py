@@ -7,14 +7,14 @@ Tests the functionality of TETRAGNOS, TELOS, and THONOC workers
 including RabbitMQ communication, task processing, and result validation.
 """
 
+import asyncio
 import json
+import logging
 import time
 import uuid
-import asyncio
-import logging
-from typing import Dict, List, Any, Optional
-from dataclasses import dataclass
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
 
 try:
     import pika
@@ -121,7 +121,9 @@ class WorkerTestSuite:
             logger.error(f"Failed to send task message: {e}")
             return False
 
-    def wait_for_response(self, task_id: str, timeout: int = 30) -> Optional[Dict[str, Any]]:
+    def wait_for_response(
+        self, task_id: str, timeout: int = 30
+    ) -> Optional[Dict[str, Any]]:
         """Wait for a response message with the given task ID."""
         start_time = time.time()
 
@@ -190,9 +192,9 @@ class WorkerTestSuite:
                     error_message="No response received within timeout",
                 )
 
-            success = response.get("status") == "success" and "clusters" in response.get(
-                "result", {}
-            )
+            success = response.get(
+                "status"
+            ) == "success" and "clusters" in response.get("result", {})
 
             return TestResult(
                 test_name="tetragnos_cluster_texts",
@@ -201,7 +203,9 @@ class WorkerTestSuite:
                 success=success,
                 response_time=response_time,
                 result_data=response.get("result"),
-                error_message=None if success else response.get("result", {}).get("error"),
+                error_message=(
+                    None if success else response.get("result", {}).get("error")
+                ),
             )
 
         except Exception as e:
@@ -223,7 +227,11 @@ class WorkerTestSuite:
             "task_id": task_id,
             "type": "predict_outcomes",
             "payload": {
-                "current_state": {"temperature": 25.0, "humidity": 60.0, "pressure": 1013.25},
+                "current_state": {
+                    "temperature": 25.0,
+                    "humidity": 60.0,
+                    "pressure": 1013.25,
+                },
                 "interventions": [
                     {"id": "increase_temperature", "parameters": {"temperature": 30.0}}
                 ],
@@ -256,9 +264,9 @@ class WorkerTestSuite:
                     error_message="No response received within timeout",
                 )
 
-            success = response.get("status") == "success" and "predictions" in response.get(
-                "result", {}
-            )
+            success = response.get(
+                "status"
+            ) == "success" and "predictions" in response.get("result", {})
 
             return TestResult(
                 test_name="telos_predict_outcomes",
@@ -267,7 +275,9 @@ class WorkerTestSuite:
                 success=success,
                 response_time=response_time,
                 result_data=response.get("result"),
-                error_message=None if success else response.get("result", {}).get("error"),
+                error_message=(
+                    None if success else response.get("result", {}).get("error")
+                ),
             )
 
         except Exception as e:
@@ -319,9 +329,9 @@ class WorkerTestSuite:
                     error_message="No response received within timeout",
                 )
 
-            success = response.get("status") == "success" and "proof_result" in response.get(
-                "result", {}
-            )
+            success = response.get(
+                "status"
+            ) == "success" and "proof_result" in response.get("result", {})
 
             return TestResult(
                 test_name="thonoc_construct_proof",
@@ -330,7 +340,9 @@ class WorkerTestSuite:
                 success=success,
                 response_time=response_time,
                 result_data=response.get("result"),
-                error_message=None if success else response.get("result", {}).get("error"),
+                error_message=(
+                    None if success else response.get("result", {}).get("error")
+                ),
             )
 
         except Exception as e:
@@ -400,7 +412,9 @@ class WorkerTestSuite:
                 success=success,
                 response_time=response_time,
                 result_data=response.get("result"),
-                error_message=None if success else response.get("result", {}).get("error"),
+                error_message=(
+                    None if success else response.get("result", {}).get("error")
+                ),
             )
 
         except Exception as e:
@@ -420,7 +434,7 @@ class WorkerTestSuite:
 
         # Test 1: Configuration validation
         try:
-            from shared.worker_config import validate_config, WorkerType
+            from shared.worker_config import WorkerType, validate_config
 
             config_valid = validate_config()
 
@@ -431,7 +445,9 @@ class WorkerTestSuite:
                     task_type="validation",
                     success=config_valid,
                     response_time=0.0,
-                    error_message=None if config_valid else "Configuration validation failed",
+                    error_message=(
+                        None if config_valid else "Configuration validation failed"
+                    ),
                 )
             )
 
@@ -556,11 +572,15 @@ class WorkerTestSuite:
             "total_tests": total_tests,
             "passed": passed_tests,
             "failed": failed_tests,
-            "success_rate": (passed_tests / total_tests * 100) if total_tests > 0 else 0,
+            "success_rate": (
+                (passed_tests / total_tests * 100) if total_tests > 0 else 0
+            ),
             "total_time": total_time,
-            "average_response_time": sum(r.response_time for r in all_results) / len(all_results)
-            if all_results
-            else 0,
+            "average_response_time": (
+                sum(r.response_time for r in all_results) / len(all_results)
+                if all_results
+                else 0
+            ),
             "test_results": all_results,
         }
 

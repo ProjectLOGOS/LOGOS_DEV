@@ -31,10 +31,14 @@ if not is_training_available():
 
 
 @pytest.fixture()
-def sts_resource() -> Generator[tuple[list[InputExample], list[InputExample]], None, None]:
+def sts_resource() -> (
+    Generator[tuple[list[InputExample], list[InputExample]], None, None]
+):
     sts_dataset_path = "datasets/stsbenchmark.tsv.gz"
     if not os.path.exists(sts_dataset_path):
-        util.http_get("https://sbert.net/datasets/stsbenchmark.tsv.gz", sts_dataset_path)
+        util.http_get(
+            "https://sbert.net/datasets/stsbenchmark.tsv.gz", sts_dataset_path
+        )
 
     stsb_train_samples = []
     stsb_test_samples = []
@@ -42,7 +46,9 @@ def sts_resource() -> Generator[tuple[list[InputExample], list[InputExample]], N
         reader = csv.DictReader(f, delimiter="\t", quoting=csv.QUOTE_NONE)
         for row in reader:
             score = float(row["score"]) / 5.0  # Normalize score to range 0 ... 1
-            inp_example = InputExample(texts=[row["sentence1"], row["sentence2"]], label=score)
+            inp_example = InputExample(
+                texts=[row["sentence1"], row["sentence2"]], label=score
+            )
 
             if row["split"] == "test":
                 stsb_test_samples.append(inp_example)
@@ -65,14 +71,20 @@ def nli_resource() -> Generator[list[InputExample], None, None]:
         for row in reader:
             if row["split"] == "train":
                 label_id = label2int[row["label"]]
-                nli_train_samples.append(InputExample(texts=[row["sentence1"], row["sentence2"]], label=label_id))
+                nli_train_samples.append(
+                    InputExample(
+                        texts=[row["sentence1"], row["sentence2"]], label=label_id
+                    )
+                )
                 if len(nli_train_samples) >= max_train_samples:
                     break
     yield nli_train_samples
 
 
 def evaluate_stsb_test(model, expected_score, test_samples) -> None:
-    evaluator = EmbeddingSimilarityEvaluator.from_input_examples(test_samples, name="sts-test")
+    evaluator = EmbeddingSimilarityEvaluator.from_input_examples(
+        test_samples, name="sts-test"
+    )
     scores = model.evaluate(evaluator)
     score = scores[evaluator.primary_metric] * 100
     print(f"STS-Test Performance: {score:.2f} vs. exp: {expected_score:.2f}")
@@ -85,7 +97,8 @@ def evaluate_stsb_test(model, expected_score, test_samples) -> None:
     reason='Sentence Transformers was not installed with the `["train"]` extra.',
 )
 def test_train_stsb_slow(
-    distilbert_base_uncased_model: SentenceTransformer, sts_resource: tuple[list[InputExample], list[InputExample]]
+    distilbert_base_uncased_model: SentenceTransformer,
+    sts_resource: tuple[list[InputExample], list[InputExample]],
 ) -> None:
     model = distilbert_base_uncased_model
     sts_train_samples, sts_test_samples = sts_resource
@@ -103,13 +116,16 @@ def test_train_stsb_slow(
     evaluate_stsb_test(model, 80.0, sts_test_samples)
 
 
-@pytest.mark.skipif("CI" in os.environ, reason="This test is too slow for the CI (~8 minutes)")
+@pytest.mark.skipif(
+    "CI" in os.environ, reason="This test is too slow for the CI (~8 minutes)"
+)
 @pytest.mark.skipif(
     not is_training_available(),
     reason='Sentence Transformers was not installed with the `["train"]` extra.',
 )
 def test_train_stsb(
-    distilbert_base_uncased_model: SentenceTransformer, sts_resource: tuple[list[InputExample], list[InputExample]]
+    distilbert_base_uncased_model: SentenceTransformer,
+    sts_resource: tuple[list[InputExample], list[InputExample]],
 ) -> None:
     model = distilbert_base_uncased_model
     sts_train_samples, sts_test_samples = sts_resource
@@ -157,7 +173,9 @@ def test_train_nli_slow(
     evaluate_stsb_test(model, 50.0, sts_test_samples)
 
 
-@pytest.mark.skipif("CI" in os.environ, reason="This test is too slow for the CI (~25 minutes)")
+@pytest.mark.skipif(
+    "CI" in os.environ, reason="This test is too slow for the CI (~25 minutes)"
+)
 @pytest.mark.skipif(
     not is_training_available(),
     reason='Sentence Transformers was not installed with the `["train"]` extra.',

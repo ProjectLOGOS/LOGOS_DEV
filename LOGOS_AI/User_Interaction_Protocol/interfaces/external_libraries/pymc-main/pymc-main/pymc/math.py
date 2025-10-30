@@ -218,7 +218,9 @@ def cartesian(*arrays):
     arrays_np = [np.asarray(x) for x in arrays]
     arrays_2d = [x[:, None] if np.asarray(x).ndim == 1 else x for x in arrays_np]
     arrays_integer = [np.arange(len(x)) for x in arrays_2d]
-    product_integers = np.stack(np.meshgrid(*arrays_integer, indexing="ij"), -1).reshape(-1, N)
+    product_integers = np.stack(
+        np.meshgrid(*arrays_integer, indexing="ij"), -1
+    ).reshape(-1, N)
     return np.concatenate(
         [array[product_integers[:, i]] for i, array in enumerate(arrays_2d)], axis=-1
     )

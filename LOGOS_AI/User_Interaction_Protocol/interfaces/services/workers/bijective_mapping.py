@@ -15,16 +15,16 @@ Version: 2.0.0
 Date: 2025-01-28
 """
 
-import numpy as np
-import json
-import time
-import logging
 import hashlib
-from typing import Dict, List, Tuple, Any, Optional, Callable, Set
+import json
+import logging
+import time
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from abc import ABC, abstractmethod
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
+import numpy as np
 from core.data_structures import TrinityVector
 
 # =========================================================================
@@ -210,7 +210,9 @@ class TrinityConfluence:
         target_trinity = mapping.target_domain.trinity_grounding
 
         # Calculate Trinity preservation score
-        trinity_distance = self._calculate_trinity_distance(source_trinity, target_trinity)
+        trinity_distance = self._calculate_trinity_distance(
+            source_trinity, target_trinity
+        )
         trinity_preserved = trinity_distance < 0.1  # Tolerance threshold
 
         # Check Trinity product preservation
@@ -237,7 +239,9 @@ class TrinityConfluence:
 
         return (dx**2 + dy**2 + dz**2) ** 0.5
 
-    def enforce_trinity_confluence(self, mappings: List[BijectiveMapping]) -> Dict[str, Any]:
+    def enforce_trinity_confluence(
+        self, mappings: List[BijectiveMapping]
+    ) -> Dict[str, Any]:
         """Enforce confluence across multiple bijective mappings"""
 
         confluence_violations = []
@@ -338,7 +342,9 @@ class OBDCKernel:
             domain_id="mathematical",
             name="Mathematical Domain",
             domain_type=DomainType.MATHEMATICAL,
-            trinity_grounding=TrinityVector(0.4, 0.2, 0.4),  # Balanced existence and truth
+            trinity_grounding=TrinityVector(
+                0.4, 0.2, 0.4
+            ),  # Balanced existence and truth
         )
         mathematical_domain.elements.update([0, 1, -1, "infinity", "pi", "e"])
         self.add_domain(mathematical_domain)
@@ -374,7 +380,9 @@ class OBDCKernel:
         # Verify Trinity preservation
         trinity_check = self.confluence_system.verify_trinity_preservation(mapping)
         if not trinity_check["trinity_preserved"]:
-            self.logger.error(f"Mapping {mapping.mapping_id} violates Trinity preservation")
+            self.logger.error(
+                f"Mapping {mapping.mapping_id} violates Trinity preservation"
+            )
             return False
 
         self.mappings[mapping.mapping_id] = mapping
@@ -417,7 +425,9 @@ class OBDCKernel:
 
         self.logger.info("Created fundamental bijective mappings")
 
-    def compose_mappings(self, mapping1_id: str, mapping2_id: str) -> Optional[BijectiveMapping]:
+    def compose_mappings(
+        self, mapping1_id: str, mapping2_id: str
+    ) -> Optional[BijectiveMapping]:
         """Compose two bijective mappings"""
 
         if mapping1_id not in self.mappings or mapping2_id not in self.mappings:
@@ -466,11 +476,13 @@ class OBDCKernel:
         # Verify Trinity preservation
         trinity_preservation = {}
         for mapping_id, mapping in self.mappings.items():
-            trinity_preservation[mapping_id] = self.confluence_system.verify_trinity_preservation(
-                mapping
+            trinity_preservation[mapping_id] = (
+                self.confluence_system.verify_trinity_preservation(mapping)
             )
 
-        all_bijective = all(result["bijective"] for result in bijection_results.values())
+        all_bijective = all(
+            result["bijective"] for result in bijection_results.values()
+        )
         all_trinity_preserved = all(
             result["trinity_preserved"] for result in trinity_preservation.values()
         )
@@ -486,7 +498,9 @@ class OBDCKernel:
             "total_mappings": len(self.mappings),
         }
 
-    def get_mapping_path(self, source_domain_id: str, target_domain_id: str) -> Optional[List[str]]:
+    def get_mapping_path(
+        self, source_domain_id: str, target_domain_id: str
+    ) -> Optional[List[str]]:
         """Find bijective mapping path between domains"""
 
         if source_domain_id not in self.domains or target_domain_id not in self.domains:
@@ -556,7 +570,13 @@ class OBDCKernel:
 # V. MODULE EXPORTS
 # =========================================================================
 
-__all__ = ["DomainType", "Domain", "BijectiveMapping", "TrinityConfluence", "OBDCKernel"]
+__all__ = [
+    "DomainType",
+    "Domain",
+    "BijectiveMapping",
+    "TrinityConfluence",
+    "OBDCKernel",
+]
 
 # Create global OBDC kernel instance
 _global_obdc_kernel = None

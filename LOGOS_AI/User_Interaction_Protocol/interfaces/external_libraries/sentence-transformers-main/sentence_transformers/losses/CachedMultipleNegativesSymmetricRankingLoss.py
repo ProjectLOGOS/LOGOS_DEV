@@ -24,7 +24,9 @@ def _backward_hook(
     assert loss_obj.cache is not None
     assert loss_obj.random_states is not None
     with torch.enable_grad():
-        for sentence_feature, grad, random_states in zip(sentence_features, loss_obj.cache, loss_obj.random_states):
+        for sentence_feature, grad, random_states in zip(
+            sentence_features, loss_obj.cache, loss_obj.random_states
+        ):
             for (reps_mb, _), grad_mb in zip(
                 loss_obj.embed_minibatch_iter(
                     sentence_feature=sentence_feature,
@@ -34,7 +36,9 @@ def _backward_hook(
                 ),
                 grad,
             ):
-                surrogate = torch.dot(reps_mb.flatten(), grad_mb.flatten()) * grad_output
+                surrogate = (
+                    torch.dot(reps_mb.flatten(), grad_mb.flatten()) * grad_output
+                )
                 surrogate.backward()
 
 
@@ -153,10 +157,16 @@ class CachedMultipleNegativesSymmetricRankingLoss(nn.Module):
         """Embed a mini-batch of sentences."""
         grad_context = nullcontext if with_grad else torch.no_grad
         random_state_context = nullcontext() if random_state is None else random_state
-        sentence_feature_minibatch = {k: v[begin:end] for k, v in sentence_feature.items()}
+        sentence_feature_minibatch = {
+            k: v[begin:end] for k, v in sentence_feature.items()
+        }
         with random_state_context:
             with grad_context():
-                random_state = RandContext(*sentence_feature_minibatch.values()) if copy_random_state else None
+                random_state = (
+                    RandContext(*sentence_feature_minibatch.values())
+                    if copy_random_state
+                    else None
+                )
                 reps = self.model(sentence_feature_minibatch)["sentence_embedding"]
         return reps, random_state
 
@@ -195,14 +205,20 @@ class CachedMultipleNegativesSymmetricRankingLoss(nn.Module):
         loss = self.calculate_loss(reps, with_backward=True)
         loss = loss.detach().requires_grad_()
 
-        self.cache = [[r.grad for r in rs] for rs in reps]  # e.g. 3 * bsz/mbsz * (mbsz, hdim)
+        self.cache = [
+            [r.grad for r in rs] for rs in reps
+        ]  # e.g. 3 * bsz/mbsz * (mbsz, hdim)
 
         return loss
 
-    def calculate_loss(self, reps: list[list[Tensor]], with_backward: bool = False) -> Tensor:
+    def calculate_loss(
+        self, reps: list[list[Tensor]], with_backward: bool = False
+    ) -> Tensor:
         """Calculate the symmetric loss without caching gradients (for evaluation)."""
         anchors = torch.cat(reps[0])  # (batch_size, embedding_dim)
-        candidates = [torch.cat(r) for r in reps[1:]]  # (1 + num_neg) tensors of shape (batch_size, embedding_dim)
+        candidates = [
+            torch.cat(r) for r in reps[1:]
+        ]  # (1 + num_neg) tensors of shape (batch_size, embedding_dim)
         batch_size = len(anchors)
         offset = 0
 
@@ -210,8 +226,13 @@ class CachedMultipleNegativesSymmetricRankingLoss(nn.Module):
             # Gather the anchors and candidates across all devices, with gradients. We compute only this device's anchors
             # with all candidates from all devices, and only this device's candidates with all anchors from all devices.
             # We do this in such a way that the backward pass on the embeddings can flow back to the original devices.
-            anchors = all_gather_with_grad(anchors)  # (batch_size * world_size, embedding_dim)
-            candidates = [all_gather_with_grad(embedding_column) for embedding_column in candidates]
+            anchors = all_gather_with_grad(
+                anchors
+            )  # (batch_size * world_size, embedding_dim)
+            candidates = [
+                all_gather_with_grad(embedding_column)
+                for embedding_column in candidates
+            ]
             # (1 + num_negatives) tensors of shape (batch_size * world_size, embedding_dim)
 
             # Adjust the range_labels to account for the gathered candidates
@@ -236,12 +257,20 @@ class CachedMultipleNegativesSymmetricRankingLoss(nn.Module):
         ):
             end = min(begin + self.mini_batch_size, batch_size)
             forward_scores: Tensor = (
-                self.similarity_fct(anchors[offset + begin : offset + end], candidates) * self.scale
+                self.similarity_fct(anchors[offset + begin : offset + end], candidates)
+                * self.scale
             )
-            forward_loss: torch.Tensor = self.cross_entropy_loss(forward_scores, labels[begin:end])
+            forward_loss: torch.Tensor = self.cross_entropy_loss(
+                forward_scores, labels[begin:end]
+            )
 
-            backward_scores = self.similarity_fct(candidates[offset + begin : offset + end], anchors) * self.scale
-            backward_loss: torch.Tensor = self.cross_entropy_loss(backward_scores, labels[begin:end])
+            backward_scores = (
+                self.similarity_fct(candidates[offset + begin : offset + end], anchors)
+                * self.scale
+            )
+            backward_loss: torch.Tensor = self.cross_entropy_loss(
+                backward_scores, labels[begin:end]
+            )
 
             loss_mbatch = (forward_loss + backward_loss) / 2
             loss_mbatch = loss_mbatch * len(forward_scores) / batch_size
@@ -253,7 +282,9 @@ class CachedMultipleNegativesSymmetricRankingLoss(nn.Module):
         loss = sum(losses)
         return loss
 
-    def forward(self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor) -> Tensor:
+    def forward(
+        self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor
+    ) -> Tensor:
         """Forward pass of the loss function."""
         reps = []
         self.random_states = []
@@ -272,7 +303,11 @@ class CachedMultipleNegativesSymmetricRankingLoss(nn.Module):
 
         if torch.is_grad_enabled():
             loss = self.calculate_loss_and_cache_gradients(reps)
-            loss.register_hook(partial(_backward_hook, sentence_features=sentence_features, loss_obj=self))
+            loss.register_hook(
+                partial(
+                    _backward_hook, sentence_features=sentence_features, loss_obj=self
+                )
+            )
         else:
             loss = self.calculate_loss(reps)
 

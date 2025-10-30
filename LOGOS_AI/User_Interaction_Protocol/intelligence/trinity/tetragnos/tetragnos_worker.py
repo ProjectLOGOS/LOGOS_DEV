@@ -1,10 +1,12 @@
-import os
-import pika
 import json
-import time
 import logging
+import os
+import time
+
 import numpy as np
-from .ml_components import FeatureExtractor, ClusterAnalyzer
+import pika
+
+from .ml_components import ClusterAnalyzer, FeatureExtractor
 
 # --- Worker-Specific Configuration ---
 SUBSYSTEM_NAME = "Tetragnos"
@@ -76,7 +78,9 @@ class TetragnosWorker:
     def _connect_rabbitmq(self, host):
         for _ in range(10):
             try:
-                connection = pika.BlockingConnection(pika.ConnectionParameters(host, heartbeat=600))
+                connection = pika.BlockingConnection(
+                    pika.ConnectionParameters(host, heartbeat=600)
+                )
                 channel = connection.channel()
                 self.logger.info("Tetragnos worker connected to RabbitMQ.")
                 return connection, channel
@@ -132,7 +136,9 @@ class TetragnosWorker:
 
     def start(self):
         self.channel.basic_qos(prefetch_count=1)
-        self.channel.basic_consume(queue=TASK_QUEUE, on_message_callback=self.process_task)
+        self.channel.basic_consume(
+            queue=TASK_QUEUE, on_message_callback=self.process_task
+        )
         self.logger.info(
             f"{SUBSYSTEM_NAME} worker started and is waiting for tasks on queue '{TASK_QUEUE}'."
         )
@@ -141,7 +147,8 @@ class TetragnosWorker:
 
 if __name__ == "__main__":
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
     worker = TetragnosWorker(os.getenv("RABBITMQ_HOST", "rabbitmq"))
     worker.start()
@@ -154,12 +161,13 @@ and feature extraction with Trinity validation.
 Dependencies: pika, json, logging, sklearn, sentence_transformers
 """
 
-import os
-import pika
 import json
-import time
 import logging
-from typing import Dict, Any, List, Optional
+import os
+import time
+from typing import Any, Dict, List, Optional
+
+import pika
 
 
 # Missing ML Components (CREATE THESE)
@@ -274,7 +282,10 @@ class TetragnosAlignmentProtocol:
 
         # Check for suspicious clustering patterns
         if cluster_count == 1:
-            return {"valid": False, "reason": "Suspicious clustering - all documents identical"}
+            return {
+                "valid": False,
+                "reason": "Suspicious clustering - all documents identical",
+            }
 
         # Check silhouette score for quality
         score = result.get("silhouette_score", 0)

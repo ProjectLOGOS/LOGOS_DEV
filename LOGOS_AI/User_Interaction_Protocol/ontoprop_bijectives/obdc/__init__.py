@@ -7,4 +7,4 @@ Final dispatcher for processed IEL ontological synthesis results.
 
 from .obdc_kernel import emit_tokens
 
-__all__ = ['emit_tokens']
+__all__ = ["emit_tokens"]

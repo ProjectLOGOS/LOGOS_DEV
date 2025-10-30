@@ -2,16 +2,25 @@
 Forecasting Toolkit: Time Series Kalman
 Scaffold + operational code
 """
+
 import numpy as np
 from pykalman import KalmanFilter as PKKalmanFilter
+
 
 class TimeSeriesKalman:
     """
     Wrapper around pykalman's KalmanFilter for time-series smoothing.
     """
-    def __init__(self, transition_matrices=None, observation_matrices=None,
-                 transition_covariance=None, observation_covariance=None,
-                 initial_state_mean=None, initial_state_covariance=None):
+
+    def __init__(
+        self,
+        transition_matrices=None,
+        observation_matrices=None,
+        transition_covariance=None,
+        observation_covariance=None,
+        initial_state_mean=None,
+        initial_state_covariance=None,
+    ):
 
         self.kf = PKKalmanFilter(
             transition_matrices=transition_matrices,
@@ -19,7 +28,7 @@ class TimeSeriesKalman:
             transition_covariance=transition_covariance,
             observation_covariance=observation_covariance,
             initial_state_mean=initial_state_mean,
-            initial_state_covariance=initial_state_covariance
+            initial_state_covariance=initial_state_covariance,
         )
 
     def fit(self, observations):

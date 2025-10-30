@@ -9,7 +9,9 @@ from sentence_transformers import SentenceTransformer, util
 
 
 class MarginMSELoss(nn.Module):
-    def __init__(self, model: SentenceTransformer, similarity_fct=util.pairwise_dot_score) -> None:
+    def __init__(
+        self, model: SentenceTransformer, similarity_fct=util.pairwise_dot_score
+    ) -> None:
         """
         Compute the MSE loss between the ``|sim(Query, Pos) - sim(Query, Neg)|`` and ``|gold_sim(Query, Pos) - gold_sim(Query, Neg)|``.
         By default, sim() is the dot-product. The gold_sim is often the similarity score from a teacher model.
@@ -167,12 +169,19 @@ class MarginMSELoss(nn.Module):
         self.similarity_fct = similarity_fct
         self.loss_fct = nn.MSELoss()
 
-    def forward(self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor) -> Tensor:
-        embeddings = [self.model(sentence_feature)["sentence_embedding"] for sentence_feature in sentence_features]
+    def forward(
+        self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor
+    ) -> Tensor:
+        embeddings = [
+            self.model(sentence_feature)["sentence_embedding"]
+            for sentence_feature in sentence_features
+        ]
 
         return self.compute_loss_from_embeddings(embeddings, labels)
 
-    def compute_loss_from_embeddings(self, embeddings: list[Tensor], labels: Tensor) -> Tensor:
+    def compute_loss_from_embeddings(
+        self, embeddings: list[Tensor], labels: Tensor
+    ) -> Tensor:
         # sentence_features: query, positive passage, negative passage(s)
         embeddings_query = embeddings[0]
         embeddings_pos = embeddings[1]
@@ -207,7 +216,9 @@ class MarginMSELoss(nn.Module):
             return self.loss_fct(margin_pred, labels)
         else:
             # Multiple negatives case
-            scores_negs = [self.similarity_fct(embeddings_query, neg) for neg in embeddings_negs]
+            scores_negs = [
+                self.similarity_fct(embeddings_query, neg) for neg in embeddings_negs
+            ]
             margins = [scores_pos - neg_score for neg_score in scores_negs]
             margins = torch.stack(margins, dim=1)  # Shape: (batch_size, num_negatives)
             return self.loss_fct(margins, labels)

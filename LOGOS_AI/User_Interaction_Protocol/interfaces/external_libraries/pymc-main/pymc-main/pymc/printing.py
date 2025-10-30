@@ -84,7 +84,9 @@ def str_for_dist(
 
     else:  # plain
         dist_name = (
-            dist.owner.op._print_name[0] if hasattr(dist.owner.op, "_print_name") else "Unknown"
+            dist.owner.op._print_name[0]
+            if hasattr(dist.owner.op, "_print_name")
+            else "Unknown"
         )
         if include_params:
             params = ", ".join(dist_args)
@@ -99,7 +101,9 @@ def str_for_dist(
                 return dist_name
 
 
-def str_for_model(model: Model, formatting: str = "plain", include_params: bool = True) -> str:
+def str_for_model(
+    model: Model, formatting: str = "plain", include_params: bool = True
+) -> str:
     """Make a human-readable string representation of Model.
 
     This lists all random variables and their distributions, optionally
@@ -108,7 +112,9 @@ def str_for_model(model: Model, formatting: str = "plain", include_params: bool 
     # Wrap functions to avoid confusing typecheckers
     sfd = partial(str_for_dist, formatting=formatting, include_params=include_params)
     sfp = partial(
-        str_for_potential_or_deterministic, formatting=formatting, include_params=include_params
+        str_for_potential_or_deterministic,
+        formatting=formatting,
+        include_params=include_params,
     )
 
     free_rv_reprs = [sfd(dist) for dist in model.free_RVs]
@@ -131,7 +137,9 @@ def str_for_model(model: Model, formatting: str = "plain", include_params: bool 
             \begin{{array}}{{rcl}}
             {}
             \end{{array}}
-            $$""".format("\\\\".join(var_reprs))
+            $$""".format(
+            "\\\\".join(var_reprs)
+        )
     else:
         # align vars on their ~
         names = [s[: s.index("~") - 1] for s in var_reprs]
@@ -233,7 +241,9 @@ def _str_for_expression(var: Variable, formatting: str) -> str:
 
     # construct a string like f(a1, ..., aN) listing all random variables a as arguments
     def _expand(x):
-        if x.owner and (not isinstance(x.owner.op, RandomVariable | SymbolicRandomVariable)):
+        if x.owner and (
+            not isinstance(x.owner.op, RandomVariable | SymbolicRandomVariable)
+        ):
             return reversed(x.owner.inputs)
 
     parents = []
@@ -255,7 +265,9 @@ def _str_for_expression(var: Variable, formatting: str) -> str:
     if "latex" in formatting:
         return (
             r"f("
-            + ",~".join([_latex_text_format(_latex_escape(n.strip("$"))) for n in names])
+            + ",~".join(
+                [_latex_text_format(_latex_escape(n.strip("$"))) for n in names]
+            )
             + ")"
         )
     else:

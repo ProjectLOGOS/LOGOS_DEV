@@ -83,7 +83,10 @@ def ask(inp: AskIn):
         if r.ok:
             return {"success": True, "archon_response": r.json()}
         else:
-            return {"success": False, "error": f"ARCHON returned {r.status_code}: {r.text}"}
+            return {
+                "success": False,
+                "error": f"ARCHON returned {r.status_code}: {r.text}",
+            }
 
     except Exception as e:
         return {"success": False, "error": str(e)}

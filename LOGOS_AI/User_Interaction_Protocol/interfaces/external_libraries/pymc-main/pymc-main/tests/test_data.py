@@ -47,7 +47,9 @@ class TestData:
         with pm.Model():
             x_shared = pm.Data("x_shared", x)
             b = pm.Normal("b", 0.0, 10.0)
-            pm.Normal("obs", b * x_shared, np.sqrt(1e-2), observed=y, shape=x_shared.shape)
+            pm.Normal(
+                "obs", b * x_shared, np.sqrt(1e-2), observed=y, shape=x_shared.shape
+            )
 
             prior_trace0 = pm.sample_prior_predictive(1000)
             idata = pm.sample(1000, tune=1000, chains=1)
@@ -68,7 +70,9 @@ class TestData:
 
         assert pp_trace1.posterior_predictive["obs"].shape == (1, 1000, 200)
         np.testing.assert_allclose(
-            x_pred, pp_trace1.posterior_predictive["obs"].mean(("chain", "draw")), atol=1e-1
+            x_pred,
+            pp_trace1.posterior_predictive["obs"].mean(("chain", "draw")),
+            atol=1e-1,
         )
 
     def test_sample_posterior_predictive_after_set_data(self):
@@ -92,7 +96,9 @@ class TestData:
 
         assert y_test.posterior_predictive["obs"].shape == (1, 1000, 3)
         np.testing.assert_allclose(
-            x_test, y_test.posterior_predictive["obs"].mean(("chain", "draw")), atol=1e-1
+            x_test,
+            y_test.posterior_predictive["obs"].mean(("chain", "draw")),
+            atol=1e-1,
         )
 
     def test_sample_posterior_predictive_after_set_data_with_coords(self):
@@ -112,7 +118,9 @@ class TestData:
         with model:
             x_test = [5, 6]
             pm.set_data(new_data={"x": x_test}, coords={"obs_id": ["a", "b"]})
-            pm.sample_posterior_predictive(idata, extend_inferencedata=True, predictions=True)
+            pm.sample_posterior_predictive(
+                idata, extend_inferencedata=True, predictions=True
+            )
 
         assert idata.predictions["obs"].shape == (1, 10, 2)
         assert np.all(idata.predictions["obs_id"].values == np.array(["a", "b"]))
@@ -147,7 +155,9 @@ class TestData:
 
         assert pp_trace.posterior_predictive["obs"].shape == (1, 1000, 3)
         np.testing.assert_allclose(
-            new_y, pp_trace.posterior_predictive["obs"].mean(("chain", "draw")), atol=1e-1
+            new_y,
+            pp_trace.posterior_predictive["obs"].mean(("chain", "draw")),
+            atol=1e-1,
         )
 
     def test_shared_data_as_index(self):
@@ -202,7 +212,9 @@ class TestData:
 
         np.testing.assert_allclose(np.array([1.0, 2.0, 3.0]), x.get_value(), atol=1e-1)
         np.testing.assert_allclose(
-            np.array([1.0, 2.0, 3.0]), samples.mean(("chain", "draw", "y_dim_0")), atol=1e-1
+            np.array([1.0, 2.0, 3.0]),
+            samples.mean(("chain", "draw", "y_dim_0")),
+            atol=1e-1,
         )
 
         with m:
@@ -220,7 +232,9 @@ class TestData:
 
         np.testing.assert_allclose(np.array([2.0, 4.0, 6.0]), x.get_value(), atol=1e-1)
         np.testing.assert_allclose(
-            np.array([2.0, 4.0, 6.0]), samples.mean(("chain", "draw", "y_dim_0")), atol=1e-1
+            np.array([2.0, 4.0, 6.0]),
+            samples.mean(("chain", "draw", "y_dim_0")),
+            atol=1e-1,
         )
 
     def test_shared_scalar_as_rv_input(self):
@@ -338,7 +352,12 @@ class TestData:
 
     def test_set_coords_through_pmdata(self):
         with pm.Model() as pmodel:
-            pm.Data("population", [100, 200], dims="city", coords={"city": ["Tinyvil", "Minitown"]})
+            pm.Data(
+                "population",
+                [100, 200],
+                dims="city",
+                coords={"city": ["Tinyvil", "Minitown"]},
+            )
             pm.Data(
                 "temperature",
                 [[15, 20, 22, 17], [18, 22, 21, 12]],
@@ -373,7 +392,9 @@ class TestData:
         pd = pytest.importorskip("pandas")
         ser_sales = pd.Series(
             data=np.random.randint(low=0, high=30, size=22),
-            index=pd.date_range(start="2020-05-01", periods=22, freq="24h", name="date"),
+            index=pd.date_range(
+                start="2020-05-01", periods=22, freq="24h", name="date"
+            ),
             name="sales",
         )
         with pm.Model() as pmodel:
@@ -395,7 +416,12 @@ class TestData:
 
         # infer coordinates from index and columns of the DataFrame
         with pm.Model() as pmodel:
-            pm.Data("observations", df_data, dims=("rows", "columns"), infer_dims_and_coords=True)
+            pm.Data(
+                "observations",
+                df_data,
+                dims=("rows", "columns"),
+                infer_dims_and_coords=True,
+            )
 
         assert "rows" in pmodel.coords
         assert "columns" in pmodel.coords
@@ -466,9 +492,9 @@ class _DataSampler:
         return self
 
     def __next__(self):
-        idx = self.rng.uniform(size=self.n, low=0.0, high=self.data.shape[0] - 1e-16).astype(
-            "int64"
-        )
+        idx = self.rng.uniform(
+            size=self.n, low=0.0, high=self.data.shape[0] - 1e-16
+        ).astype("int64")
         return np.asarray(self.data[idx], self.dtype)
 
     next = __next__
@@ -524,7 +550,8 @@ class TestMinibatch:
     def test_assert(self):
         d1, d2 = pm.Minibatch(self.data, self.data[::2], batch_size=20)
         with pytest.raises(
-            AssertionError, match=r"All variables shape\[0\] in Minibatch should be equal"
+            AssertionError,
+            match=r"All variables shape\[0\] in Minibatch should be equal",
         ):
             d1.eval()
 

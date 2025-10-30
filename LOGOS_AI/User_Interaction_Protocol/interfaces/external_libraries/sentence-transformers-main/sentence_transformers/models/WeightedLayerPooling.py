@@ -14,10 +14,18 @@ from sentence_transformers.models.Module import Module
 class WeightedLayerPooling(Module):
     """Token embeddings are weighted mean of their different hidden layer representations"""
 
-    config_keys: list[str] = ["word_embedding_dimension", "layer_start", "num_hidden_layers"]
+    config_keys: list[str] = [
+        "word_embedding_dimension",
+        "layer_start",
+        "num_hidden_layers",
+    ]
 
     def __init__(
-        self, word_embedding_dimension, num_hidden_layers: int = 12, layer_start: int = 4, layer_weights=None
+        self,
+        word_embedding_dimension,
+        num_hidden_layers: int = 12,
+        layer_start: int = 4,
+        layer_weights=None,
     ):
         super().__init__()
         self.word_embedding_dimension = word_embedding_dimension
@@ -26,17 +34,30 @@ class WeightedLayerPooling(Module):
         self.layer_weights = (
             layer_weights
             if layer_weights is not None
-            else nn.Parameter(torch.tensor([1] * (num_hidden_layers + 1 - layer_start), dtype=torch.float))
+            else nn.Parameter(
+                torch.tensor(
+                    [1] * (num_hidden_layers + 1 - layer_start), dtype=torch.float
+                )
+            )
         )
 
     def forward(self, features: dict[str, Tensor]):
         ft_all_layers = features["all_layer_embeddings"]
 
         all_layer_embedding = torch.stack(ft_all_layers)
-        all_layer_embedding = all_layer_embedding[self.layer_start :, :, :, :]  # Start from 4th layers output
+        all_layer_embedding = all_layer_embedding[
+            self.layer_start :, :, :, :
+        ]  # Start from 4th layers output
 
-        weight_factor = self.layer_weights.unsqueeze(-1).unsqueeze(-1).unsqueeze(-1).expand(all_layer_embedding.size())
-        weighted_average = (weight_factor * all_layer_embedding).sum(dim=0) / self.layer_weights.sum()
+        weight_factor = (
+            self.layer_weights.unsqueeze(-1)
+            .unsqueeze(-1)
+            .unsqueeze(-1)
+            .expand(all_layer_embedding.size())
+        )
+        weighted_average = (weight_factor * all_layer_embedding).sum(
+            dim=0
+        ) / self.layer_weights.sum()
 
         features.update({"token_embeddings": weighted_average})
         return features
@@ -44,7 +65,9 @@ class WeightedLayerPooling(Module):
     def get_word_embedding_dimension(self):
         return self.word_embedding_dimension
 
-    def save(self, output_path: str, *args, safe_serialization: bool = True, **kwargs) -> None:
+    def save(
+        self, output_path: str, *args, safe_serialization: bool = True, **kwargs
+    ) -> None:
         self.save_config(output_path)
         self.save_torch_weights(output_path, safe_serialization=safe_serialization)
 
@@ -68,5 +91,7 @@ class WeightedLayerPooling(Module):
         }
         config = cls.load_config(model_name_or_path=model_name_or_path, **hub_kwargs)
         model = cls(**config)
-        model = cls.load_torch_weights(model_name_or_path=model_name_or_path, model=model, **hub_kwargs)
+        model = cls.load_torch_weights(
+            model_name_or_path=model_name_or_path, model=model, **hub_kwargs
+        )
         return model

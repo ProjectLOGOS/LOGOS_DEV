@@ -82,10 +82,16 @@ class MSEEvaluatorFromDataFrame(SentenceEvaluator):
         all_source_sentences = list(all_source_sentences)
 
         all_src_embeddings = self.embed_inputs(teacher_model, all_source_sentences)
-        self.teacher_embeddings = {sent: emb for sent, emb in zip(all_source_sentences, all_src_embeddings)}
+        self.teacher_embeddings = {
+            sent: emb for sent, emb in zip(all_source_sentences, all_src_embeddings)
+        }
 
     def __call__(
-        self, model: SentenceTransformer, output_path: str | None = None, epoch: int = -1, steps: int = -1
+        self,
+        model: SentenceTransformer,
+        output_path: str | None = None,
+        epoch: int = -1,
+        steps: int = -1,
     ) -> dict[str, float]:
         model.eval()
 
@@ -93,20 +99,29 @@ class MSEEvaluatorFromDataFrame(SentenceEvaluator):
         for src_lang, trg_lang in self.combinations:
             src_sentences, trg_sentences = self.data[(src_lang, trg_lang)]
 
-            src_embeddings = np.asarray([self.teacher_embeddings[sent] for sent in src_sentences])
+            src_embeddings = np.asarray(
+                [self.teacher_embeddings[sent] for sent in src_sentences]
+            )
             trg_embeddings = np.asarray(self.embed_inputs(model, trg_sentences))
 
             mse = ((src_embeddings - trg_embeddings) ** 2).mean()
             mse *= 100
             mse_scores.append(mse)
 
-            logger.info(f"MSE evaluation on {self.name} dataset - {src_lang}-{trg_lang}:")
+            logger.info(
+                f"MSE evaluation on {self.name} dataset - {src_lang}-{trg_lang}:"
+            )
             logger.info(f"MSE (*100):\t{mse:4f}")
 
         if output_path is not None and self.write_csv:
             csv_path = os.path.join(output_path, self.csv_file)
             output_file_exists = os.path.isfile(csv_path)
-            with open(csv_path, newline="", mode="a" if output_file_exists else "w", encoding="utf-8") as f:
+            with open(
+                csv_path,
+                newline="",
+                mode="a" if output_file_exists else "w",
+                encoding="utf-8",
+            ) as f:
                 writer = csv.writer(f)
                 if not output_file_exists:
                     writer.writerow(self.csv_headers)

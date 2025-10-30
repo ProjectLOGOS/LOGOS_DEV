@@ -7,19 +7,19 @@ translation layers with support for trinity vector extraction.
 Dependencies: typing, json, re
 """
 
-from typing import Dict, List, Tuple, Optional, Union, Any
-import re
 import json
 import logging
+import re
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 # Import from other modules (adjust paths as needed)
 from ..core.lambda_engine import (
-    LogosExpr,
-    Variable,
-    Value,
     Application,
-    SufficientReason,
     LambdaEngine,
+    LogosExpr,
+    SufficientReason,
+    Value,
+    Variable,
 )
 from ..ontology.trinity_vector import TrinityVector
 from ..utils.data_structures import OntologicalType
@@ -30,7 +30,9 @@ logger = logging.getLogger(__name__)
 class TranslationResult:
     """Holds results of 3PDN translation."""
 
-    def __init__(self, query: str, trinity_vector: TrinityVector, layers: Dict[str, Any] = None):
+    def __init__(
+        self, query: str, trinity_vector: TrinityVector, layers: Dict[str, Any] = None
+    ):
         """Initialize translation result.
 
         Args:
@@ -195,7 +197,8 @@ class PDNBridge:
         tokens = [
             token.lower()
             for token in re.findall(r"\b\w+\b", query)
-            if len(token) > 1 and token.lower() not in ["the", "a", "an", "is", "are", "to"]
+            if len(token) > 1
+            and token.lower() not in ["the", "a", "an", "is", "are", "to"]
         ]
 
         return tokens
@@ -222,7 +225,10 @@ class PDNBridge:
         # Count matches in each category
         for token in sign_layer:
             for category, keywords in self.semantic_categories.items():
-                if any(token == keyword or token.startswith(keyword) for keyword in keywords):
+                if any(
+                    token == keyword or token.startswith(keyword)
+                    for keyword in keywords
+                ):
                     categories[category] += 1.0
 
         # Normalize to range [0,1]
@@ -300,7 +306,11 @@ class PDNBridge:
             trinity = trinity_data
 
         # Determine strongest dimension
-        dims = [("existence", trinity[0]), ("goodness", trinity[1]), ("truth", trinity[2])]
+        dims = [
+            ("existence", trinity[0]),
+            ("goodness", trinity[1]),
+            ("truth", trinity[2]),
+        ]
         primary_dim = max(dims, key=lambda x: x[1])
 
         # Create expression based on primary dimension
@@ -367,9 +377,15 @@ class PDNBridge:
             arg_str = str(expr.arg)
 
             # Special case for common patterns
-            if func_str == str(self.common_terms.get("sr_eg", "")) and arg_str == "ei:𝔼":
+            if (
+                func_str == str(self.common_terms.get("sr_eg", ""))
+                and arg_str == "ei:𝔼"
+            ):
                 return "existence implies goodness"
-            elif func_str == str(self.common_terms.get("sr_gt", "")) and arg_str == "og:𝔾":
+            elif (
+                func_str == str(self.common_terms.get("sr_gt", ""))
+                and arg_str == "og:𝔾"
+            ):
                 return "goodness implies truth"
             else:
                 func_natural = self.lambda_to_natural(expr.func)
@@ -399,7 +415,11 @@ class PDNBridge:
 
         # Create 3PDN representation
         return {
-            "layers": {"SIGN": self._expr_to_sign(expr), "MIND": semantic, "BRIDGE": ontological},
+            "layers": {
+                "SIGN": self._expr_to_sign(expr),
+                "MIND": semantic,
+                "BRIDGE": ontological,
+            },
             "trinity_vector": (
                 ontological.get("existence", 0.5),
                 ontological.get("goodness", 0.5),
@@ -425,7 +445,11 @@ class PDNBridge:
             return {"type": "simple", "value": expr.onto_type}
 
         elif isinstance(expr, SufficientReason):
-            return {"type": "sr", "source": expr.source_type, "target": expr.target_type}
+            return {
+                "type": "sr",
+                "source": expr.source_type,
+                "target": expr.target_type,
+            }
 
         elif isinstance(expr, Application):
             # Recursive type extraction
@@ -474,7 +498,10 @@ class PDNBridge:
             source = type_info.get("source")
             target = type_info.get("target")
 
-            if source == OntologicalType.EXISTENCE and target == OntologicalType.GOODNESS:
+            if (
+                source == OntologicalType.EXISTENCE
+                and target == OntologicalType.GOODNESS
+            ):
                 semantic["ontological"] = 0.5
                 semantic["moral"] = 0.5
             elif source == OntologicalType.GOODNESS and target == OntologicalType.TRUTH:
@@ -527,10 +554,14 @@ class PDNBridge:
             ontological["truth"] = 0.5 + 0.5 * semantic["epistemic"]
 
         if semantic.get("logical", 0) > 0:
-            ontological["truth"] = max(ontological["truth"], 0.5 + 0.4 * semantic["logical"])
+            ontological["truth"] = max(
+                ontological["truth"], 0.5 + 0.4 * semantic["logical"]
+            )
 
         if semantic.get("causal", 0) > 0:
-            ontological["existence"] = max(ontological["existence"], 0.5 + 0.3 * semantic["causal"])
+            ontological["existence"] = max(
+                ontological["existence"], 0.5 + 0.3 * semantic["causal"]
+            )
 
         # Ensure values are within [0, 1]
         for key in ontological:
@@ -549,7 +580,9 @@ class PDNBridge:
         """
         # Convert to string and tokenize
         expr_str = str(expr)
-        tokens = expr_str.replace("(", " ( ").replace(")", " ) ").replace(".", " . ").split()
+        tokens = (
+            expr_str.replace("(", " ( ").replace(")", " ) ").replace(".", " . ").split()
+        )
 
         # Filter and clean
         return [token for token in tokens if token.strip()]
@@ -590,7 +623,11 @@ class PDNBottleneckSolver:
             trinity = trinity_data
 
         # Determine strongest dimensions (top 2)
-        dims = [("existence", trinity[0]), ("goodness", trinity[1]), ("truth", trinity[2])]
+        dims = [
+            ("existence", trinity[0]),
+            ("goodness", trinity[1]),
+            ("truth", trinity[2]),
+        ]
         dims.sort(key=lambda x: x[1], reverse=True)
 
         # Create Lambda target based on dimensions
@@ -625,9 +662,11 @@ class PDNBottleneckSolver:
             "query": query,
             "trinity_vector": trinity,
             "lambda_expr": str(target),
-            "lambda_dict": self.bridge.lambda_engine.expr_to_dict(target)
-            if self.bridge.lambda_engine
-            else {},
+            "lambda_dict": (
+                self.bridge.lambda_engine.expr_to_dict(target)
+                if self.bridge.lambda_engine
+                else {}
+            ),
             "natural": self.bridge.lambda_to_natural(target),
         }
 

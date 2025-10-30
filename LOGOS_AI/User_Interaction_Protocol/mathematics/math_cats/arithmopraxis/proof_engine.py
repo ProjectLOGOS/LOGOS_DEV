@@ -5,6 +5,7 @@ Provides automated theorem proving, proof verification,
 and mathematical reasoning capabilities.
 """
 
+
 class ProofEngine:
     """
     Engine for automated mathematical proving and verification.
@@ -13,7 +14,7 @@ class ProofEngine:
     resolution, and specialized mathematical proving strategies.
     """
 
-    def __init__(self, logic_system: str = 'first_order'):
+    def __init__(self, logic_system: str = "first_order"):
         """
         Initialize the proof engine.
 
@@ -33,11 +34,7 @@ class ProofEngine:
             axiom: Axiom statement
             name: Optional name for the axiom
         """
-        self.axioms.append({
-            'statement': axiom,
-            'name': name,
-            'type': 'axiom'
-        })
+        self.axioms.append({"statement": axiom, "name": name, "type": "axiom"})
 
     def prove_theorem(self, theorem: str, max_steps: int = 100) -> dict:
         """
@@ -51,10 +48,10 @@ class ProofEngine:
             Proof result with steps and success status
         """
         proof_attempt = {
-            'theorem': theorem,
-            'steps': [],
-            'success': False,
-            'method': 'natural_deduction'
+            "theorem": theorem,
+            "steps": [],
+            "success": False,
+            "method": "natural_deduction",
         }
 
         # Placeholder proof search
@@ -62,12 +59,14 @@ class ProofEngine:
 
         # Try some basic proofs
         if self._try_basic_proof(theorem, proof_attempt, max_steps):
-            proof_attempt['success'] = True
+            proof_attempt["success"] = True
 
         self.proof_history.append(proof_attempt)
         return proof_attempt
 
-    def _try_basic_proof(self, theorem: str, proof_attempt: dict, max_steps: int) -> bool:
+    def _try_basic_proof(
+        self, theorem: str, proof_attempt: dict, max_steps: int
+    ) -> bool:
         """
         Attempt basic proof strategies.
 
@@ -83,28 +82,42 @@ class ProofEngine:
 
         # Check if theorem is already an axiom
         for axiom in self.axioms:
-            if axiom['statement'] == theorem:
-                proof_attempt['steps'].append({
-                    'step': 1,
-                    'statement': theorem,
-                    'justification': f'Axiom: {axiom.get("name", "unnamed")}'
-                })
+            if axiom["statement"] == theorem:
+                proof_attempt["steps"].append(
+                    {
+                        "step": 1,
+                        "statement": theorem,
+                        "justification": f'Axiom: {axiom.get("name", "unnamed")}',
+                    }
+                )
                 return True
 
         # Try modus ponens with available axioms
         for axiom in self.axioms:
-            if '→' in axiom['statement']:
-                antecedent, consequent = axiom['statement'].split('→', 1)
+            if "→" in axiom["statement"]:
+                antecedent, consequent = axiom["statement"].split("→", 1)
                 antecedent = antecedent.strip()
                 consequent = consequent.strip()
 
                 # Check if we have the antecedent as another axiom or theorem
                 for other in self.axioms + self.theorems:
-                    if other['statement'] == antecedent and consequent == theorem:
-                        proof_attempt['steps'] = [
-                            {'step': 1, 'statement': antecedent, 'justification': 'Premise'},
-                            {'step': 2, 'statement': axiom['statement'], 'justification': 'Premise'},
-                            {'step': 3, 'statement': theorem, 'justification': 'Modus Ponens (1,2)'}
+                    if other["statement"] == antecedent and consequent == theorem:
+                        proof_attempt["steps"] = [
+                            {
+                                "step": 1,
+                                "statement": antecedent,
+                                "justification": "Premise",
+                            },
+                            {
+                                "step": 2,
+                                "statement": axiom["statement"],
+                                "justification": "Premise",
+                            },
+                            {
+                                "step": 3,
+                                "statement": theorem,
+                                "justification": "Modus Ponens (1,2)",
+                            },
                         ]
                         return True
 
@@ -120,11 +133,7 @@ class ProofEngine:
         Returns:
             Verification result
         """
-        verification = {
-            'valid': True,
-            'errors': [],
-            'warnings': []
-        }
+        verification = {"valid": True, "errors": [], "warnings": []}
 
         # Placeholder verification
         # In practice, would check each step against inference rules
@@ -132,20 +141,23 @@ class ProofEngine:
         used_lines = set()
 
         for i, step in enumerate(proof_steps):
-            step_num = step.get('step', i + 1)
-            statement = step.get('statement', '')
-            justification = step.get('justification', '')
+            step_num = step.get("step", i + 1)
+            statement = step.get("statement", "")
+            justification = step.get("justification", "")
 
             # Check if justification references valid previous lines
-            if 'Modus Ponens' in justification:
+            if "Modus Ponens" in justification:
                 # Extract referenced line numbers
                 import re
-                refs = re.findall(r'\((\d+),(\d+)\)', justification)
+
+                refs = re.findall(r"\((\d+),(\d+)\)", justification)
                 if refs:
                     ref1, ref2 = map(int, refs[0])
                     if ref1 >= step_num or ref2 >= step_num:
-                        verification['errors'].append(f'Step {step_num}: Invalid line reference')
-                        verification['valid'] = False
+                        verification["errors"].append(
+                            f"Step {step_num}: Invalid line reference"
+                        )
+                        verification["valid"] = False
 
             used_lines.add(step_num)
 
@@ -165,22 +177,18 @@ class ProofEngine:
         # In practice, would use model finding or semantic methods
 
         # Simple counterexamples for basic statements
-        if statement == 'All ravens are black':
+        if statement == "All ravens are black":
+            return {"found": True, "counterexample": "A white raven", "domain": "birds"}
+        elif statement == "2 + 2 = 5":
             return {
-                'found': True,
-                'counterexample': 'A white raven',
-                'domain': 'birds'
-            }
-        elif statement == '2 + 2 = 5':
-            return {
-                'found': True,
-                'counterexample': 'Arithmetic shows 2 + 2 = 4',
-                'domain': 'arithmetic'
+                "found": True,
+                "counterexample": "Arithmetic shows 2 + 2 = 4",
+                "domain": "arithmetic",
             }
 
         return {
-            'found': False,
-            'reason': 'No counterexample found with available methods'
+            "found": False,
+            "reason": "No counterexample found with available methods",
         }
 
     def check_consistency(self) -> dict:
@@ -194,22 +202,22 @@ class ProofEngine:
         contradictions = []
 
         # Check for obvious contradictions
-        statements = [a['statement'] for a in self.axioms + self.theorems]
+        statements = [a["statement"] for a in self.axioms + self.theorems]
 
         for stmt in statements:
-            if '⊥' in stmt or 'false' in stmt.lower():
-                contradictions.append(f'Explicit contradiction: {stmt}')
+            if "⊥" in stmt or "false" in stmt.lower():
+                contradictions.append(f"Explicit contradiction: {stmt}")
 
         # Check for A and ¬A
         for i, stmt1 in enumerate(statements):
-            for stmt2 in statements[i+1:]:
-                if f'¬{stmt1}' == stmt2 or f'¬{stmt2}' == stmt1:
-                    contradictions.append(f'Contradiction pair: {stmt1} and {stmt2}')
+            for stmt2 in statements[i + 1 :]:
+                if f"¬{stmt1}" == stmt2 or f"¬{stmt2}" == stmt1:
+                    contradictions.append(f"Contradiction pair: {stmt1} and {stmt2}")
 
         return {
-            'consistent': len(contradictions) == 0,
-            'contradictions': contradictions,
-            'method': 'syntactic_check'
+            "consistent": len(contradictions) == 0,
+            "contradictions": contradictions,
+            "method": "syntactic_check",
         }
 
     def generate_proof_skeleton(self, theorem: str) -> list:
@@ -225,20 +233,16 @@ class ProofEngine:
         # Placeholder proof skeleton generation
         skeleton = [
             {
-                'step': 1,
-                'statement': 'Assumption or premise',
-                'justification': 'To be determined'
+                "step": 1,
+                "statement": "Assumption or premise",
+                "justification": "To be determined",
             },
             {
-                'step': 2,
-                'statement': 'Intermediate step',
-                'justification': 'To be determined'
+                "step": 2,
+                "statement": "Intermediate step",
+                "justification": "To be determined",
             },
-            {
-                'step': 3,
-                'statement': theorem,
-                'justification': 'Goal'
-            }
+            {"step": 3, "statement": theorem, "justification": "Goal"},
         ]
 
         return skeleton

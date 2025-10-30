@@ -92,7 +92,9 @@ class LOGOSChatEngine:
             "security": "Proof-gated execution with kernel verification",
         }
 
-    async def authorize_chat_action(self, action: str, session_id: str) -> dict[str, Any]:
+    async def authorize_chat_action(
+        self, action: str, session_id: str
+    ) -> dict[str, Any]:
         """Get authorization for chat actions through LOGOS alignment system"""
         auth_request = {
             "action": f"chat:{action}",
@@ -133,11 +135,15 @@ class LOGOSChatEngine:
 
         # Use GPT for intelligent processing
         try:
-            response_text, tool_request = await self.gpt_engine.process_message(message, session_id)
+            response_text, tool_request = await self.gpt_engine.process_message(
+                message, session_id
+            )
 
             # If GPT wants to use a tool, execute it
             if tool_request:
-                tool_result = await self.execute_gpt_tool_request(tool_request, session_id)
+                tool_result = await self.execute_gpt_tool_request(
+                    tool_request, session_id
+                )
                 return f"{response_text}\n\n{tool_result}"
 
             return response_text
@@ -147,7 +153,9 @@ class LOGOSChatEngine:
             print(f"GPT processing failed: {e}")
             return await self.fallback_process_message(message, session_id)
 
-    async def execute_gpt_tool_request(self, tool_request: dict, session_id: str) -> str:
+    async def execute_gpt_tool_request(
+        self, tool_request: dict, session_id: str
+    ) -> str:
         """Execute tool request from GPT"""
         tool = tool_request.get("tool")
         operation = tool_request.get("operation")
@@ -178,7 +186,9 @@ class LOGOSChatEngine:
                 "proof_token": auth["proof_token"],
             }
 
-            response = requests.post(f"{TOOL_ROUTER_URL}/route", json=request_data, timeout=10)
+            response = requests.post(
+                f"{TOOL_ROUTER_URL}/route", json=request_data, timeout=10
+            )
 
             if response.status_code == 200:
                 result = response.json()
@@ -213,7 +223,9 @@ class LOGOSChatEngine:
                 "proof_token": auth["proof_token"],
             }
 
-            response = requests.post(f"{TOOL_ROUTER_URL}/route", json=request_data, timeout=10)
+            response = requests.post(
+                f"{TOOL_ROUTER_URL}/route", json=request_data, timeout=10
+            )
 
             if response.status_code == 200:
                 result = response.json()
@@ -243,7 +255,9 @@ The trend analysis shows the data progression and predicts the next {horizon} va
                 "proof_token": auth["proof_token"],
             }
 
-            response = requests.post(f"{TOOL_ROUTER_URL}/route", json=request_data, timeout=10)
+            response = requests.post(
+                f"{TOOL_ROUTER_URL}/route", json=request_data, timeout=10
+            )
 
             if response.status_code == 200:
                 result = response.json()
@@ -267,9 +281,13 @@ The logical statement has been processed using automated theorem proving.
             for keyword in ["analyze", "cluster", "semantic", "text analysis"]
         ):
             return await self.handle_text_analysis(message, session_id)
-        elif any(keyword in message.lower() for keyword in ["predict", "forecast", "trend"]):
+        elif any(
+            keyword in message.lower() for keyword in ["predict", "forecast", "trend"]
+        ):
             return await self.handle_forecasting(message, session_id)
-        elif any(keyword in message.lower() for keyword in ["prove", "logic", "theorem"]):
+        elif any(
+            keyword in message.lower() for keyword in ["prove", "logic", "theorem"]
+        ):
             return await self.handle_theorem_proving(message, session_id)
         else:
             return await self.handle_general_chat(message, session_id)
@@ -347,11 +365,17 @@ The logical statement has been processed using automated theorem proving.
             # Call TETRAGNOS through Tool Router
             request_data = {
                 "tool": "tetragnos",
-                "args": {"op": "cluster_texts", "texts": sentences, "k": min(2, len(sentences))},
+                "args": {
+                    "op": "cluster_texts",
+                    "texts": sentences,
+                    "k": min(2, len(sentences)),
+                },
                 "proof_token": auth["proof_token"],
             }
 
-            response = requests.post(f"{TOOL_ROUTER_URL}/route", json=request_data, timeout=10)
+            response = requests.post(
+                f"{TOOL_ROUTER_URL}/route", json=request_data, timeout=10
+            )
 
             if response.status_code == 200:
                 result = response.json()
@@ -396,7 +420,9 @@ The logical statement has been processed using automated theorem proving.
                 "proof_token": auth["proof_token"],
             }
 
-            response = requests.post(f"{TOOL_ROUTER_URL}/route", json=request_data, timeout=10)
+            response = requests.post(
+                f"{TOOL_ROUTER_URL}/route", json=request_data, timeout=10
+            )
 
             if response.status_code == 200:
                 result = response.json()
@@ -422,7 +448,9 @@ The trend analysis shows the data progression and predicts the next 4 values bas
             auth = await self.authorize_chat_action("theorem_proving", session_id)
 
             # Extract logical statement (simple parsing)
-            statement = message.lower().replace("prove that", "").replace("prove", "").strip()
+            statement = (
+                message.lower().replace("prove that", "").replace("prove", "").strip()
+            )
             if "true" in statement and "true" in statement:
                 formula = "And(True, True)"
             elif "false" in statement:
@@ -437,7 +465,9 @@ The trend analysis shows the data progression and predicts the next 4 values bas
                 "proof_token": auth["proof_token"],
             }
 
-            response = requests.post(f"{TOOL_ROUTER_URL}/route", json=request_data, timeout=10)
+            response = requests.post(
+                f"{TOOL_ROUTER_URL}/route", json=request_data, timeout=10
+            )
 
             if response.status_code == 200:
                 result = response.json()
@@ -483,7 +513,10 @@ What would you like to explore today? You can ask me to analyze text, make predi
 
 Type /help for more commands."""
 
-        elif any(word in message_lower for word in ["what can you do", "capabilities", "help"]):
+        elif any(
+            word in message_lower
+            for word in ["what can you do", "capabilities", "help"]
+        ):
             return await self.handle_command("/capabilities", session_id)
 
         elif any(word in message_lower for word in ["goodbye", "bye", "exit"]):
@@ -597,7 +630,9 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
 @app.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(message: ChatMessage):
     """REST endpoint for chat (alternative to WebSocket)"""
-    response_text = await chat_engine.process_message(message.message, message.session_id)
+    response_text = await chat_engine.process_message(
+        message.message, message.session_id
+    )
 
     return ChatResponse(
         response=response_text,

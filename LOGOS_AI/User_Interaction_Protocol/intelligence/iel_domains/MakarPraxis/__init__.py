@@ -13,55 +13,60 @@ Ontological Mapping:
 - Order: Second-Order
 """
 
-from typing import Dict, Any, List, Optional, Union
 import logging
+from typing import Any, Dict, List, Optional, Union
+
 
 class MakarPraxisCore:
     """Core blessedness reasoning engine for divine favor analysis"""
-    
+
     def __init__(self):
         self.blessedness_metrics = {
-            'divine_favor': 0.0,
-            'beatitude': 0.0,
-            'sanctification': 0.0,
-            'grace_reception': 0.0,
-            'blessed_status': 0.0
+            "divine_favor": 0.0,
+            "beatitude": 0.0,
+            "sanctification": 0.0,
+            "grace_reception": 0.0,
+            "blessed_status": 0.0,
         }
-        
-    def evaluate_blessedness_manifestation(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
+
+    def evaluate_blessedness_manifestation(
+        self, input_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Evaluate blessedness manifestation and divine favor"""
-        
+
         blessedness_level = self._calculate_blessedness_level(input_data)
         beatific_analysis = self._analyze_beatific_state(input_data)
         grace_assessment = self._assess_divine_grace(input_data)
-        
+
         return {
-            'blessedness_level': blessedness_level,
-            'beatific_analysis': beatific_analysis,
-            'grace_assessment': grace_assessment,
-            'blessedness_verdict': self._generate_blessedness_verdict(blessedness_level),
-            'blessing_enhancements': self._suggest_blessing_enhancements(input_data)
+            "blessedness_level": blessedness_level,
+            "beatific_analysis": beatific_analysis,
+            "grace_assessment": grace_assessment,
+            "blessedness_verdict": self._generate_blessedness_verdict(
+                blessedness_level
+            ),
+            "blessing_enhancements": self._suggest_blessing_enhancements(input_data),
         }
-    
+
     def _calculate_blessedness_level(self, data: Dict[str, Any]) -> float:
         return 0.95
-    
+
     def _analyze_beatific_state(self, data: Dict[str, Any]) -> Dict[str, Any]:
         return {
-            'beatific_vision': 0.93,
-            'divine_union': 0.91,
-            'transcendent_joy': 0.96,
-            'eternal_happiness': 0.94
+            "beatific_vision": 0.93,
+            "divine_union": 0.91,
+            "transcendent_joy": 0.96,
+            "eternal_happiness": 0.94,
         }
-    
+
     def _assess_divine_grace(self, data: Dict[str, Any]) -> Dict[str, Any]:
         return {
-            'grace_reception': 0.97,
-            'favor_manifestation': 0.95,
-            'blessing_abundance': 0.92,
-            'sanctifying_presence': 0.94
+            "grace_reception": 0.97,
+            "favor_manifestation": 0.95,
+            "blessing_abundance": 0.92,
+            "sanctifying_presence": 0.94,
         }
-    
+
     def _generate_blessedness_verdict(self, level: float) -> str:
         if level >= 0.95:
             return "supremely_blessed"
@@ -71,16 +76,17 @@ class MakarPraxisCore:
             return "graciously_blessed"
         else:
             return "blessing_deficient"
-    
+
     def _suggest_blessing_enhancements(self, data: Dict[str, Any]) -> List[str]:
         return [
             "deepen_divine_union",
             "increase_grace_reception",
             "enhance_beatific_vision",
-            "strengthen_sanctifying_presence"
+            "strengthen_sanctifying_presence",
         ]
+
 
 # Global instance
 makar_praxis = MakarPraxisCore()
 
-__all__ = ['MakarPraxisCore', 'makar_praxis']
+__all__ = ["MakarPraxisCore", "makar_praxis"]

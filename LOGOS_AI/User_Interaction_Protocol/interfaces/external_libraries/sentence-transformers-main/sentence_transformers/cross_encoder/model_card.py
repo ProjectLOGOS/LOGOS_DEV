@@ -7,11 +7,20 @@ from typing import TYPE_CHECKING, Any
 
 from huggingface_hub import ModelCard
 
-from sentence_transformers.model_card import SentenceTransformerModelCardCallback, SentenceTransformerModelCardData
+from sentence_transformers.model_card import (
+    SentenceTransformerModelCardCallback,
+    SentenceTransformerModelCardData,
+)
 from sentence_transformers.util import is_datasets_available
 
 if is_datasets_available():
-    from datasets import Dataset, DatasetDict, IterableDataset, IterableDatasetDict, Value
+    from datasets import (
+        Dataset,
+        DatasetDict,
+        IterableDataset,
+        IterableDatasetDict,
+        Value,
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +91,9 @@ class CrossEncoderModelCardData(SentenceTransformerModelCardData):
 
     # Computed once, always unchanged
     pipeline_tag: str = field(default=None, init=False)
-    template_path: Path = field(default=Path(__file__).parent / "model_card_template.md", init=False, repr=False)
+    template_path: Path = field(
+        default=Path(__file__).parent / "model_card_template.md", init=False, repr=False
+    )
 
     # Passed via `register_model` only
     model: CrossEncoder | None = field(default=None, init=False, repr=False)
@@ -107,7 +118,10 @@ class CrossEncoderModelCardData(SentenceTransformerModelCardData):
         columns = [
             column
             for column, feature in dataset.features.items()
-            if (isinstance(feature, Value) and feature.dtype in {"string", "large_string"})
+            if (
+                isinstance(feature, Value)
+                and feature.dtype in {"string", "large_string"}
+            )
             or (
                 hasattr(feature, "feature")
                 and isinstance(feature.feature, Value)
@@ -132,17 +146,23 @@ class CrossEncoderModelCardData(SentenceTransformerModelCardData):
             queries = [queries[0]] * len(answers)
 
         if query_type is str:
-            self.predict_example = [[query, response] for query, response in zip(queries, answers)]
+            self.predict_example = [
+                [query, response] for query, response in zip(queries, answers)
+            ]
 
     def register_model(self, model) -> None:
         super().register_model(model)
 
         if self.task_name is None:
             self.task_name = (
-                "text reranking and semantic search" if model.num_labels == 1 else "text pair classification"
+                "text reranking and semantic search"
+                if model.num_labels == 1
+                else "text pair classification"
             )
         if self.pipeline_tag is None:
-            self.pipeline_tag = "text-ranking" if model.num_labels == 1 else "text-classification"
+            self.pipeline_tag = (
+                "text-ranking" if model.num_labels == 1 else "text-classification"
+            )
 
     def tokenize(self, text: str | list[str], **kwargs) -> dict[str, Any]:
         return self.model.tokenizer(text)
@@ -161,6 +181,8 @@ class CrossEncoderModelCardData(SentenceTransformerModelCardData):
 
 def generate_model_card(model: CrossEncoder) -> str:
     model_card = ModelCard.from_template(
-        card_data=model.model_card_data, template_path=model.model_card_data.template_path, hf_emoji="🤗"
+        card_data=model.model_card_data,
+        template_path=model.model_card_data.template_path,
+        hf_emoji="🤗",
     )
     return model_card.content

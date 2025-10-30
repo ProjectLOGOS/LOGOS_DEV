@@ -14,7 +14,8 @@ from sklearn.pipeline import make_pipeline
 # --- End Imports ---
 
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - TETRAGNOS_CORE - %(message)s"
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - TETRAGNOS_CORE - %(message)s",
 )
 
 
@@ -33,7 +34,9 @@ class TetragnosCore:
             # PyTorch and Sentence-Transformers setup
             self.device = "cuda" if torch.cuda.is_available() else "cpu"
             logging.info(f"Using device: {self.device}")
-            self.embedding_model = SentenceTransformer("all-MiniLM-L6-v2", device=self.device)
+            self.embedding_model = SentenceTransformer(
+                "all-MiniLM-L6-v2", device=self.device
+            )
             logging.info("SentenceTransformer model loaded successfully.")
 
             # --- NEW: Train a simple Scikit-learn model on startup ---
@@ -48,7 +51,9 @@ class TetragnosCore:
             train_labels = ["positive", "positive", "negative", "negative"]
 
             # Create a model pipeline: text -> TF-IDF vectors -> Naive Bayes classifier
-            self.sentiment_classifier = make_pipeline(TfidfVectorizer(), MultinomialNB())
+            self.sentiment_classifier = make_pipeline(
+                TfidfVectorizer(), MultinomialNB()
+            )
             self.sentiment_classifier.fit(train_data, train_labels)
             logging.info("Scikit-learn sentiment classifier trained successfully.")
             # --- END NEW ---
@@ -63,7 +68,9 @@ class TetragnosCore:
         Executes a task based on the payload.
         """
         if not all([self.embedding_model, self.sentiment_classifier]):
-            raise RuntimeError("TetragnosCore is not properly initialized. A model failed to load.")
+            raise RuntimeError(
+                "TetragnosCore is not properly initialized. A model failed to load."
+            )
 
         action = payload.get("action")
         logging.info(f"Executing action: {action}")
@@ -71,7 +78,9 @@ class TetragnosCore:
         if action == "generate_embedding":
             text = payload.get("text")
             if not text:
-                raise ValueError("Payload for 'generate_embedding' must contain 'text'.")
+                raise ValueError(
+                    "Payload for 'generate_embedding' must contain 'text'."
+                )
 
             embedding = self.embedding_model.encode(text, convert_to_tensor=True)
             return {"embedding": embedding.cpu().tolist(), "model": "all-MiniLM-L6-v2"}
@@ -80,11 +89,15 @@ class TetragnosCore:
         elif action == "classify_sentiment_classic":
             text_to_classify = payload.get("text")
             if not text_to_classify:
-                raise ValueError("Payload for 'classify_sentiment_classic' must contain 'text'.")
+                raise ValueError(
+                    "Payload for 'classify_sentiment_classic' must contain 'text'."
+                )
 
             # The pipeline handles vectorization and prediction
             prediction = self.sentiment_classifier.predict([text_to_classify])[0]
-            probabilities = self.sentiment_classifier.predict_proba([text_to_classify])[0]
+            probabilities = self.sentiment_classifier.predict_proba([text_to_classify])[
+                0
+            ]
 
             confidence = max(probabilities)
             classes = self.sentiment_classifier.classes_
@@ -110,4 +123,6 @@ class TetragnosCore:
                     "details": f"Analyzed text related to {text_ref}",
                 }
 
-            raise NotImplementedError(f"Action '{action}' is not implemented in TetragnosCore.")
+            raise NotImplementedError(
+                f"Action '{action}' is not implemented in TetragnosCore."
+            )

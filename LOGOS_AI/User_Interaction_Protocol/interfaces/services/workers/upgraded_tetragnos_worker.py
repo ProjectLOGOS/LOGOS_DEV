@@ -13,32 +13,32 @@ Core Capabilities:
 Dependencies: sentence_transformers, sklearn, numpy, pandas
 """
 
-import os
-import sys
 import json
-import time
 import logging
+import os
 import signal
-import uuid
-from typing import Dict, List, Any, Optional, Tuple, Union
-from datetime import datetime
+import sys
 import threading
+import time
+import uuid
 from concurrent.futures import ThreadPoolExecutor
-
-# RabbitMQ messaging
-import pika
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 # External libraries for advanced ML capabilities
 import numpy as np
 import pandas as pd
+
+# RabbitMQ messaging
+import pika
 from sentence_transformers import SentenceTransformer
 from sklearn.cluster import DBSCAN, AgglomerativeClustering, KMeans
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.decomposition import PCA, UMAP
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.manifold import TSNE
-from sklearn.preprocessing import StandardScaler
+from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 
 # Configuration
 SUBSYSTEM_NAME = "TETRAGNOS"
@@ -86,7 +86,9 @@ class AdvancedSemanticEngine:
             self._model = SentenceTransformer(self.model_name)
             self.logger.info("Model loaded successfully")
 
-    def encode_texts(self, texts: List[str], batch_size: int = MAX_BATCH_SIZE) -> np.ndarray:
+    def encode_texts(
+        self, texts: List[str], batch_size: int = MAX_BATCH_SIZE
+    ) -> np.ndarray:
         """Generate semantic embeddings for text collection.
 
         Args:
@@ -112,7 +114,9 @@ class AdvancedSemanticEngine:
                 self.cache_misses += 1
 
         # Generate embeddings for uncached texts
-        embeddings = np.zeros((len(texts), self._model.get_sentence_embedding_dimension()))
+        embeddings = np.zeros(
+            (len(texts), self._model.get_sentence_embedding_dimension())
+        )
 
         if uncached_texts:
             indices, texts_to_encode = zip(*uncached_texts)
@@ -155,7 +159,9 @@ class AdvancedClusteringEngine:
         self.logger = logging.getLogger("CLUSTERING_ENGINE")
         self.scaler = StandardScaler()
 
-    def adaptive_clustering(self, embeddings: np.ndarray, method: str = "auto") -> Dict[str, Any]:
+    def adaptive_clustering(
+        self, embeddings: np.ndarray, method: str = "auto"
+    ) -> Dict[str, Any]:
         """Perform adaptive clustering with automatic algorithm selection.
 
         Args:
@@ -213,13 +219,17 @@ class AdvancedClusteringEngine:
             "n_clusters": len(set(cluster_labels)) - (1 if -1 in cluster_labels else 0),
             "n_noise": np.sum(cluster_labels == -1),
             "parameters": {"eps": eps, "min_samples": min_samples},
-            "silhouette_score": self._compute_silhouette_score(embeddings, cluster_labels),
+            "silhouette_score": self._compute_silhouette_score(
+                embeddings, cluster_labels
+            ),
         }
 
     def _hierarchical_clustering(self, embeddings: np.ndarray) -> Dict[str, Any]:
         """Agglomerative hierarchical clustering with linkage optimization."""
         # Determine optimal number of clusters using elbow method
-        optimal_k = self._find_optimal_k(embeddings, max_k=min(20, len(embeddings) // 2))
+        optimal_k = self._find_optimal_k(
+            embeddings, max_k=min(20, len(embeddings) // 2)
+        )
 
         clusterer = AgglomerativeClustering(
             n_clusters=optimal_k, linkage="ward", metric="euclidean"
@@ -231,14 +241,20 @@ class AdvancedClusteringEngine:
             "labels": cluster_labels.tolist(),
             "n_clusters": optimal_k,
             "parameters": {"linkage": "ward", "metric": "euclidean"},
-            "silhouette_score": self._compute_silhouette_score(embeddings, cluster_labels),
+            "silhouette_score": self._compute_silhouette_score(
+                embeddings, cluster_labels
+            ),
         }
 
     def _kmeans_clustering(self, embeddings: np.ndarray) -> Dict[str, Any]:
         """K-means clustering with automatic K selection."""
-        optimal_k = self._find_optimal_k(embeddings, max_k=min(20, len(embeddings) // 2))
+        optimal_k = self._find_optimal_k(
+            embeddings, max_k=min(20, len(embeddings) // 2)
+        )
 
-        clusterer = KMeans(n_clusters=optimal_k, init="k-means++", n_init=10, random_state=42)
+        clusterer = KMeans(
+            n_clusters=optimal_k, init="k-means++", n_init=10, random_state=42
+        )
         cluster_labels = clusterer.fit_predict(embeddings)
 
         return {
@@ -247,7 +263,9 @@ class AdvancedClusteringEngine:
             "n_clusters": optimal_k,
             "centroids": clusterer.cluster_centers_.tolist(),
             "parameters": {"init": "k-means++", "n_init": 10},
-            "silhouette_score": self._compute_silhouette_score(embeddings, cluster_labels),
+            "silhouette_score": self._compute_silhouette_score(
+                embeddings, cluster_labels
+            ),
             "inertia": clusterer.inertia_,
         }
 
@@ -283,7 +301,9 @@ class AdvancedClusteringEngine:
         elbow_point = np.argmax(diffs[:-1] - diffs[1:]) + 2
         return elbow_point
 
-    def _compute_silhouette_score(self, embeddings: np.ndarray, labels: np.ndarray) -> float:
+    def _compute_silhouette_score(
+        self, embeddings: np.ndarray, labels: np.ndarray
+    ) -> float:
         """Compute silhouette score for clustering quality assessment."""
         from sklearn.metrics import silhouette_score
 
@@ -371,9 +391,15 @@ class AdvancedFeatureExtractor:
         return {
             "per_document_features": features,
             "aggregate_features": {
-                "avg_word_length_mean": np.mean([f["avg_word_length"] for f in features]),
-                "avg_sentence_length_mean": np.mean([f["avg_sentence_length"] for f in features]),
-                "vocabulary_richness_mean": np.mean([f["vocabulary_richness"] for f in features]),
+                "avg_word_length_mean": np.mean(
+                    [f["avg_word_length"] for f in features]
+                ),
+                "avg_sentence_length_mean": np.mean(
+                    [f["avg_sentence_length"] for f in features]
+                ),
+                "vocabulary_richness_mean": np.mean(
+                    [f["vocabulary_richness"] for f in features]
+                ),
             },
         }
 
@@ -474,10 +500,14 @@ class TetragnosCore:
         embeddings = self.semantic_engine.encode_texts(texts)
 
         # Perform clustering
-        clustering_result = self.clustering_engine.adaptive_clustering(embeddings, method)
+        clustering_result = self.clustering_engine.adaptive_clustering(
+            embeddings, method
+        )
 
         # Add cluster interpretability
-        cluster_summaries = self._generate_cluster_summaries(texts, clustering_result["labels"])
+        cluster_summaries = self._generate_cluster_summaries(
+            texts, clustering_result["labels"]
+        )
 
         return {
             "clustering_result": clustering_result,
@@ -566,7 +596,9 @@ class TetragnosCore:
             "original_embedding_shape": original_embedding.shape,
         }
 
-    def _generate_cluster_summaries(self, texts: List[str], labels: List[int]) -> Dict[str, Any]:
+    def _generate_cluster_summaries(
+        self, texts: List[str], labels: List[int]
+    ) -> Dict[str, Any]:
         """Generate interpretable summaries for each cluster."""
         clusters = {}
 

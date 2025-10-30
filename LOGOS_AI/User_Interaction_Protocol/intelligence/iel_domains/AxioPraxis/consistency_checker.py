@@ -6,6 +6,7 @@ including syntactic consistency, semantic consistency, and
 relative consistency proofs.
 """
 
+
 class ConsistencyChecker:
     """
     Framework for checking consistency of formal systems.
@@ -33,9 +34,9 @@ class ConsistencyChecker:
         # Check for obvious contradictions
         for axiom in axioms:
             axiom_lower = axiom.lower()
-            if '⊥' in axiom or 'false' in axiom_lower:
+            if "⊥" in axiom or "false" in axiom_lower:
                 contradictions_found.append(f"Explicit contradiction in axiom: {axiom}")
-            elif 'a ∧ ¬a' in axiom_lower or 'a and not a' in axiom_lower:
+            elif "a ∧ ¬a" in axiom_lower or "a and not a" in axiom_lower:
                 contradictions_found.append(f"Direct contradiction in axiom: {axiom}")
 
         # Check for complementary pairs
@@ -43,12 +44,14 @@ class ConsistencyChecker:
         for axiom in axioms:
             negated = self._negate_formula(axiom)
             if negated in axiom_set:
-                contradictions_found.append(f"Contradictory pair: {axiom} and {negated}")
+                contradictions_found.append(
+                    f"Contradictory pair: {axiom} and {negated}"
+                )
 
         return {
-            'consistent': len(contradictions_found) == 0,
-            'contradictions': contradictions_found,
-            'method': 'syntactic_check'
+            "consistent": len(contradictions_found) == 0,
+            "contradictions": contradictions_found,
+            "method": "syntactic_check",
         }
 
     def _negate_formula(self, formula: str) -> str:
@@ -62,10 +65,12 @@ class ConsistencyChecker:
             Negated formula
         """
         # Very basic negation - in practice would need proper parsing
-        if formula.startswith('¬') or formula.startswith('not '):
-            return formula[1:].strip() if formula.startswith('¬') else formula[4:].strip()
+        if formula.startswith("¬") or formula.startswith("not "):
+            return (
+                formula[1:].strip() if formula.startswith("¬") else formula[4:].strip()
+            )
         else:
-            return f'¬{formula}'
+            return f"¬{formula}"
 
     def check_semantic_consistency(self, axioms: list) -> dict:
         """
@@ -83,19 +88,19 @@ class ConsistencyChecker:
         # Simple heuristic: assume consistent unless obvious contradiction
         syntactic_check = self.check_syntactic_consistency(axioms)
 
-        if not syntactic_check['consistent']:
+        if not syntactic_check["consistent"]:
             return {
-                'consistent': False,
-                'model_found': False,
-                'reason': 'Syntactic contradictions prevent model existence'
+                "consistent": False,
+                "model_found": False,
+                "reason": "Syntactic contradictions prevent model existence",
             }
 
         # For demonstration, assume we can find a model for simple cases
         return {
-            'consistent': True,
-            'model_found': True,
-            'model_size': 'finite',
-            'method': 'model_construction'
+            "consistent": True,
+            "model_found": True,
+            "model_size": "finite",
+            "method": "model_construction",
         }
 
     def prove_relative_consistency(self, system1: str, system2: str) -> dict:
@@ -113,21 +118,18 @@ class ConsistencyChecker:
         # Examples: PA is consistent relative to ZF, etc.
 
         known_results = {
-            ('PA', 'ZF'): True,  # Peano Arithmetic consistent relative to ZFC
-            ('ZF', 'ZF+CH'): False,  # Cannot prove consistency of ZF+CH within ZF
+            ("PA", "ZF"): True,  # Peano Arithmetic consistent relative to ZFC
+            ("ZF", "ZF+CH"): False,  # Cannot prove consistency of ZF+CH within ZF
         }
 
         key = (system1, system2)
         if key in known_results:
             return {
-                'proved': known_results[key],
-                'method': 'known_metamathematical_result'
+                "proved": known_results[key],
+                "method": "known_metamathematical_result",
             }
 
-        return {
-            'proved': None,  # Unknown
-            'method': 'insufficient_information'
-        }
+        return {"proved": None, "method": "insufficient_information"}  # Unknown
 
     def analyze_independence(self, axioms: list) -> dict:
         """
@@ -159,9 +161,9 @@ class ConsistencyChecker:
                 dependent_axioms.append(axiom)
 
         return {
-            'independent': independent_axioms,
-            'dependent': dependent_axioms,
-            'method': 'heuristic_analysis'
+            "independent": independent_axioms,
+            "dependent": dependent_axioms,
+            "method": "heuristic_analysis",
         }
 
     def _implies(self, formula1: str, formula2: str) -> bool:

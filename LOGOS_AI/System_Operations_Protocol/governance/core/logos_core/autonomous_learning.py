@@ -13,29 +13,34 @@ behaviors maintain logical consistency and system integrity.
 
 import json
 import logging
+import sqlite3
+import threading
 import time
 import uuid
+from collections import Counter, defaultdict
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Set, Optional, Any, Tuple
-from dataclasses import dataclass, field
-from collections import defaultdict, Counter
-import threading
-import sqlite3
+from typing import Any, Dict, List, Optional, Set, Tuple
+
+from .meta_reasoning.iel_evaluator import IELEvaluator
 
 # Core imports
-from .meta_reasoning.iel_generator import IELGenerator, IELCandidate, GenerationConfig
-from .meta_reasoning.iel_evaluator import IELEvaluator
+from .meta_reasoning.iel_generator import GenerationConfig, IELCandidate, IELGenerator
 from .meta_reasoning.iel_registry import IELRegistry, IELRegistryEntry
 from .reference_monitor import ReferenceMonitor
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class ReasoningGap:
     """Represents an identified reasoning gap from telemetry analysis"""
+
     gap_id: str
-    gap_type: str  # "evaluation_failure", "consistency_violation", "performance_anomaly"
+    gap_type: (
+        str  # "evaluation_failure", "consistency_violation", "performance_anomaly"
+    )
     domain: str
     description: str
     severity: float  # 0.0 to 1.0
@@ -58,12 +63,14 @@ class ReasoningGap:
             "error_patterns": self.error_patterns,
             "context_data": self.context_data,
             "first_seen": self.first_seen.isoformat(),
-            "last_seen": self.last_seen.isoformat()
+            "last_seen": self.last_seen.isoformat(),
         }
+
 
 @dataclass
 class LearningConfig:
     """Configuration for autonomous learning cycle"""
+
     max_candidates_per_gap: int = 5
     evaluation_threshold: float = 0.7
     min_gap_frequency: int = 3
@@ -73,6 +80,7 @@ class LearningConfig:
     enable_cross_domain_learning: bool = True
     enable_conservative_mode: bool = True
     registry_path: str = "registry/iel_registry.db"
+
 
 class TelemetryAnalyzer:
     """Analyzes telemetry data to identify reasoning gaps"""
@@ -93,7 +101,7 @@ class TelemetryAnalyzer:
             cutoff_time = cutoff_time.replace(tzinfo=None)
 
         try:
-            with open(self.telemetry_file, 'r') as f:
+            with open(self.telemetry_file, "r") as f:
                 for line in f:
                     line = line.strip()
                     if not line:
@@ -101,11 +109,13 @@ class TelemetryAnalyzer:
                     try:
                         record = json.loads(line)
                         # Parse timestamp
-                        timestamp_str = record.get('timestamp', '')
+                        timestamp_str = record.get("timestamp", "")
                         if timestamp_str:
                             # Handle timezone properly
-                            if timestamp_str.endswith('Z'):
-                                timestamp_str = timestamp_str[:-1]  # Remove Z for naive parsing
+                            if timestamp_str.endswith("Z"):
+                                timestamp_str = timestamp_str[
+                                    :-1
+                                ]  # Remove Z for naive parsing
                             record_time = datetime.fromisoformat(timestamp_str)
                             if record_time.tzinfo is not None:
                                 record_time = record_time.replace(tzinfo=None)
@@ -123,8 +133,9 @@ class TelemetryAnalyzer:
 
         return records
 
-    def identify_reasoning_gaps(self, records: List[Dict[str, Any]],
-                              config: LearningConfig) -> List[ReasoningGap]:
+    def identify_reasoning_gaps(
+        self, records: List[Dict[str, Any]], config: LearningConfig
+    ) -> List[ReasoningGap]:
         """Identify reasoning gaps from telemetry records"""
         gaps = []
 
@@ -133,14 +144,16 @@ class TelemetryAnalyzer:
         error_frequencies = Counter()
 
         for record in records:
-            eval_record = record.get('evaluation_record', {})
-            if not eval_record.get('success', True):
-                error_msg = eval_record.get('error_message', 'Unknown error')
-                proposition = eval_record.get('input_data', {}).get('proposition', '')
-                evaluator_type = eval_record.get('evaluator_type', 'unknown')
+            eval_record = record.get("evaluation_record", {})
+            if not eval_record.get("success", True):
+                error_msg = eval_record.get("error_message", "Unknown error")
+                proposition = eval_record.get("input_data", {}).get("proposition", "")
+                evaluator_type = eval_record.get("evaluator_type", "unknown")
 
                 # Categorize the failure
-                pattern_key = self._extract_error_pattern(error_msg, proposition, evaluator_type)
+                pattern_key = self._extract_error_pattern(
+                    error_msg, proposition, evaluator_type
+                )
                 failure_patterns[pattern_key].append(eval_record)
                 error_frequencies[pattern_key] += 1
 
@@ -153,8 +166,9 @@ class TelemetryAnalyzer:
 
         return gaps
 
-    def _extract_error_pattern(self, error_msg: str, proposition: str,
-                              evaluator_type: str) -> str:
+    def _extract_error_pattern(
+        self, error_msg: str, proposition: str, evaluator_type: str
+    ) -> str:
         """Extract error pattern for grouping similar failures"""
         # Categorize by error type
         if "file specified" in error_msg.lower():
@@ -178,15 +192,18 @@ class TelemetryAnalyzer:
             else:
                 return f"propositional_logic_{evaluator_type}"
 
-    def _create_reasoning_gap(self, pattern: str, failures: List[Dict[str, Any]],
-                            config: LearningConfig) -> ReasoningGap:
+    def _create_reasoning_gap(
+        self, pattern: str, failures: List[Dict[str, Any]], config: LearningConfig
+    ) -> ReasoningGap:
         """Create a ReasoningGap from failure pattern"""
 
         # Extract common characteristics
-        propositions = [f.get('input_data', {}).get('proposition', '') for f in failures]
+        propositions = [
+            f.get("input_data", {}).get("proposition", "") for f in failures
+        ]
         unique_props = list(set(p for p in propositions if p))
 
-        error_messages = [f.get('error_message', '') for f in failures]
+        error_messages = [f.get("error_message", "") for f in failures]
         unique_errors = list(set(e for e in error_messages if e))
 
         # Determine domain
@@ -209,7 +226,7 @@ class TelemetryAnalyzer:
         timestamps = []
         for f in failures:
             try:
-                timestamps.append(datetime.fromtimestamp(f.get('timestamp', 0)))
+                timestamps.append(datetime.fromtimestamp(f.get("timestamp", 0)))
             except (ValueError, TypeError):
                 pass
 
@@ -217,7 +234,9 @@ class TelemetryAnalyzer:
         last_seen = max(timestamps) if timestamps else datetime.now()
 
         # Generate description
-        description = self._generate_gap_description(pattern, frequency, unique_props[:3])
+        description = self._generate_gap_description(
+            pattern, frequency, unique_props[:3]
+        )
 
         return ReasoningGap(
             gap_id=str(uuid.uuid4()),
@@ -230,11 +249,12 @@ class TelemetryAnalyzer:
             error_patterns=unique_errors[:5],  # Limit to first 5
             context_data={"pattern": pattern, "sample_failures": failures[:3]},
             first_seen=first_seen,
-            last_seen=last_seen
+            last_seen=last_seen,
         )
 
-    def _generate_gap_description(self, pattern: str, frequency: int,
-                                sample_props: List[str]) -> str:
+    def _generate_gap_description(
+        self, pattern: str, frequency: int, sample_props: List[str]
+    ) -> str:
         """Generate human-readable description of the gap"""
         if "bridge_unavailable" in pattern:
             return f"Bridge infrastructure unavailable ({frequency} failures). Need fallback evaluation strategies."
@@ -247,7 +267,10 @@ class TelemetryAnalyzer:
         elif "complex_proposition" in pattern:
             return f"Complex proposition handling ({frequency} failures). Need decomposition strategies."
         else:
-            return f"General reasoning gaps ({frequency} failures) in pattern: {pattern}"
+            return (
+                f"General reasoning gaps ({frequency} failures) in pattern: {pattern}"
+            )
+
 
 class LearningCycleManager:
     """Manages the complete autonomous learning cycle"""
@@ -282,11 +305,13 @@ class LearningCycleManager:
                 return {
                     "cycle_id": cycle_id,
                     "status": "rate_limited",
-                    "message": "Rate limit exceeded for learning cycles"
+                    "message": "Rate limit exceeded for learning cycles",
                 }
 
             # Step 1: Analyze telemetry for reasoning gaps
-            since_time = datetime.now() - timedelta(days=self.config.learning_history_days)
+            since_time = datetime.now() - timedelta(
+                days=self.config.learning_history_days
+            )
             telemetry_records = self.analyzer.load_telemetry(since=since_time)
 
             logger.info(f"Loaded {len(telemetry_records)} telemetry records")
@@ -298,7 +323,7 @@ class LearningCycleManager:
                 return {
                     "cycle_id": cycle_id,
                     "status": "no_gaps",
-                    "message": "No significant reasoning gaps found"
+                    "message": "No significant reasoning gaps found",
                 }
 
             # Step 2: Generate IEL candidates for each gap
@@ -306,7 +331,9 @@ class LearningCycleManager:
             for gap in gaps:
                 candidates = self._generate_candidates_for_gap(gap)
                 all_candidates.extend(candidates)
-                logger.info(f"Generated {len(candidates)} candidates for gap: {gap.description}")
+                logger.info(
+                    f"Generated {len(candidates)} candidates for gap: {gap.description}"
+                )
 
             # Step 3: Evaluate candidates
             evaluation_results = []
@@ -318,12 +345,19 @@ class LearningCycleManager:
                     result = self.evaluator.evaluate_candidate(candidate)
                     evaluation_results.append(result)
 
-                    if result.get('overall_score', 0) >= self.config.evaluation_threshold:
+                    if (
+                        result.get("overall_score", 0)
+                        >= self.config.evaluation_threshold
+                    ):
                         accepted_candidates.append((candidate, result))
-                        logger.info(f"Accepted candidate: {candidate.rule_name} (score: {result.get('overall_score', 0):.3f})")
+                        logger.info(
+                            f"Accepted candidate: {candidate.rule_name} (score: {result.get('overall_score', 0):.3f})"
+                        )
                     else:
                         rejected_candidates.append((candidate, result))
-                        logger.debug(f"Rejected candidate: {candidate.rule_name} (score: {result.get('overall_score', 0):.3f})")
+                        logger.debug(
+                            f"Rejected candidate: {candidate.rule_name} (score: {result.get('overall_score', 0):.3f})"
+                        )
 
                 except Exception as e:
                     logger.error(f"Error evaluating candidate {candidate.id}: {e}")
@@ -352,14 +386,25 @@ class LearningCycleManager:
                 "gaps": [gap.to_dict() for gap in gaps],
                 "evaluation_summary": {
                     "total_evaluations": len(evaluation_results),
-                    "acceptance_rate": len(accepted_candidates) / len(all_candidates) if all_candidates else 0,
-                    "average_accepted_score": sum(r.get('overall_score', 0) for _, r in accepted_candidates) / len(accepted_candidates) if accepted_candidates else 0
-                }
+                    "acceptance_rate": (
+                        len(accepted_candidates) / len(all_candidates)
+                        if all_candidates
+                        else 0
+                    ),
+                    "average_accepted_score": (
+                        sum(r.get("overall_score", 0) for _, r in accepted_candidates)
+                        / len(accepted_candidates)
+                        if accepted_candidates
+                        else 0
+                    ),
+                },
             }
 
             self._record_cycle_result(cycle_result)
 
-            logger.info(f"Learning cycle {cycle_id} completed: {registered_count} new IELs registered")
+            logger.info(
+                f"Learning cycle {cycle_id} completed: {registered_count} new IELs registered"
+            )
             return cycle_result
 
         except Exception as e:
@@ -369,7 +414,7 @@ class LearningCycleManager:
                 "status": "failed",
                 "error": str(e),
                 "start_time": cycle_start.isoformat(),
-                "end_time": datetime.now().isoformat()
+                "end_time": datetime.now().isoformat(),
             }
 
     def _check_rate_limit(self) -> bool:
@@ -380,12 +425,16 @@ class LearningCycleManager:
             # Count cycles in the last hour
             hour_ago = current_time - timedelta(hours=1)
             recent_cycles = [
-                cycle for cycle in self.learning_history[-20:]  # Check last 20 cycles
-                if datetime.fromisoformat(cycle.get('start_time', '1970-01-01')) >= hour_ago
+                cycle
+                for cycle in self.learning_history[-20:]  # Check last 20 cycles
+                if datetime.fromisoformat(cycle.get("start_time", "1970-01-01"))
+                >= hour_ago
             ]
 
             if len(recent_cycles) >= self.config.max_learning_cycles_per_hour:
-                logger.warning(f"Rate limit exceeded: {len(recent_cycles)} cycles in last hour")
+                logger.warning(
+                    f"Rate limit exceeded: {len(recent_cycles)} cycles in last hour"
+                )
                 return False
 
             return True
@@ -397,7 +446,7 @@ class LearningCycleManager:
             gen_config = GenerationConfig(
                 max_candidates_per_gap=self.config.max_candidates_per_gap,
                 min_confidence_threshold=0.4,
-                enable_domain_bridging=self.config.enable_cross_domain_learning
+                enable_domain_bridging=self.config.enable_cross_domain_learning,
             )
 
             # Convert ReasoningGap to format expected by generator
@@ -408,19 +457,23 @@ class LearningCycleManager:
                 "severity": gap.severity,
                 "required_premises": gap.propositions[:3],  # Use sample propositions
                 "expected_conclusion": f"resolve_{gap.domain}_gap",
-                "confidence": min(0.8, gap.severity + 0.2)
+                "confidence": min(0.8, gap.severity + 0.2),
             }
 
-            candidates = self.generator.generate_candidates_for_gap(gap_data, gen_config)
+            candidates = self.generator.generate_candidates_for_gap(
+                gap_data, gen_config
+            )
 
             # Add metadata about the source gap
             for candidate in candidates:
-                candidate.metadata = getattr(candidate, 'metadata', {})
-                candidate.metadata.update({
-                    "source_gap_id": gap.gap_id,
-                    "gap_frequency": gap.frequency,
-                    "gap_severity": gap.severity
-                })
+                candidate.metadata = getattr(candidate, "metadata", {})
+                candidate.metadata.update(
+                    {
+                        "source_gap_id": gap.gap_id,
+                        "gap_frequency": gap.frequency,
+                        "gap_severity": gap.severity,
+                    }
+                )
 
             return candidates
 
@@ -428,7 +481,9 @@ class LearningCycleManager:
             logger.error(f"Error generating candidates for gap {gap.gap_id}: {e}")
             return []
 
-    def _register_candidate(self, candidate: IELCandidate, eval_result: Dict[str, Any]) -> bool:
+    def _register_candidate(
+        self, candidate: IELCandidate, eval_result: Dict[str, Any]
+    ) -> bool:
         """Register an accepted candidate in the IEL registry"""
         try:
             # Create registry entry
@@ -442,11 +497,11 @@ class LearningCycleManager:
                 status="pending",  # Will be verified before activation
                 created_at=datetime.now(),
                 metadata={
-                    "evaluation_score": eval_result.get('overall_score', 0),
+                    "evaluation_score": eval_result.get("overall_score", 0),
                     "confidence": candidate.confidence,
                     "source": "autonomous_learning",
-                    "evaluation_details": eval_result
-                }
+                    "evaluation_details": eval_result,
+                },
             )
 
             # Store in registry
@@ -456,7 +511,9 @@ class LearningCycleManager:
                 logger.info(f"Registered IEL candidate: {candidate.rule_name}")
                 return True
             else:
-                logger.warning(f"Failed to register IEL candidate: {candidate.rule_name}")
+                logger.warning(
+                    f"Failed to register IEL candidate: {candidate.rule_name}"
+                )
                 return False
 
         except Exception as e:
@@ -479,8 +536,8 @@ class LearningCycleManager:
                 history_file = Path("logs/learning_history.jsonl")
                 history_file.parent.mkdir(exist_ok=True)
 
-                with open(history_file, 'a') as f:
-                    f.write(json.dumps(result) + '\n')
+                with open(history_file, "a") as f:
+                    f.write(json.dumps(result) + "\n")
 
             except Exception as e:
                 logger.error(f"Error persisting learning history: {e}")
@@ -490,26 +547,47 @@ class LearningCycleManager:
         with self._lock:
             return {
                 "total_cycles": self.cycle_count,
-                "last_cycle": self.last_cycle_time.isoformat() if self.last_cycle_time else None,
-                "recent_cycles": len([
-                    c for c in self.learning_history[-10:]
-                    if datetime.fromisoformat(c.get('start_time', '1970-01-01')) >=
-                       datetime.now() - timedelta(hours=24)
-                ]),
-                "total_gaps_identified": sum(c.get('gaps_identified', 0) for c in self.learning_history),
-                "total_candidates_generated": sum(c.get('candidates_generated', 0) for c in self.learning_history),
-                "total_candidates_registered": sum(c.get('candidates_registered', 0) for c in self.learning_history),
-                "average_acceptance_rate": sum(c.get('evaluation_summary', {}).get('acceptance_rate', 0) for c in self.learning_history) / len(self.learning_history) if self.learning_history else 0,
+                "last_cycle": (
+                    self.last_cycle_time.isoformat() if self.last_cycle_time else None
+                ),
+                "recent_cycles": len(
+                    [
+                        c
+                        for c in self.learning_history[-10:]
+                        if datetime.fromisoformat(c.get("start_time", "1970-01-01"))
+                        >= datetime.now() - timedelta(hours=24)
+                    ]
+                ),
+                "total_gaps_identified": sum(
+                    c.get("gaps_identified", 0) for c in self.learning_history
+                ),
+                "total_candidates_generated": sum(
+                    c.get("candidates_generated", 0) for c in self.learning_history
+                ),
+                "total_candidates_registered": sum(
+                    c.get("candidates_registered", 0) for c in self.learning_history
+                ),
+                "average_acceptance_rate": (
+                    sum(
+                        c.get("evaluation_summary", {}).get("acceptance_rate", 0)
+                        for c in self.learning_history
+                    )
+                    / len(self.learning_history)
+                    if self.learning_history
+                    else 0
+                ),
                 "config": {
                     "max_candidates_per_gap": self.config.max_candidates_per_gap,
                     "evaluation_threshold": self.config.evaluation_threshold,
                     "learning_history_days": self.config.learning_history_days,
-                    "max_cycles_per_hour": self.config.max_learning_cycles_per_hour
-                }
+                    "max_cycles_per_hour": self.config.max_learning_cycles_per_hour,
+                },
             }
+
 
 # Global learning manager instance
 _global_learning_manager = None
+
 
 def get_global_learning_manager() -> LearningCycleManager:
     """Get or create global learning manager instance"""
@@ -517,6 +595,7 @@ def get_global_learning_manager() -> LearningCycleManager:
     if _global_learning_manager is None:
         _global_learning_manager = LearningCycleManager()
     return _global_learning_manager
+
 
 def shutdown_learning_manager():
     """Shutdown global learning manager"""

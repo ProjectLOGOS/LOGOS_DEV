@@ -91,11 +91,15 @@ class StaticEmbedding(InputModule):
             if isinstance(embedding_weights, np.ndarray):
                 embedding_weights = torch.from_numpy(embedding_weights)
 
-            self.embedding = nn.EmbeddingBag.from_pretrained(embedding_weights, freeze=False)
+            self.embedding = nn.EmbeddingBag.from_pretrained(
+                embedding_weights, freeze=False
+            )
         elif embedding_dim is not None:
             self.embedding = nn.EmbeddingBag(tokenizer.get_vocab_size(), embedding_dim)
         else:
-            raise ValueError("Either `embedding_weights` or `embedding_dim` must be provided.")
+            raise ValueError(
+                "Either `embedding_weights` or `embedding_dim` must be provided."
+            )
 
         self.num_embeddings = self.embedding.num_embeddings
         self.embedding_dim = self.embedding.embedding_dim
@@ -110,12 +114,21 @@ class StaticEmbedding(InputModule):
         encodings = self.tokenizer.encode_batch(texts, add_special_tokens=False)
         encodings_ids = [encoding.ids for encoding in encodings]
 
-        offsets = torch.from_numpy(np.cumsum([0] + [len(token_ids) for token_ids in encodings_ids[:-1]]))
-        input_ids = torch.tensor([token_id for token_ids in encodings_ids for token_id in token_ids], dtype=torch.long)
+        offsets = torch.from_numpy(
+            np.cumsum([0] + [len(token_ids) for token_ids in encodings_ids[:-1]])
+        )
+        input_ids = torch.tensor(
+            [token_id for token_ids in encodings_ids for token_id in token_ids],
+            dtype=torch.long,
+        )
         return {"input_ids": input_ids, "offsets": offsets}
 
-    def forward(self, features: dict[str, torch.Tensor], **kwargs) -> dict[str, torch.Tensor]:
-        features["sentence_embedding"] = self.embedding(features["input_ids"], features["offsets"])
+    def forward(
+        self, features: dict[str, torch.Tensor], **kwargs
+    ) -> dict[str, torch.Tensor]:
+        features["sentence_embedding"] = self.embedding(
+            features["input_ids"], features["offsets"]
+        )
         return features
 
     @property
@@ -125,11 +138,17 @@ class StaticEmbedding(InputModule):
     def get_sentence_embedding_dimension(self) -> int:
         return self.embedding_dim
 
-    def save(self, output_path: str, *args, safe_serialization: bool = True, **kwargs) -> None:
+    def save(
+        self, output_path: str, *args, safe_serialization: bool = True, **kwargs
+    ) -> None:
         if safe_serialization:
-            save_safetensors_file(self.state_dict(), os.path.join(output_path, "model.safetensors"))
+            save_safetensors_file(
+                self.state_dict(), os.path.join(output_path, "model.safetensors")
+            )
         else:
-            torch.save(self.state_dict(), os.path.join(output_path, "pytorch_model.bin"))
+            torch.save(
+                self.state_dict(), os.path.join(output_path, "pytorch_model.bin")
+            )
         self.tokenizer.save(str(Path(output_path) / "tokenizer.json"))
 
     @classmethod
@@ -150,10 +169,14 @@ class StaticEmbedding(InputModule):
             "revision": revision,
             "local_files_only": local_files_only,
         }
-        tokenizer_path = cls.load_file_path(model_name_or_path, filename="tokenizer.json", **hub_kwargs)
+        tokenizer_path = cls.load_file_path(
+            model_name_or_path, filename="tokenizer.json", **hub_kwargs
+        )
         tokenizer = Tokenizer.from_file(tokenizer_path)
 
-        weights = cls.load_torch_weights(model_name_or_path=model_name_or_path, **hub_kwargs)
+        weights = cls.load_torch_weights(
+            model_name_or_path=model_name_or_path, **hub_kwargs
+        )
         try:
             weights = weights["embedding.weight"]
         except KeyError:
@@ -224,7 +247,9 @@ class StaticEmbedding(InputModule):
                 f"Your version of `model2vec` does not support the {', '.join(map(repr, leftovers))} arguments for the `distill` method. "
                 "Consider updating `model2vec` to take advantage of these arguments."
             )
-            kwargs = {key: value for key, value in kwargs.items() if key in distill_kwargs}
+            kwargs = {
+                key: value for key, value in kwargs.items() if key in distill_kwargs
+            }
 
         device = get_device_name()
         static_model = distill(model_name, **kwargs)
@@ -234,7 +259,9 @@ class StaticEmbedding(InputModule):
             embedding_weights = static_model.embedding.weight
         tokenizer: Tokenizer = static_model.tokenizer
 
-        return cls(tokenizer, embedding_weights=embedding_weights, base_model=model_name)
+        return cls(
+            tokenizer, embedding_weights=embedding_weights, base_model=model_name
+        )
 
     @classmethod
     def from_model2vec(cls, model_id_or_path: str) -> StaticEmbedding:
@@ -256,7 +283,9 @@ class StaticEmbedding(InputModule):
         try:
             from model2vec import StaticModel
         except ImportError:
-            raise ImportError("To use this method, please install the `model2vec` package: `pip install model2vec`")
+            raise ImportError(
+                "To use this method, please install the `model2vec` package: `pip install model2vec`"
+            )
 
         static_model = StaticModel.from_pretrained(model_id_or_path)
         if isinstance(static_model.embedding, np.ndarray):
@@ -265,4 +294,6 @@ class StaticEmbedding(InputModule):
             embedding_weights = static_model.embedding.weight
         tokenizer: Tokenizer = static_model.tokenizer
 
-        return cls(tokenizer, embedding_weights=embedding_weights, base_model=model_id_or_path)
+        return cls(
+            tokenizer, embedding_weights=embedding_weights, base_model=model_id_or_path
+        )

@@ -13,44 +13,44 @@ Core Capabilities:
 Dependencies: pmdarima, arch, causal-learn, pymc, numpy, pandas, scipy
 """
 
-import os
-import sys
 import json
-import time
 import logging
+import os
 import signal
+import sys
+import threading
+import time
 import uuid
 import warnings
-from typing import Dict, List, Any, Optional, Tuple, Union
 from datetime import datetime
-import threading
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 # Suppress warnings for cleaner output
 warnings.filterwarnings("ignore")
 
-# RabbitMQ messaging
-import pika
-
 # Core scientific libraries
 import numpy as np
 import pandas as pd
-from scipy import stats
-from scipy.optimize import minimize
 
-# Time series analysis libraries
-from pmdarima import auto_arima
-from arch import arch_model
-from arch.unitroot import ADF, PhillipsPerron
-
-# Causal inference libraries
-from causallearn.search.ScoreBased.GES import ges
-from causallearn.search.ConstraintBased.PC import pc
-from causallearn.search.FCMBased import lingam
-from causallearn.utils.cit import CIT
+# RabbitMQ messaging
+import pika
 
 # Bayesian modeling
 import pymc as pm
 import pytensor.tensor as pt
+from arch import arch_model
+from arch.unitroot import ADF, PhillipsPerron
+from causallearn.search.ConstraintBased.PC import pc
+from causallearn.search.FCMBased import lingam
+
+# Causal inference libraries
+from causallearn.search.ScoreBased.GES import ges
+from causallearn.utils.cit import CIT
+
+# Time series analysis libraries
+from pmdarima import auto_arima
+from scipy import stats
+from scipy.optimize import minimize
 
 # Configuration
 SUBSYSTEM_NAME = "TELOS"
@@ -181,9 +181,9 @@ class AdvancedTimeSeriesEngine:
 
             return {
                 "model_order": model.order,
-                "seasonal_order": model.seasonal_order
-                if hasattr(model, "seasonal_order")
-                else None,
+                "seasonal_order": (
+                    model.seasonal_order if hasattr(model, "seasonal_order") else None
+                ),
                 "aic": aic,
                 "bic": bic,
                 "forecast": forecast.tolist(),
@@ -230,7 +230,9 @@ class AdvancedTimeSeriesEngine:
                 "log_likelihood": float(garch_fit.loglikelihood),
                 "aic": float(garch_fit.aic),
                 "bic": float(garch_fit.bic),
-                "volatility_forecast": volatility_forecast.variance.values[-1, :].tolist(),
+                "volatility_forecast": volatility_forecast.variance.values[
+                    -1, :
+                ].tolist(),
                 "conditional_volatility": garch_fit.conditional_volatility.tolist(),
             }
 
@@ -262,7 +264,10 @@ class AdvancedCausalEngine:
         self.logger = logging.getLogger("CAUSAL_ENGINE")
 
     def discover_causal_structure(
-        self, data: np.ndarray, variable_names: Optional[List[str]] = None, method: str = "pc"
+        self,
+        data: np.ndarray,
+        variable_names: Optional[List[str]] = None,
+        method: str = "pc",
     ) -> Dict[str, Any]:
         """Discover causal structure from observational data.
 
@@ -275,7 +280,9 @@ class AdvancedCausalEngine:
             Discovered causal structure with confidence metrics
         """
         if data.shape[1] > MAX_CAUSAL_VARIABLES:
-            raise ValueError(f"Too many variables: {data.shape[1]} > {MAX_CAUSAL_VARIABLES}")
+            raise ValueError(
+                f"Too many variables: {data.shape[1]} > {MAX_CAUSAL_VARIABLES}"
+            )
 
         variable_names = variable_names or [f"X{i}" for i in range(data.shape[1])]
 
@@ -288,7 +295,9 @@ class AdvancedCausalEngine:
         else:
             raise ValueError(f"Unsupported causal discovery method: {method}")
 
-    def _pc_algorithm(self, data: np.ndarray, variable_names: List[str]) -> Dict[str, Any]:
+    def _pc_algorithm(
+        self, data: np.ndarray, variable_names: List[str]
+    ) -> Dict[str, Any]:
         """PC algorithm for causal discovery."""
         try:
             # Run PC algorithm
@@ -304,7 +313,11 @@ class AdvancedCausalEngine:
                     if adjacency_matrix[i, j] != 0:
                         edge_type = self._interpret_edge_type(adjacency_matrix[i, j])
                         edges.append(
-                            {"from": variable_names[i], "to": variable_names[j], "type": edge_type}
+                            {
+                                "from": variable_names[i],
+                                "to": variable_names[j],
+                                "type": edge_type,
+                            }
                         )
 
             return {
@@ -320,7 +333,9 @@ class AdvancedCausalEngine:
             self.logger.error(f"PC algorithm failed: {e}")
             return {"error": str(e)}
 
-    def _ges_algorithm(self, data: np.ndarray, variable_names: List[str]) -> Dict[str, Any]:
+    def _ges_algorithm(
+        self, data: np.ndarray, variable_names: List[str]
+    ) -> Dict[str, Any]:
         """GES algorithm for causal discovery."""
         try:
             # Run GES algorithm
@@ -335,7 +350,11 @@ class AdvancedCausalEngine:
                 for j in range(len(variable_names)):
                     if adjacency_matrix[i, j] != 0:
                         edges.append(
-                            {"from": variable_names[i], "to": variable_names[j], "type": "directed"}
+                            {
+                                "from": variable_names[i],
+                                "to": variable_names[j],
+                                "type": "directed",
+                            }
                         )
 
             return {
@@ -352,7 +371,9 @@ class AdvancedCausalEngine:
             self.logger.error(f"GES algorithm failed: {e}")
             return {"error": str(e)}
 
-    def _lingam_algorithm(self, data: np.ndarray, variable_names: List[str]) -> Dict[str, Any]:
+    def _lingam_algorithm(
+        self, data: np.ndarray, variable_names: List[str]
+    ) -> Dict[str, Any]:
         """LiNGAM algorithm for linear causal discovery."""
         try:
             # Run DirectLiNGAM
@@ -380,9 +401,11 @@ class AdvancedCausalEngine:
                 "algorithm": "LiNGAM",
                 "adjacency_matrix": adjacency_matrix.tolist(),
                 "edges": edges,
-                "causal_order": model.causal_order_.tolist()
-                if hasattr(model, "causal_order_")
-                else None,
+                "causal_order": (
+                    model.causal_order_.tolist()
+                    if hasattr(model, "causal_order_")
+                    else None
+                ),
                 "n_variables": len(variable_names),
                 "n_edges": len(edges),
                 "variable_names": variable_names,
@@ -492,9 +515,12 @@ class AdvancedBayesianEngine:
             alpha_mean = float(posterior["alpha"].mean())
             alpha_hdi = pm.hdi(posterior["alpha"], hdi_prob=0.95)
 
-            beta_means = [float(posterior["beta"][:, :, i].mean()) for i in range(X.shape[1])]
+            beta_means = [
+                float(posterior["beta"][:, :, i].mean()) for i in range(X.shape[1])
+            ]
             beta_hdis = [
-                pm.hdi(posterior["beta"][:, :, i], hdi_prob=0.95) for i in range(X.shape[1])
+                pm.hdi(posterior["beta"][:, :, i], hdi_prob=0.95)
+                for i in range(X.shape[1])
             ]
 
             sigma_mean = float(posterior["sigma"].mean())
@@ -530,7 +556,9 @@ class AdvancedBayesianEngine:
             self.logger.error(f"Bayesian regression failed: {e}")
             return {"error": str(e)}
 
-    def hypothesis_testing(self, data1: np.ndarray, data2: np.ndarray) -> Dict[str, Any]:
+    def hypothesis_testing(
+        self, data1: np.ndarray, data2: np.ndarray
+    ) -> Dict[str, Any]:
         """Bayesian hypothesis testing for group differences."""
         try:
             with pm.Model() as model:
@@ -551,7 +579,12 @@ class AdvancedBayesianEngine:
 
                 # Sampling
                 trace = pm.sample(
-                    2000, tune=1000, return_inferencedata=True, chains=2, cores=1, progressbar=False
+                    2000,
+                    tune=1000,
+                    return_inferencedata=True,
+                    chains=2,
+                    cores=1,
+                    progressbar=False,
                 )
 
             # Extract results
@@ -571,9 +604,9 @@ class AdvancedBayesianEngine:
                     "hdi_95": [float(diff_hdi[0]), float(diff_hdi[1])],
                     "prob_positive": prob_positive,
                 },
-                "bayes_factor_evidence": "strong"
-                if prob_positive > 0.95 or prob_positive < 0.05
-                else "weak",
+                "bayes_factor_evidence": (
+                    "strong" if prob_positive > 0.95 or prob_positive < 0.05 else "weak"
+                ),
             }
 
         except Exception as e:
@@ -656,7 +689,9 @@ class TelosCore:
         if not data:
             raise ValueError("No data provided for forecasting")
 
-        result = self.timeseries_engine.forecast_series_advanced(data, periods, include_volatility)
+        result = self.timeseries_engine.forecast_series_advanced(
+            data, periods, include_volatility
+        )
 
         return {"forecast_result": result}
 
@@ -672,7 +707,9 @@ class TelosCore:
         if len(data.shape) == 1:
             data = data.reshape(-1, 1)
 
-        result = self.causal_engine.discover_causal_structure(data, variable_names, method)
+        result = self.causal_engine.discover_causal_structure(
+            data, variable_names, method
+        )
 
         return {"causal_structure": result}
 
@@ -766,7 +803,9 @@ class TelosCore:
                 y = data[:, i]
 
                 if X.shape[1] > 0:
-                    model = self.bayesian_engine.bayesian_regression(X, y, n_samples=1000)
+                    model = self.bayesian_engine.bayesian_regression(
+                        X, y, n_samples=1000
+                    )
                     var_name = variable_names[i] if variable_names else f"var_{i}"
                     models[var_name] = model
 

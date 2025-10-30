@@ -20,7 +20,12 @@ class BoW(InputModule):
     """
 
     save_in_root: bool = False
-    config_keys: list[str] = ["vocab", "word_weights", "unknown_word_weight", "cumulative_term_frequency"]
+    config_keys: list[str] = [
+        "vocab",
+        "word_weights",
+        "unknown_word_weight",
+        "cumulative_term_frequency",
+    ]
 
     def __init__(
         self,
@@ -53,7 +58,9 @@ class BoW(InputModule):
             f"{num_unknown_words} out of {len(vocab)} words without a weighting value. Set weight to {unknown_word_weight}"
         )
 
-        self.tokenizer = WhitespaceTokenizer(vocab, stop_words=set(), do_lower_case=False)
+        self.tokenizer = WhitespaceTokenizer(
+            vocab, stop_words=set(), do_lower_case=False
+        )
         self.sentence_embedding_dimension = len(vocab)
 
     def forward(self, features: dict[str, Tensor]):
@@ -73,7 +80,9 @@ class BoW(InputModule):
         vectors = []
 
         for tokens in tokenized_texts:
-            vector = torch.zeros(self.get_sentence_embedding_dimension(), dtype=torch.float32)
+            vector = torch.zeros(
+                self.get_sentence_embedding_dimension(), dtype=torch.float32
+            )
             for token in tokens:
                 if self.cumulative_term_frequency:
                     vector[token] += self.weights[token]
@@ -83,5 +92,7 @@ class BoW(InputModule):
 
         return {"sentence_embedding": torch.stack(vectors)}
 
-    def save(self, output_path: str, *args, safe_serialization: bool = True, **kwargs) -> None:
+    def save(
+        self, output_path: str, *args, safe_serialization: bool = True, **kwargs
+    ) -> None:
         self.save_config(output_path)

@@ -1,4 +1,5 @@
-from typing import Dict, Any
+from typing import Any, Dict
+
 
 class TelosNexus:  # Your existing class name
     def __init__(self):

@@ -1426,7 +1426,7 @@ if "optree" in sys.modules:
         self.assertEqual(from_two_trees, from_one_tree)
 
     def test_tree_flatten_with_path_is_leaf(self):
-        leaf_dict = {"foo": [(3)]}
+        leaf_dict = {"foo": [3]}
         pytree = (["hello", [1, 2], leaf_dict],)
         key_leaves, _ = py_pytree.tree_flatten_with_path(
             pytree, is_leaf=lambda x: isinstance(x, dict)
@@ -1454,7 +1454,7 @@ if "optree" in sys.modules:
 
         SOME_PYTREES = [
             (None,),
-            ["hello", [1, 2], {"foo": [(3)]}],
+            ["hello", [1, 2], {"foo": [3]}],
             [ANamedTuple(x=torch.rand(2, 3), y=1, z="foo")],
             [ACustomPytree(x=12, y={"cin": [1, 4, 10], "bar": 18}, z="leaf"), 5],
         ]
@@ -1484,7 +1484,7 @@ if "optree" in sys.modules:
 
         SOME_PYTREES = [
             (None,),
-            ["hello", [1, 2], {"foo": [(3)]}],
+            ["hello", [1, 2], {"foo": [3]}],
             [ANamedTuple(x=torch.rand(2, 3), y=1, z="foo")],
             [ACustomPytree(x=12, y={"cin": [1, 4, 10], "bar": 18}, z="leaf"), 5],
         ]
@@ -1498,7 +1498,7 @@ if "optree" in sys.modules:
             x: str
             y: int
 
-        tree = (["hello", [1, 2], {"foo": [(3)], "bar": [ANamedTuple(x="baz", y=10)]}],)
+        tree = (["hello", [1, 2], {"foo": [3], "bar": [ANamedTuple(x="baz", y=10)]}],)
         flat, _ = py_pytree.tree_flatten_with_path(tree)
         paths = [f"{py_pytree.keystr(kp)}: {val}" for kp, val in flat]
         self.assertEqual(
@@ -1545,7 +1545,7 @@ if "optree" in sys.modules:
             x: str
             y: int
 
-        tree = (["hello", [1, 2], {"foo": [(3)], "bar": [ANamedTuple(x="baz", y=10)]}],)
+        tree = (["hello", [1, 2], {"foo": [3], "bar": [ANamedTuple(x="baz", y=10)]}],)
         flat, _ = py_pytree.tree_flatten_with_path(tree)
         for kp, val in flat:
             self.assertEqual(py_pytree.key_get(tree, kp), val)

@@ -16,7 +16,16 @@ import numpy as np
 
 from pytensor.tensor.random import normal
 
-from pymc import Bernoulli, Censored, CustomDist, Gamma, HalfCauchy, Mixture, StudentT, Truncated
+from pymc import (
+    Bernoulli,
+    Censored,
+    CustomDist,
+    Gamma,
+    HalfCauchy,
+    Mixture,
+    StudentT,
+    Truncated,
+)
 from pymc.distributions import (
     Dirichlet,
     DirichletMultinomial,
@@ -35,7 +44,9 @@ from pymc.pytensorf import floatX
 
 class BaseTestStrAndLatexRepr:
     def test__repr_latex_(self):
-        for distribution, tex in zip(self.distributions, self.expected[("latex", True)]):
+        for distribution, tex in zip(
+            self.distributions, self.expected[("latex", True)]
+        ):
             assert distribution._repr_latex_() == tex
 
         model_tex = self.model._repr_latex_()
@@ -106,7 +117,9 @@ class TestMonolith(BaseTestStrAndLatexRepr):
             # KroneckerNormal
             n, m = 3, 4
             covs = [np.eye(n), np.eye(m)]
-            kron_normal = KroneckerNormal("kron_normal", mu=np.zeros(n * m), covs=covs, size=n * m)
+            kron_normal = KroneckerNormal(
+                "kron_normal", mu=np.zeros(n * m), covs=covs, size=n * m
+            )
 
             # MatrixNormal
             # matrix_normal = MatrixNormal(
@@ -129,10 +142,27 @@ class TestMonolith(BaseTestStrAndLatexRepr):
             # add a deterministic that depends on an unnamed random variable
             pred = Deterministic("pred", Normal.dist(0, 1))
 
-        self.distributions = [alpha, sigma, mu, b, Z, nb2, zip, w, nested_mix, Y_obs, pot]
+        self.distributions = [
+            alpha,
+            sigma,
+            mu,
+            b,
+            Z,
+            nb2,
+            zip,
+            w,
+            nested_mix,
+            Y_obs,
+            pot,
+        ]
         self.deterministics_or_potentials = [mu, pot, pred]
         # tuples of (formatting, include_params)
-        self.formats = [("plain", True), ("plain", False), ("latex", True), ("latex", False)]
+        self.formats = [
+            ("plain", True),
+            ("plain", False),
+            ("latex", True),
+            ("latex", False),
+        ]
         self.expected = {
             ("plain", True): [
                 r"alpha ~ Normal(0, 10)",
@@ -214,7 +244,12 @@ class TestData(BaseTestStrAndLatexRepr):
 
         self.distributions = [a, b, c, d]
         # tuples of (formatting, include_params)
-        self.formats = [("plain", True), ("plain", False), ("latex", True), ("latex", False)]
+        self.formats = [
+            ("plain", True),
+            ("plain", False),
+            ("latex", True),
+            ("latex", False),
+        ]
         self.expected = {
             ("plain", True): [
                 r"a ~ Normal(2, 1)",
@@ -268,7 +303,9 @@ def test_model_latex_repr_three_levels_model():
 def test_model_latex_repr_mixture_model():
     with Model() as mix_model:
         w = Dirichlet("w", [1, 1])
-        mix = Mixture("mix", w=w, comp_dists=[Normal.dist(0.0, 5.0), StudentT.dist(7.0)])
+        mix = Mixture(
+            "mix", w=w, comp_dists=[Normal.dist(0.0, 5.0), StudentT.dist(7.0)]
+        )
 
     latex_repr = mix_model.str_repr(formatting="latex")
     expected = [

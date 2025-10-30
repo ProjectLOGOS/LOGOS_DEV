@@ -1,6 +1,7 @@
 # logos_agi_v1/subsystems/telos/causal_engine/telos_core.py
 
 import logging
+
 import numpy as np
 
 # --- External Library Imports ---
@@ -66,4 +67,6 @@ class TelosCore:
             return {"model_summary": summary.to_dict()}
 
         else:
-            raise NotImplementedError(f"Action '{action}' is not implemented in TelosCore.")
+            raise NotImplementedError(
+                f"Action '{action}' is not implemented in TelosCore."
+            )

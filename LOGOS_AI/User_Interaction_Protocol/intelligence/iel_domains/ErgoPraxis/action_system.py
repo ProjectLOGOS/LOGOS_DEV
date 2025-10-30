@@ -5,10 +5,11 @@ Provides classes for modeling actions, their costs, effects,
 and optimization under resource constraints.
 """
 
-from typing import Dict, List, Any, Optional, Set, Callable
+import time
 from dataclasses import dataclass
 from enum import Enum
-import time
+from typing import Any, Callable, Dict, List, Optional, Set
+
 
 class ActionStatus(Enum):
     PENDING = "pending"
@@ -17,9 +18,11 @@ class ActionStatus(Enum):
     FAILED = "failed"
     CANCELLED = "cancelled"
 
+
 @dataclass
 class Resource:
     """Represents a resource with quantity and constraints."""
+
     name: str
     quantity: float
     max_quantity: float
@@ -34,12 +37,15 @@ class Resource:
 
     def regenerate(self, time_delta: float):
         """Regenerate resource over time."""
-        self.quantity = min(self.max_quantity,
-                          self.quantity + self.regeneration_rate * time_delta)
+        self.quantity = min(
+            self.max_quantity, self.quantity + self.regeneration_rate * time_delta
+        )
+
 
 @dataclass
 class Action:
     """Represents an executable action."""
+
     name: str
     description: str
     resource_costs: Dict[str, float]
@@ -53,6 +59,7 @@ class Action:
             self.prerequisites = set()
         if self.effects is None:
             self.effects = {}
+
 
 class ActionSystem:
     """
@@ -121,7 +128,7 @@ class ActionSystem:
         self.current_actions[execution_id] = {
             "action": action,
             "start_time": time.time(),
-            "status": ActionStatus.EXECUTING
+            "status": ActionStatus.EXECUTING,
         }
 
         # Simulate execution (in practice would be async)
@@ -135,7 +142,7 @@ class ActionSystem:
             "action": action_name,
             "status": "completed" if success else "failed",
             "resources_consumed": action.resource_costs,
-            "execution_time": action.execution_time
+            "execution_time": action.execution_time,
         }
 
         self.action_history.append(result)
@@ -149,7 +156,7 @@ class ActionSystem:
             name: {
                 "quantity": resource.quantity,
                 "max_quantity": resource.max_quantity,
-                "utilization": resource.quantity / resource.max_quantity
+                "utilization": resource.quantity / resource.max_quantity,
             }
             for name, resource in self.resources.items()
         }
@@ -173,5 +180,5 @@ class ActionSystem:
             "feasible": all(
                 total_costs.get(resource, 0) <= self.resources[resource].quantity
                 for resource in self.resources
-            )
+            ),
         }

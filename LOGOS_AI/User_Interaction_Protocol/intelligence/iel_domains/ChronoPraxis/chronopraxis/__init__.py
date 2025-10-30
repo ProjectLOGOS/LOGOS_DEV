@@ -8,8 +8,8 @@ This domain focuses on the praxis of temporal reasoning, including:
 - Causality and temporal dependencies
 """
 
+from .sequence_analysis import SequenceAnalyzer
 from .temporal_logic import TemporalLogic
 from .time_modeling import TimeModel
-from .sequence_analysis import SequenceAnalyzer
 
-__all__ = ['TemporalLogic', 'TimeModel', 'SequenceAnalyzer']
+__all__ = ["TemporalLogic", "TimeModel", "SequenceAnalyzer"]

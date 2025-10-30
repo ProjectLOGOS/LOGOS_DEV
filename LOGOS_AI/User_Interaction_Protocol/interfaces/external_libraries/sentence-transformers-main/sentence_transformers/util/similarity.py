@@ -6,7 +6,12 @@ from sklearn.metrics import pairwise_distances
 from torch import Tensor
 from transformers.utils import logging
 
-from .tensor import _convert_to_batch_tensor, _convert_to_tensor, normalize_embeddings, to_scipy_coo
+from .tensor import (
+    _convert_to_batch_tensor,
+    _convert_to_tensor,
+    normalize_embeddings,
+    to_scipy_coo,
+)
 
 # NOTE: transformers wraps the regular logging module for e.g. warning_once
 logger = logging.get_logger(__name__)
@@ -65,7 +70,9 @@ def pairwise_cos_sim(a: Tensor, b: Tensor) -> Tensor:
         b_norm = normalize_embeddings(b)
         return (a_norm * b_norm).sum(dim=-1).to_dense()
     else:
-        return pairwise_dot_score(normalize_embeddings(a), normalize_embeddings(b)).to_dense()
+        return pairwise_dot_score(
+            normalize_embeddings(a), normalize_embeddings(b)
+        ).to_dense()
 
 
 def dot_score(a: list | np.ndarray | Tensor, b: list | np.ndarray | Tensor) -> Tensor:
@@ -102,7 +109,9 @@ def pairwise_dot_score(a: Tensor, b: Tensor) -> Tensor:
     return (a * b).sum(dim=-1).to_dense()
 
 
-def manhattan_sim(a: list | np.ndarray | Tensor, b: list | np.ndarray | Tensor) -> Tensor:
+def manhattan_sim(
+    a: list | np.ndarray | Tensor, b: list | np.ndarray | Tensor
+) -> Tensor:
     """
     Computes the manhattan similarity (i.e., negative distance) between two tensors.
     Handles sparse tensors without converting to dense when possible.
@@ -129,7 +138,9 @@ def manhattan_sim(a: list | np.ndarray | Tensor, b: list | np.ndarray | Tensor) 
         return -torch.cdist(a, b, p=1.0).to_dense()
 
 
-def pairwise_manhattan_sim(a: list | np.ndarray | Tensor, b: list | np.ndarray | Tensor):
+def pairwise_manhattan_sim(
+    a: list | np.ndarray | Tensor, b: list | np.ndarray | Tensor
+):
     """
     Computes the manhattan similarity (i.e., negative distance) between pairs of tensors.
 
@@ -146,7 +157,9 @@ def pairwise_manhattan_sim(a: list | np.ndarray | Tensor, b: list | np.ndarray |
     return -torch.sum(torch.abs(a - b), dim=-1).to_dense()
 
 
-def euclidean_sim(a: list | np.ndarray | Tensor, b: list | np.ndarray | Tensor) -> Tensor:
+def euclidean_sim(
+    a: list | np.ndarray | Tensor, b: list | np.ndarray | Tensor
+) -> Tensor:
     """
     Computes the euclidean similarity (i.e., negative distance) between two tensors.
     Handles sparse tensors without converting to dense when possible.
@@ -162,8 +175,12 @@ def euclidean_sim(a: list | np.ndarray | Tensor, b: list | np.ndarray | Tensor) 
     b = _convert_to_batch_tensor(b)
 
     if a.is_sparse:
-        a_norm_sq = torch.sparse.sum(a * a, dim=1).to_dense().unsqueeze(1)  # Shape (N, 1)
-        b_norm_sq = torch.sparse.sum(b * b, dim=1).to_dense().unsqueeze(0)  # Shape (1, M)
+        a_norm_sq = (
+            torch.sparse.sum(a * a, dim=1).to_dense().unsqueeze(1)
+        )  # Shape (N, 1)
+        b_norm_sq = (
+            torch.sparse.sum(b * b, dim=1).to_dense().unsqueeze(0)
+        )  # Shape (1, M)
         dot_product = torch.matmul(a, b.t()).to_dense()  # Shape (N, M)
 
         # Calculate squared distance
@@ -177,7 +194,9 @@ def euclidean_sim(a: list | np.ndarray | Tensor, b: list | np.ndarray | Tensor) 
         return -torch.cdist(a, b, p=2.0)
 
 
-def pairwise_euclidean_sim(a: list | np.ndarray | Tensor, b: list | np.ndarray | Tensor):
+def pairwise_euclidean_sim(
+    a: list | np.ndarray | Tensor, b: list | np.ndarray | Tensor
+):
     """
     Computes the euclidean distance (i.e., negative distance) between pairs of tensors.
 
@@ -207,7 +226,9 @@ def pairwise_angle_sim(x: Tensor, y: Tensor) -> Tensor:
         Tensor: Vector with res[i] = angle_sim(a[i], b[i])
     """
     if x.is_sparse:
-        logger.warning_once("Pairwise angle similarity does not support sparse tensors. Converting to dense.")
+        logger.warning_once(
+            "Pairwise angle similarity does not support sparse tensors. Converting to dense."
+        )
         x = x.coalesce().to_dense()
         y = y.coalesce().to_dense()
 

@@ -97,9 +97,9 @@ class ForeachFuncWrapper:
             keys = tuple([e.key for e in p.key_averages()])
             mta_called = any("multi_tensor_apply_kernel" in k for k in keys)
 
-            assert mta_called == (expect_fastpath and (not zero_size)), (
-                f"{mta_called=}, {expect_fastpath=}, {zero_size=}, {self.func.__name__=}, {keys=}"
-            )
+            assert mta_called == (
+                expect_fastpath and (not zero_size)
+            ), f"{mta_called=}, {expect_fastpath=}, {zero_size=}, {self.func.__name__=}, {keys=}"
         else:
             actual = self.func(*inputs, **kwargs)
         if self.is_inplace:
@@ -1040,9 +1040,11 @@ class TestForeach(TestCase):
             else {200, 300, 301, 400, 401, 402, 404, 598}
         )
         tensorlist = [
-            make_tensor((2, 3), dtype=dtype, device=device, noncontiguous=False)
-            if i not in indices_with_empty_tensors
-            else torch.empty(0, dtype=dtype, device=device)
+            (
+                make_tensor((2, 3), dtype=dtype, device=device, noncontiguous=False)
+                if i not in indices_with_empty_tensors
+                else torch.empty(0, dtype=dtype, device=device)
+            )
             for i in range(N)
         ]
         fn, ref_fn, *_ = self._get_funcs(op)

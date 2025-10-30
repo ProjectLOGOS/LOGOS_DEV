@@ -4,7 +4,11 @@ import torch
 
 
 def sparse_allclose(
-    input: torch.Tensor, other: torch.Tensor, rtol: float = 1e-05, atol: float = 1e-08, equal_nan: bool = False
+    input: torch.Tensor,
+    other: torch.Tensor,
+    rtol: float = 1e-05,
+    atol: float = 1e-08,
+    equal_nan: bool = False,
 ) -> bool:
     """
     Check if two sparse embeddings are close to each other.
@@ -42,4 +46,6 @@ def sparse_allclose(
         return False
 
     # Check if values are close
-    return torch.allclose(input_values, other_values, rtol=rtol, atol=atol, equal_nan=equal_nan)
+    return torch.allclose(
+        input_values, other_values, rtol=rtol, atol=atol, equal_nan=equal_nan
+    )

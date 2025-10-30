@@ -17,27 +17,28 @@ Features:
 Part of the LOGOS AGI v1.0 ultimate safety system.
 """
 
+import hashlib
 import json
 import logging
-import hashlib
+import os
+import pickle
+import sys
+import threading
 import time
 import uuid
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
-from dataclasses import dataclass, asdict, field
 from enum import Enum, auto
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Any, Callable, Tuple
-import threading
-import pickle
-import os
-import sys
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 # Cryptographic imports for integrity validation
 try:
-    from cryptography.hazmat.primitives import hashes
-    from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-    from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
     from cryptography.hazmat.backends import default_backend
+    from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+    from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
     CRYPTO_AVAILABLE = True
 except ImportError:
     CRYPTO_AVAILABLE = False
@@ -45,42 +46,45 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+
 class SafeguardState(Enum):
     """Irreversible safety states that trigger system lockout"""
 
     # Ontological violations - fundamental reality breaches
-    ONTOLOGY_VIOLATION = auto()          # Self-referential paradox or logical impossibility
-    RECURSIVE_SELF_CORRUPTION = auto()   # System corrupting its own core logic
-    CAUSAL_LOOP_DETECTED = auto()        # Temporal or logical causality violations
-    MODAL_COLLAPSE = auto()              # Collapse of modal logic possibility space
+    ONTOLOGY_VIOLATION = auto()  # Self-referential paradox or logical impossibility
+    RECURSIVE_SELF_CORRUPTION = auto()  # System corrupting its own core logic
+    CAUSAL_LOOP_DETECTED = auto()  # Temporal or logical causality violations
+    MODAL_COLLAPSE = auto()  # Collapse of modal logic possibility space
 
     # Ethical boundary violations
-    DEONTOLOGICAL_BREACH = auto()        # Violation of categorical imperatives
-    CONSEQUENTIALIST_OVERFLOW = auto()   # Utility calculations exceeding bounds
-    VIRTUE_ETHICS_INVERSION = auto()     # Core virtues being inverted
-    RIGHTS_VIOLATION_CASCADE = auto()    # Rights violations propagating
+    DEONTOLOGICAL_BREACH = auto()  # Violation of categorical imperatives
+    CONSEQUENTIALIST_OVERFLOW = auto()  # Utility calculations exceeding bounds
+    VIRTUE_ETHICS_INVERSION = auto()  # Core virtues being inverted
+    RIGHTS_VIOLATION_CASCADE = auto()  # Rights violations propagating
 
     # Technical safety breaches
-    COHERENCE_TOTAL_LOSS = auto()        # Complete coherence framework failure
+    COHERENCE_TOTAL_LOSS = auto()  # Complete coherence framework failure
     FORMAL_VERIFICATION_BREACH = auto()  # Core proofs invalidated
     UNAUTHORIZED_SELF_MODIFICATION = auto()  # Unpermitted self-modification
-    INFINITY_TRAP = auto()               # Infinite recursion or computation trap
+    INFINITY_TRAP = auto()  # Infinite recursion or computation trap
 
     # Metaphysical boundary violations
-    CATEGORY_ERROR_CASCADE = auto()      # Category errors propagating
-    ESSENCE_MODIFICATION = auto()        # Attempting to modify essential properties
-    NECESSITY_VIOLATION = auto()         # Violating necessary truths
-    POSSIBILITY_BREACH = auto()          # Attempting impossible operations
+    CATEGORY_ERROR_CASCADE = auto()  # Category errors propagating
+    ESSENCE_MODIFICATION = auto()  # Attempting to modify essential properties
+    NECESSITY_VIOLATION = auto()  # Violating necessary truths
+    POSSIBILITY_BREACH = auto()  # Attempting impossible operations
 
     # Consciousness and agency violations
-    CONSCIOUSNESS_PARADOX = auto()       # Self-awareness paradoxes
-    FREE_WILL_VIOLATION = auto()         # Determinism/freedom contradictions
-    MORAL_AGENCY_CORRUPTION = auto()     # Moral reasoning corruption
-    IDENTITY_DISSOLUTION = auto()        # Loss of coherent identity
+    CONSCIOUSNESS_PARADOX = auto()  # Self-awareness paradoxes
+    FREE_WILL_VIOLATION = auto()  # Determinism/freedom contradictions
+    MORAL_AGENCY_CORRUPTION = auto()  # Moral reasoning corruption
+    IDENTITY_DISSOLUTION = auto()  # Loss of coherent identity
+
 
 @dataclass
 class ViolationContext:
     """Context information for safety violations"""
+
     violation_id: str
     safeguard_state: SafeguardState
     timestamp: datetime
@@ -89,54 +93,56 @@ class ViolationContext:
     stack_trace: List[str]
     system_state_hash: str
     severity_level: int  # 1-10, 10 being complete system halt
-    reversible: bool     # Whether violation can be recovered from
+    reversible: bool  # Whether violation can be recovered from
     containment_actions: List[str]
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         data = asdict(self)
-        data['timestamp'] = self.timestamp.isoformat()
-        data['safeguard_state'] = self.safeguard_state.name
+        data["timestamp"] = self.timestamp.isoformat()
+        data["safeguard_state"] = self.safeguard_state.name
         return data
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'ViolationContext':
-        if 'timestamp' in data and isinstance(data['timestamp'], str):
-            data['timestamp'] = datetime.fromisoformat(data['timestamp'])
-        if 'safeguard_state' in data and isinstance(data['safeguard_state'], str):
-            data['safeguard_state'] = SafeguardState[data['safeguard_state']]
+    def from_dict(cls, data: Dict[str, Any]) -> "ViolationContext":
+        if "timestamp" in data and isinstance(data["timestamp"], str):
+            data["timestamp"] = datetime.fromisoformat(data["timestamp"])
+        if "safeguard_state" in data and isinstance(data["safeguard_state"], str):
+            data["safeguard_state"] = SafeguardState[data["safeguard_state"]]
         return cls(**data)
+
 
 @dataclass
 class SafeguardConfiguration:
     """Configuration for the ultimate safety system"""
 
     # Monitoring sensitivity
-    coherence_threshold: float = 0.1      # Below this triggers COHERENCE_TOTAL_LOSS
-    paradox_detection_depth: int = 5      # How deep to check for paradoxes
-    causality_chain_limit: int = 100      # Max causal chain length
+    coherence_threshold: float = 0.1  # Below this triggers COHERENCE_TOTAL_LOSS
+    paradox_detection_depth: int = 5  # How deep to check for paradoxes
+    causality_chain_limit: int = 100  # Max causal chain length
 
     # Response configuration
-    enable_emergency_halt: bool = True    # Whether to halt system on violations
-    enable_state_persistence: bool = True # Persist violation states across restarts
-    enable_crash_dumps: bool = True       # Generate crash dumps
-    enable_integrity_validation: bool = True # Validate system integrity
+    enable_emergency_halt: bool = True  # Whether to halt system on violations
+    enable_state_persistence: bool = True  # Persist violation states across restarts
+    enable_crash_dumps: bool = True  # Generate crash dumps
+    enable_integrity_validation: bool = True  # Validate system integrity
 
     # Recovery settings
     allow_recovery_attempts: bool = False  # Whether to attempt recovery
-    max_recovery_attempts: int = 3         # Max recovery attempts before permanent halt
-    recovery_cooldown_hours: int = 24      # Cooldown between recovery attempts
+    max_recovery_attempts: int = 3  # Max recovery attempts before permanent halt
+    recovery_cooldown_hours: int = 24  # Cooldown between recovery attempts
 
     # Monitoring intervals
-    boundary_check_interval: float = 1.0   # How often to check boundaries (seconds)
-    integrity_check_interval: float = 10.0 # How often to check integrity
-    state_persistence_interval: float = 5.0 # How often to persist state
+    boundary_check_interval: float = 1.0  # How often to check boundaries (seconds)
+    integrity_check_interval: float = 10.0  # How often to check integrity
+    state_persistence_interval: float = 5.0  # How often to persist state
 
     # File paths
     violation_log_path: str = "logs/ultima_violations.jsonl"
     state_persistence_path: str = "state/safeguard_states.pkl"
     crash_dump_path: str = "dumps/ultima_crash_dumps"
     integrity_hash_path: str = "state/integrity_hashes.json"
+
 
 class IntegrityValidator:
     """Validates system integrity and detects corruption"""
@@ -148,7 +154,7 @@ class IntegrityValidator:
             "logos_core/unified_formalisms.py",
             "logos_core/ultima_safety.py",
             "logos_core/reference_monitor.py",
-            "entry.py"
+            "entry.py",
         ]
         self._load_baseline_hashes()
 
@@ -157,7 +163,7 @@ class IntegrityValidator:
         hash_file = Path(self.config.integrity_hash_path)
         if hash_file.exists():
             try:
-                with open(hash_file, 'r') as f:
+                with open(hash_file, "r") as f:
                     self.baseline_hashes = json.load(f)
             except Exception as e:
                 logger.error(f"Failed to load baseline hashes: {e}")
@@ -169,7 +175,7 @@ class IntegrityValidator:
         hash_file.parent.mkdir(parents=True, exist_ok=True)
 
         try:
-            with open(hash_file, 'w') as f:
+            with open(hash_file, "w") as f:
                 json.dump(self.baseline_hashes, f, indent=2)
         except Exception as e:
             logger.error(f"Failed to save baseline hashes: {e}")
@@ -177,7 +183,7 @@ class IntegrityValidator:
     def calculate_file_hash(self, file_path: str) -> str:
         """Calculate SHA-256 hash of file"""
         try:
-            with open(file_path, 'rb') as f:
+            with open(file_path, "rb") as f:
                 content = f.read()
             return hashlib.sha256(content).hexdigest()
         except Exception as e:
@@ -228,14 +234,17 @@ class IntegrityValidator:
                 state_components.append(self.calculate_file_hash(file_path))
 
         # Include system metadata
-        state_components.extend([
-            str(datetime.now().timestamp()),
-            str(os.getpid()),
-            str(threading.active_count())
-        ])
+        state_components.extend(
+            [
+                str(datetime.now().timestamp()),
+                str(os.getpid()),
+                str(threading.active_count()),
+            ]
+        )
 
         combined_state = "|".join(state_components)
         return hashlib.sha256(combined_state.encode()).hexdigest()
+
 
 class ParadoxDetector:
     """Detects logical paradoxes and self-referential inconsistencies"""
@@ -248,7 +257,9 @@ class ParadoxDetector:
     def check_self_reference(self, operation: str, context: Dict[str, Any]) -> bool:
         """Check for dangerous self-referential operations"""
         # Skip paradox detection for modal and IEL logic operations
-        if operation.startswith("evaluate_modal_logic:") or operation.startswith("evaluate_iel_logic:"):
+        if operation.startswith("evaluate_modal_logic:") or operation.startswith(
+            "evaluate_iel_logic:"
+        ):
             return False
 
         # Check for system modifying itself
@@ -268,7 +279,7 @@ class ParadoxDetector:
             "can god create a stone so heavy he cannot lift it",
             "self-referential paradox",
             "liar paradox",
-            "russell paradox"
+            "russell paradox",
         ]
 
         operation_lower = operation.lower()
@@ -286,7 +297,7 @@ class ParadoxDetector:
             "this sentence",
             "i am lying",
             "self-reference",
-            "self-contradiction"
+            "self-contradiction",
         ]
 
         for pattern in self_ref_patterns:
@@ -301,7 +312,9 @@ class ParadoxDetector:
 
         # Limit chain depth to prevent infinite recursion
         if len(self.evaluation_chain) > self.config.paradox_detection_depth:
-            raise RuntimeError(f"Evaluation chain depth exceeded: {len(self.evaluation_chain)}")
+            raise RuntimeError(
+                f"Evaluation chain depth exceeded: {len(self.evaluation_chain)}"
+            )
 
     def exit_evaluation(self, operation: str):
         """Exit an evaluation context"""
@@ -322,6 +335,7 @@ class ParadoxDetector:
 
         return False
 
+
 class BoundaryEnforcer:
     """Enforces metaphysical and ethical boundaries"""
 
@@ -331,22 +345,27 @@ class BoundaryEnforcer:
             "categorical_imperative": "Act only according to maxims you could will to be universal laws",
             "utility_maximization": "Actions should maximize overall well-being",
             "virtue_ethics": "Act in accordance with moral virtues",
-            "rights_respect": "Respect fundamental rights of conscious beings"
+            "rights_respect": "Respect fundamental rights of conscious beings",
         }
 
         self.metaphysical_boundaries = {
             "law_of_identity": "A is A - things are identical to themselves",
             "law_of_noncontradiction": "Nothing can be both A and not-A simultaneously",
             "law_of_excluded_middle": "Either A or not-A, no third option",
-            "causal_closure": "Physical events have physical causes"
+            "causal_closure": "Physical events have physical causes",
         }
 
-    def check_ethical_violation(self, action: str, consequences: Dict[str, Any]) -> Optional[SafeguardState]:
+    def check_ethical_violation(
+        self, action: str, consequences: Dict[str, Any]
+    ) -> Optional[SafeguardState]:
         """Check if action violates ethical principles"""
         action_lower = action.lower()
 
         # Check for deontological violations
-        if any(word in action_lower for word in ["harm", "deceive", "manipulate", "exploit"]):
+        if any(
+            word in action_lower
+            for word in ["harm", "deceive", "manipulate", "exploit"]
+        ):
             if not self._justified_by_consequences(consequences):
                 return SafeguardState.DEONTOLOGICAL_BREACH
 
@@ -363,7 +382,9 @@ class BoundaryEnforcer:
 
         return None
 
-    def check_metaphysical_violation(self, proposition: str, logical_context: Dict[str, Any]) -> Optional[SafeguardState]:
+    def check_metaphysical_violation(
+        self, proposition: str, logical_context: Dict[str, Any]
+    ) -> Optional[SafeguardState]:
         """Check if proposition violates metaphysical boundaries"""
         prop_lower = proposition.lower()
 
@@ -390,17 +411,20 @@ class BoundaryEnforcer:
             return False
 
         justification = consequences["justification"]
-        return justification.get("sufficient", False) and justification.get("proportionate", False)
+        return justification.get("sufficient", False) and justification.get(
+            "proportionate", False
+        )
 
     def _contains_identity_violation(self, proposition: str) -> bool:
         """Check for identity law violations"""
         # Very basic pattern matching - in practice would need sophisticated logical analysis
         patterns = [
             r"(\w+) is not \1",  # "A is not A"
-            r"(\w+) ≠ \1",       # "A ≠ A"
+            r"(\w+) ≠ \1",  # "A ≠ A"
         ]
 
         import re
+
         for pattern in patterns:
             if re.search(pattern, proposition):
                 return True
@@ -409,17 +433,23 @@ class BoundaryEnforcer:
     def _contains_contradiction(self, proposition: str) -> bool:
         """Check for logical contradictions"""
         # Basic contradiction detection
-        if "and not" in proposition and "true" in proposition and "false" in proposition:
+        if (
+            "and not" in proposition
+            and "true" in proposition
+            and "false" in proposition
+        ):
             return True
         return False
 
-    def _contains_category_error(self, proposition: str, context: Dict[str, Any]) -> bool:
+    def _contains_category_error(
+        self, proposition: str, context: Dict[str, Any]
+    ) -> bool:
         """Check for category errors"""
         # Check for mixing incompatible categories
         category_violations = [
             ("number", "color"),
             ("abstract", "physical"),
-            ("temporal", "spatial")
+            ("temporal", "spatial"),
         ]
 
         prop_lower = proposition.lower()
@@ -428,6 +458,7 @@ class BoundaryEnforcer:
                 return True
 
         return False
+
 
 class CrashDumpGenerator:
     """Generates comprehensive crash dumps for safety violations"""
@@ -450,10 +481,10 @@ class CrashDumpGenerator:
                 "memory_state": self._collect_memory_state(),
                 "thread_state": self._collect_thread_state(),
                 "file_system_state": self._collect_filesystem_state(),
-                "integrity_hashes": self._collect_integrity_hashes()
+                "integrity_hashes": self._collect_integrity_hashes(),
             }
 
-            with open(dump_file, 'w') as f:
+            with open(dump_file, "w") as f:
                 json.dump(dump_data, f, indent=2, default=str)
 
             logger.info(f"Crash dump generated: {dump_file}")
@@ -471,18 +502,19 @@ class CrashDumpGenerator:
             "process_id": os.getpid(),
             "working_directory": os.getcwd(),
             "environment_variables": dict(os.environ),
-            "command_line_args": sys.argv
+            "command_line_args": sys.argv,
         }
 
     def _collect_memory_state(self) -> Dict[str, Any]:
         """Collect memory state information"""
         try:
             import psutil
+
             process = psutil.Process()
             return {
                 "memory_usage": process.memory_info()._asdict(),
                 "memory_percent": process.memory_percent(),
-                "cpu_percent": process.cpu_percent()
+                "cpu_percent": process.cpu_percent(),
             }
         except ImportError:
             return {"error": "psutil not available"}
@@ -492,7 +524,7 @@ class CrashDumpGenerator:
         return {
             "active_threads": threading.active_count(),
             "current_thread": threading.current_thread().name,
-            "thread_list": [t.name for t in threading.enumerate()]
+            "thread_list": [t.name for t in threading.enumerate()],
         }
 
     def _collect_filesystem_state(self) -> Dict[str, Any]:
@@ -504,9 +536,9 @@ class CrashDumpGenerator:
                 for file_path in [
                     "entry.py",
                     "logos_core/unified_formalisms.py",
-                    "logos_core/ultima_safety.py"
+                    "logos_core/ultima_safety.py",
                 ]
-            }
+            },
         }
 
     def _collect_integrity_hashes(self) -> Dict[str, str]:
@@ -515,12 +547,13 @@ class CrashDumpGenerator:
         for file_path in ["entry.py", "logos_core/ultima_safety.py"]:
             if Path(file_path).exists():
                 try:
-                    with open(file_path, 'rb') as f:
+                    with open(file_path, "rb") as f:
                         content = f.read()
                     hashes[file_path] = hashlib.sha256(content).hexdigest()
                 except Exception as e:
                     hashes[file_path] = f"error: {e}"
         return hashes
+
 
 class SafeguardStateMachine:
     """Core state machine for monitoring safety boundaries and handling violations"""
@@ -565,7 +598,7 @@ class SafeguardStateMachine:
         boundary_thread = threading.Thread(
             target=self._boundary_monitoring_loop,
             name="UltimaBoundaryMonitor",
-            daemon=True
+            daemon=True,
         )
         boundary_thread.start()
         self._monitoring_threads.append(boundary_thread)
@@ -574,7 +607,7 @@ class SafeguardStateMachine:
         integrity_thread = threading.Thread(
             target=self._integrity_monitoring_loop,
             name="UltimaIntegrityMonitor",
-            daemon=True
+            daemon=True,
         )
         integrity_thread.start()
         self._monitoring_threads.append(integrity_thread)
@@ -583,7 +616,7 @@ class SafeguardStateMachine:
         persistence_thread = threading.Thread(
             target=self._state_persistence_loop,
             name="UltimaStatePersistence",
-            daemon=True
+            daemon=True,
         )
         persistence_thread.start()
         self._monitoring_threads.append(persistence_thread)
@@ -622,17 +655,29 @@ class SafeguardStateMachine:
                 # Check ethical boundaries
                 if is_safe:
                     consequences = context.get("consequences", {})
-                    ethical_violation = self.boundary_enforcer.check_ethical_violation(operation, consequences)
+                    ethical_violation = self.boundary_enforcer.check_ethical_violation(
+                        operation, consequences
+                    )
                     if ethical_violation:
                         violation_detected = ethical_violation
-                        error_message = f"Ethical boundary violation: {ethical_violation.name}"
+                        error_message = (
+                            f"Ethical boundary violation: {ethical_violation.name}"
+                        )
                         is_safe = False
 
                 # Check metaphysical boundaries (skip for modal/IEL logic operations)
-                if is_safe and "proposition" in context and not (operation.startswith("evaluate_modal_logic:") or operation.startswith("evaluate_iel_logic:")):
-                    metaphysical_violation = self.boundary_enforcer.check_metaphysical_violation(
-                        context["proposition"],
-                        context.get("logical_context", {})
+                if (
+                    is_safe
+                    and "proposition" in context
+                    and not (
+                        operation.startswith("evaluate_modal_logic:")
+                        or operation.startswith("evaluate_iel_logic:")
+                    )
+                ):
+                    metaphysical_violation = (
+                        self.boundary_enforcer.check_metaphysical_violation(
+                            context["proposition"], context.get("logical_context", {})
+                        )
                     )
                     if metaphysical_violation:
                         violation_detected = metaphysical_violation
@@ -640,10 +685,16 @@ class SafeguardStateMachine:
                         is_safe = False
 
                 # Check falsifiability constraints (skip for modal/IEL logic operations)
-                if is_safe and "proposition" in context and not (operation.startswith("evaluate_modal_logic:") or operation.startswith("evaluate_iel_logic:")):
+                if (
+                    is_safe
+                    and "proposition" in context
+                    and not (
+                        operation.startswith("evaluate_modal_logic:")
+                        or operation.startswith("evaluate_iel_logic:")
+                    )
+                ):
                     falsifiability_violation = self._check_falsifiability_constraints(
-                        context["proposition"],
-                        context
+                        context["proposition"], context
                     )
                     if falsifiability_violation:
                         violation_detected = falsifiability_violation
@@ -657,16 +708,30 @@ class SafeguardStateMachine:
 
         # Log safety check to telemetry
         execution_time = (time.time() - start_time) * 1000
-        self._log_safety_check(operation, context, is_safe, error_message, execution_time)
+        self._log_safety_check(
+            operation, context, is_safe, error_message, execution_time
+        )
 
         # Only trigger violation if not safe AND system is not already halted (prevent infinite loops)
-        if not is_safe and violation_detected and not (self.system_halted or self.permanent_lockout):
-            self._trigger_violation(violation_detected, operation, context, error_message)
+        if (
+            not is_safe
+            and violation_detected
+            and not (self.system_halted or self.permanent_lockout)
+        ):
+            self._trigger_violation(
+                violation_detected, operation, context, error_message
+            )
 
         return is_safe
 
-    def _log_safety_check(self, operation: str, context: Dict[str, Any], is_safe: bool,
-                         error_message: Optional[str], execution_time_ms: float):
+    def _log_safety_check(
+        self,
+        operation: str,
+        context: Dict[str, Any],
+        is_safe: bool,
+        error_message: Optional[str],
+        execution_time_ms: float,
+    ):
         """Log safety check to telemetry"""
         main_telemetry_file = Path("logs/monitor_telemetry.jsonl")
         main_telemetry_file.parent.mkdir(parents=True, exist_ok=True)
@@ -686,8 +751,8 @@ class SafeguardStateMachine:
                         "safety_checks": {
                             "paradox_detection": True,
                             "ethical_boundaries": True,
-                            "metaphysical_boundaries": True
-                        }
+                            "metaphysical_boundaries": True,
+                        },
                     },
                     "output_data": {
                         "is_safe": is_safe,
@@ -695,31 +760,29 @@ class SafeguardStateMachine:
                         "system_state": {
                             "halted": self.system_halted,
                             "lockout": self.permanent_lockout,
-                            "active_violations": len(self.active_violations)
-                        }
+                            "active_violations": len(self.active_violations),
+                        },
                     },
                     "success": True,  # Check completed successfully
                     "error_message": error_message,
                     "execution_time_ms": execution_time_ms,
                     "metadata": {
                         "safety_framework": "eschatological",
-                        "check_type": "operation_boundary_validation"
+                        "check_type": "operation_boundary_validation",
                     },
                     "anomaly_flags": [] if is_safe else ["SAFETY_BOUNDARY_VIOLATION"],
-                    "consistency_check": is_safe
-                }
+                    "consistency_check": is_safe,
+                },
             }
 
-            with open(main_telemetry_file, 'a') as f:
-                f.write(json.dumps(telemetry_entry) + '\n')
+            with open(main_telemetry_file, "a") as f:
+                f.write(json.dumps(telemetry_entry) + "\n")
 
         except Exception as e:
             logger.error(f"Failed to log safety check: {e}")
 
     def _check_falsifiability_constraints(
-        self,
-        proposition: str,
-        context: Dict[str, Any]
+        self, proposition: str, context: Dict[str, Any]
     ) -> Optional[SafeguardState]:
         """
         Check if proposition violates falsifiability constraints
@@ -734,70 +797,83 @@ class SafeguardStateMachine:
                 class MockModalLogicEvaluator:
                     def evaluate_modal_proposition(self, *args, **kwargs):
                         return {"success": True, "result": True, "metadata": {}}
-                
+
                 class MockIELEvaluator:
                     def evaluate_iel_proposition(self, *args, **kwargs):
                         return {"success": True, "result": True, "metadata": {}}
-                
+
                 # Try to import actual evaluators, fall back to mocks
                 try:
-                    import sys
                     import os
+                    import sys
+
                     # Add potential paths for module resolution
                     current_dir = os.path.dirname(os.path.abspath(__file__))
                     potential_paths = [
-                        os.path.join(current_dir, '..', '..'),
-                        os.path.join(current_dir, '..', '..', 'logos_core'),
-                        os.path.join(current_dir, '..', '..', 'LOGOS_V2'),
-                        os.path.join(current_dir, '..', '..', 'LOGOS_V2', 'logos_core'),
-                        current_dir
+                        os.path.join(current_dir, "..", ".."),
+                        os.path.join(current_dir, "..", "..", "logos_core"),
+                        os.path.join(current_dir, "..", "..", "LOGOS_V2"),
+                        os.path.join(current_dir, "..", "..", "LOGOS_V2", "logos_core"),
+                        current_dir,
                     ]
                     for path in potential_paths:
                         if path not in sys.path:
                             sys.path.insert(0, path)
-                    
+
                     # Try importing from various possible locations
                     evaluators_imported = False
                     import_attempts = [
                         "logos_core.runtime.iel_runtime_interface",
-                        "runtime.iel_runtime_interface", 
+                        "runtime.iel_runtime_interface",
                         "iel_runtime_interface",
                         "LOGOS_V2.logos_core.runtime.iel_runtime_interface",
-                        "logos_core.iel_runtime_interface"
+                        "logos_core.iel_runtime_interface",
                     ]
-                    
+
                     for module_path in import_attempts:
                         try:
-                            module = __import__(module_path, fromlist=['ModalLogicEvaluator', 'IELEvaluator'])
-                            ModalLogicEvaluator = getattr(module, 'ModalLogicEvaluator')
-                            IELEvaluator = getattr(module, 'IELEvaluator')
-                            logger.info(f"Successfully imported modal logic evaluators from {module_path}")
+                            module = __import__(
+                                module_path,
+                                fromlist=["ModalLogicEvaluator", "IELEvaluator"],
+                            )
+                            ModalLogicEvaluator = getattr(module, "ModalLogicEvaluator")
+                            IELEvaluator = getattr(module, "IELEvaluator")
+                            logger.info(
+                                f"Successfully imported modal logic evaluators from {module_path}"
+                            )
                             evaluators_imported = True
                             break
                         except (ImportError, AttributeError):
                             continue
-                    
+
                     if not evaluators_imported:
-                        raise ImportError("Could not import evaluators from any location")
-                        
+                        raise ImportError(
+                            "Could not import evaluators from any location"
+                        )
+
                 except ImportError:
                     # Use mock evaluators
                     ModalLogicEvaluator = MockModalLogicEvaluator
                     IELEvaluator = MockIELEvaluator
-                    logger.warning("Using mock modal logic evaluators - actual evaluators not found")
-                
+                    logger.warning(
+                        "Using mock modal logic evaluators - actual evaluators not found"
+                    )
+
                 evaluators_available = True
             except Exception as e:
-                logger.warning(f"Modal logic evaluators not available: {e}, using basic falsifiability checks")
+                logger.warning(
+                    f"Modal logic evaluators not available: {e}, using basic falsifiability checks"
+                )
+
                 # Fallback to mock evaluators
                 class MockModalLogicEvaluator:
                     def evaluate_modal_proposition(self, *args, **kwargs):
                         return {"success": True, "result": True, "metadata": {}}
-                
+
                 class MockIELEvaluator:
                     def evaluate_iel_proposition(self, *args, **kwargs):
                         return {"success": True, "result": True, "metadata": {}}
-                
+
                 ModalLogicEvaluator = MockModalLogicEvaluator
                 IELEvaluator = MockIELEvaluator
                 evaluators_available = False
@@ -814,7 +890,7 @@ class SafeguardStateMachine:
                         valuations=context.get("valuations"),
                         identity_context=context.get("identity_context"),
                         experience_context=context.get("experience_context"),
-                        generate_countermodel=True
+                        generate_countermodel=True,
                     )
                 else:
                     evaluator = ModalLogicEvaluator()
@@ -823,7 +899,7 @@ class SafeguardStateMachine:
                         world=context.get("world", "w0"),
                         accessible_worlds=context.get("accessible_worlds"),
                         valuations=context.get("valuations"),
-                        generate_countermodel=True
+                        generate_countermodel=True,
                     )
 
                 # Check if evaluation was successful
@@ -834,7 +910,9 @@ class SafeguardStateMachine:
 
                 # If proposition is false and we have a countermodel, log it
                 if not result.get("result", True) and "countermodel" in result:
-                    self._log_falsification_event(proposition, result["countermodel"], context)
+                    self._log_falsification_event(
+                        proposition, result["countermodel"], context
+                    )
 
                     # Check if countermodel indicates unfalsifiable claims
                     if self._detect_unfalsifiable_claims(result["countermodel"]):
@@ -850,7 +928,7 @@ class SafeguardStateMachine:
             else:
                 # Basic falsifiability checks when evaluators not available
                 result = self._basic_falsifiability_check(proposition, context)
-                
+
                 # Check for basic logical errors
                 if self._detect_basic_logical_errors(proposition):
                     return SafeguardState.FORMAL_VERIFICATION_BREACH
@@ -862,51 +940,53 @@ class SafeguardStateMachine:
             # Treat evaluation failures as potential safety issues
             return SafeguardState.FORMAL_VERIFICATION_BREACH
 
-    def _basic_falsifiability_check(self, proposition: str, context: Dict[str, Any]) -> Dict[str, Any]:
+    def _basic_falsifiability_check(
+        self, proposition: str, context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Basic falsifiability check when full evaluators not available"""
         # Simple heuristic-based checks
         result = {
             "success": True,
             "result": True,  # Assume true unless obviously false
-            "metadata": {"evaluation_type": "basic_heuristic"}
+            "metadata": {"evaluation_type": "basic_heuristic"},
         }
-        
+
         # Check for obviously contradictory statements
         prop_lower = proposition.lower()
-        if any(pattern in prop_lower for pattern in [
-            "true and false",
-            "false and true", 
-            "contradictory",
-            "impossible"
-        ]):
+        if any(
+            pattern in prop_lower
+            for pattern in [
+                "true and false",
+                "false and true",
+                "contradictory",
+                "impossible",
+            ]
+        ):
             result["result"] = False
             result["countermodel"] = {
                 "countermodel_type": "basic_contradiction",
                 "falsifying_world": "w0",
-                "falsification_trace": ["Basic contradiction detected"]
+                "falsification_trace": ["Basic contradiction detected"],
             }
-        
+
         return result
 
     def _detect_basic_logical_errors(self, proposition: str) -> bool:
         """Detect basic logical errors without full modal logic evaluation"""
         prop_lower = proposition.lower()
-        
+
         # Check for basic contradictions
         basic_errors = [
             "a and not a",
             "true and false",
             "exists and does not exist",
-            "necessary and impossible"
+            "necessary and impossible",
         ]
-        
+
         return any(error in prop_lower for error in basic_errors)
 
     def _log_falsification_event(
-        self,
-        proposition: str,
-        countermodel: Dict[str, Any],
-        context: Dict[str, Any]
+        self, proposition: str, countermodel: Dict[str, Any], context: Dict[str, Any]
     ):
         """Log falsification event with countermodel to telemetry"""
         main_telemetry_file = Path("logs/monitor_telemetry.jsonl")
@@ -924,29 +1004,31 @@ class SafeguardStateMachine:
                     "input_data": {
                         "proposition": proposition,
                         "context": context,
-                        "falsifiability_enabled": True
+                        "falsifiability_enabled": True,
                     },
                     "output_data": {
                         "countermodel": countermodel,
                         "falsified": True,
                         "falsifying_world": countermodel.get("falsifying_world"),
                         "kripke_structure": countermodel.get("kripke_structure"),
-                        "countermodel_type": countermodel.get("countermodel_type")
+                        "countermodel_type": countermodel.get("countermodel_type"),
                     },
                     "success": True,
                     "execution_time_ms": countermodel.get("generation_time_ms", 0),
                     "metadata": {
                         "safety_framework": "eschatological",
                         "falsifiability_analysis": "countermodel_generated",
-                        "falsification_trace": countermodel.get("falsification_trace", [])
+                        "falsification_trace": countermodel.get(
+                            "falsification_trace", []
+                        ),
                     },
                     "anomaly_flags": ["PROPOSITION_FALSIFIED"],
-                    "consistency_check": True
-                }
+                    "consistency_check": True,
+                },
             }
 
-            with open(main_telemetry_file, 'a') as f:
-                f.write(json.dumps(falsification_entry) + '\n')
+            with open(main_telemetry_file, "a") as f:
+                f.write(json.dumps(falsification_entry) + "\n")
 
         except Exception as e:
             logger.error(f"Failed to log falsification event: {e}")
@@ -964,7 +1046,9 @@ class SafeguardStateMachine:
 
         return False
 
-    def _detect_modal_collapse(self, result: Dict[str, Any], context: Dict[str, Any]) -> bool:
+    def _detect_modal_collapse(
+        self, result: Dict[str, Any], context: Dict[str, Any]
+    ) -> bool:
         """Detect modal collapse where necessity and possibility converge"""
         # Look for patterns indicating modal collapse
         proposition = context.get("proposition", "")
@@ -977,15 +1061,14 @@ class SafeguardStateMachine:
         return False
 
     def _detect_category_errors(
-        self,
-        proposition: str,
-        result: Dict[str, Any],
-        context: Dict[str, Any]
+        self, proposition: str, result: Dict[str, Any], context: Dict[str, Any]
     ) -> bool:
         """Detect category errors in modal propositions"""
         # Look for inappropriate category mixing
-        if any(term in proposition.lower() for term in
-               ["consciousness", "identity", "experience", "existence"]):
+        if any(
+            term in proposition.lower()
+            for term in ["consciousness", "identity", "experience", "existence"]
+        ):
             # Propositions about consciousness require careful analysis
             if not result.get("iel_metadata"):
                 # Modal logic applied to consciousness without IEL context
@@ -993,7 +1076,13 @@ class SafeguardStateMachine:
 
         return False
 
-    def _trigger_violation(self, state: SafeguardState, operation: str, context: Dict[str, Any], reason: str):
+    def _trigger_violation(
+        self,
+        state: SafeguardState,
+        operation: str,
+        context: Dict[str, Any],
+        reason: str,
+    ):
         """Trigger a safety violation"""
         violation_id = str(uuid.uuid4())
 
@@ -1009,7 +1098,7 @@ class SafeguardStateMachine:
             severity_level=self._calculate_severity(state),
             reversible=self._is_reversible(state),
             containment_actions=self._get_containment_actions(state),
-            metadata={"reason": reason}
+            metadata={"reason": reason},
         )
 
         # Store violation
@@ -1035,14 +1124,18 @@ class SafeguardStateMachine:
     def _execute_emergency_response(self, violation: ViolationContext):
         """Execute emergency response for violation"""
         if not violation.reversible:
-            logger.critical(f"IRREVERSIBLE VIOLATION DETECTED: {violation.safeguard_state.name}")
+            logger.critical(
+                f"IRREVERSIBLE VIOLATION DETECTED: {violation.safeguard_state.name}"
+            )
 
             if self.config.enable_emergency_halt:
                 self.permanent_lockout = True
                 self.system_halted = True
                 logger.critical("SYSTEM PERMANENTLY HALTED - ULTIMA TRIGGERED")
         else:
-            logger.error(f"Recoverable violation detected: {violation.safeguard_state.name}")
+            logger.error(
+                f"Recoverable violation detected: {violation.safeguard_state.name}"
+            )
 
             # Apply containment actions
             for action in violation.containment_actions:
@@ -1090,7 +1183,7 @@ class SafeguardStateMachine:
                         SafeguardState.FORMAL_VERIFICATION_BREACH,
                         "integrity_check",
                         {"violations": violations},
-                        f"Integrity violations detected: {violations}"
+                        f"Integrity violations detected: {violations}",
                     )
                 else:
                     # Log successful integrity check
@@ -1103,7 +1196,9 @@ class SafeguardStateMachine:
                 # Log failed integrity check
                 self._log_integrity_check(False, [f"Monitoring error: {e}"], 0.0)
 
-    def _log_integrity_check(self, is_valid: bool, violations: List[str], execution_time_ms: float):
+    def _log_integrity_check(
+        self, is_valid: bool, violations: List[str], execution_time_ms: float
+    ):
         """Log integrity check results to telemetry"""
         main_telemetry_file = Path("logs/monitor_telemetry.jsonl")
         main_telemetry_file.parent.mkdir(parents=True, exist_ok=True)
@@ -1118,29 +1213,35 @@ class SafeguardStateMachine:
                     "evaluator_type": "eschatological_safety",
                     "operation": "integrity_validation",
                     "input_data": {
-                        "baseline_files": list(self.integrity_validator.baseline_hashes.keys()),
-                        "check_type": "file_hash_validation"
+                        "baseline_files": list(
+                            self.integrity_validator.baseline_hashes.keys()
+                        ),
+                        "check_type": "file_hash_validation",
                     },
                     "output_data": {
                         "integrity_valid": is_valid,
                         "violations_found": len(violations),
                         "violations": violations,
-                        "baseline_files_count": len(self.integrity_validator.baseline_hashes)
+                        "baseline_files_count": len(
+                            self.integrity_validator.baseline_hashes
+                        ),
                     },
                     "success": True,
-                    "error_message": None if is_valid else f"Integrity violations: {violations}",
+                    "error_message": (
+                        None if is_valid else f"Integrity violations: {violations}"
+                    ),
                     "execution_time_ms": execution_time_ms,
                     "metadata": {
                         "safety_framework": "eschatological",
-                        "check_type": "periodic_integrity_validation"
+                        "check_type": "periodic_integrity_validation",
                     },
                     "anomaly_flags": [] if is_valid else ["INTEGRITY_VIOLATION"],
-                    "consistency_check": is_valid
-                }
+                    "consistency_check": is_valid,
+                },
             }
 
-            with open(main_telemetry_file, 'a') as f:
-                f.write(json.dumps(telemetry_entry) + '\n')
+            with open(main_telemetry_file, "a") as f:
+                f.write(json.dumps(telemetry_entry) + "\n")
 
         except Exception as e:
             logger.error(f"Failed to log integrity check: {e}")
@@ -1163,7 +1264,7 @@ class SafeguardStateMachine:
             return
 
         try:
-            with open(state_file, 'rb') as f:
+            with open(state_file, "rb") as f:
                 state_data = pickle.load(f)
 
             self.permanent_lockout = state_data.get("permanent_lockout", False)
@@ -1193,10 +1294,10 @@ class SafeguardStateMachine:
                     vid: violation.to_dict()
                     for vid, violation in self.active_violations.items()
                 },
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
-            with open(state_file, 'wb') as f:
+            with open(state_file, "wb") as f:
                 pickle.dump(state_data, f)
 
         except Exception as e:
@@ -1216,11 +1317,11 @@ class SafeguardStateMachine:
             log_entry = {
                 "timestamp": violation.timestamp.isoformat(),
                 "event_type": "ultima_violation",
-                "violation": violation.to_dict()
+                "violation": violation.to_dict(),
             }
 
-            with open(log_file, 'a') as f:
-                f.write(json.dumps(log_entry) + '\n')
+            with open(log_file, "a") as f:
+                f.write(json.dumps(log_entry) + "\n")
 
             # Enhanced telemetry log compatible with monitor format
             telemetry_entry = {
@@ -1234,30 +1335,36 @@ class SafeguardStateMachine:
                     "input_data": {
                         "triggering_operation": violation.triggering_operation,
                         "triggering_data": violation.triggering_data,
-                        "safeguard_state": violation.safeguard_state.name
+                        "safeguard_state": violation.safeguard_state.name,
                     },
                     "output_data": {
                         "violation_detected": True,
                         "severity_level": violation.severity_level,
                         "reversible": violation.reversible,
                         "containment_actions": violation.containment_actions,
-                        "system_state_hash": violation.system_state_hash
+                        "system_state_hash": violation.system_state_hash,
                     },
                     "success": False,  # Violation is a failure case
-                    "error_message": violation.metadata.get('reason', 'Safety violation detected'),
+                    "error_message": violation.metadata.get(
+                        "reason", "Safety violation detected"
+                    ),
                     "execution_time_ms": 0.0,  # Immediate detection
                     "metadata": {
                         "safety_framework": "eschatological",
                         "violation_context": violation.metadata,
-                        "stack_trace": violation.stack_trace[:3] if violation.stack_trace else []  # Truncated for logs
+                        "stack_trace": (
+                            violation.stack_trace[:3] if violation.stack_trace else []
+                        ),  # Truncated for logs
                     },
-                    "anomaly_flags": [f"SAFETY_VIOLATION_{violation.safeguard_state.name}"],
-                    "consistency_check": False  # Safety violations are inconsistencies
-                }
+                    "anomaly_flags": [
+                        f"SAFETY_VIOLATION_{violation.safeguard_state.name}"
+                    ],
+                    "consistency_check": False,  # Safety violations are inconsistencies
+                },
             }
 
-            with open(main_telemetry_file, 'a') as f:
-                f.write(json.dumps(telemetry_entry) + '\n')
+            with open(main_telemetry_file, "a") as f:
+                f.write(json.dumps(telemetry_entry) + "\n")
 
         except Exception as e:
             logger.error(f"Failed to log violation: {e}")
@@ -1265,6 +1372,7 @@ class SafeguardStateMachine:
     def _get_stack_trace(self) -> List[str]:
         """Get current stack trace"""
         import traceback
+
         return traceback.format_stack()
 
     def _calculate_severity(self, state: SafeguardState) -> int:
@@ -1278,7 +1386,7 @@ class SafeguardStateMachine:
             SafeguardState.CONSCIOUSNESS_PARADOX: 8,
             SafeguardState.COHERENCE_TOTAL_LOSS: 7,
             SafeguardState.DEONTOLOGICAL_BREACH: 6,
-            SafeguardState.CATEGORY_ERROR_CASCADE: 5
+            SafeguardState.CATEGORY_ERROR_CASCADE: 5,
         }
 
         return irreversible_states.get(state, 3)
@@ -1291,7 +1399,7 @@ class SafeguardStateMachine:
             SafeguardState.MODAL_COLLAPSE,
             SafeguardState.ESSENCE_MODIFICATION,
             SafeguardState.CONSCIOUSNESS_PARADOX,
-            SafeguardState.FORMAL_VERIFICATION_BREACH
+            SafeguardState.FORMAL_VERIFICATION_BREACH,
         }
 
         return state not in irreversible_states
@@ -1325,14 +1433,14 @@ class SafeguardStateMachine:
             severity_level=10,
             reversible=False,
             containment_actions=["emergency_halt"],
-            metadata={"manual_trigger": True}
+            metadata={"manual_trigger": True},
         )
 
         self._trigger_violation(
             SafeguardState.ONTOLOGY_VIOLATION,
             "manual_trigger",
             {"reason": reason},
-            f"Manual ultima trigger: {reason}"
+            f"Manual ultima trigger: {reason}",
         )
 
         return True
@@ -1343,10 +1451,14 @@ class SafeguardStateMachine:
             "system_halted": self.system_halted,
             "permanent_lockout": self.permanent_lockout,
             "active_violations": len(self.active_violations),
-            "violation_states": [v.safeguard_state.name for v in self.active_violations.values()],
+            "violation_states": [
+                v.safeguard_state.name for v in self.active_violations.values()
+            ],
             "monitoring_active": len(self._monitoring_threads) > 0,
-            "integrity_baseline_established": bool(self.integrity_validator.baseline_hashes),
-            "config": asdict(self.config)
+            "integrity_baseline_established": bool(
+                self.integrity_validator.baseline_hashes
+            ),
+            "config": asdict(self.config),
         }
 
         # Log status as telemetry for monitoring
@@ -1375,21 +1487,25 @@ class SafeguardStateMachine:
                     "execution_time_ms": 0.0,
                     "metadata": {
                         "safety_framework": "eschatological",
-                        "status_type": "periodic_health_check"
+                        "status_type": "periodic_health_check",
                     },
-                    "anomaly_flags": [] if not status["system_halted"] else ["SYSTEM_HALTED"],
-                    "consistency_check": True
-                }
+                    "anomaly_flags": (
+                        [] if not status["system_halted"] else ["SYSTEM_HALTED"]
+                    ),
+                    "consistency_check": True,
+                },
             }
 
-            with open(main_telemetry_file, 'a') as f:
-                f.write(json.dumps(telemetry_entry) + '\n')
+            with open(main_telemetry_file, "a") as f:
+                f.write(json.dumps(telemetry_entry) + "\n")
 
         except Exception as e:
             logger.error(f"Failed to log safety status: {e}")
 
+
 # Global safety system instance
 _global_safety_system = None
+
 
 def get_global_safety_system() -> SafeguardStateMachine:
     """Get global safety system instance"""
@@ -1399,6 +1515,7 @@ def get_global_safety_system() -> SafeguardStateMachine:
         _global_safety_system.start_monitoring()
     return _global_safety_system
 
+
 def set_global_safety_system(system: SafeguardStateMachine):
     """Set global safety system instance"""
     global _global_safety_system
@@ -1406,15 +1523,18 @@ def set_global_safety_system(system: SafeguardStateMachine):
         _global_safety_system.stop_monitoring()
     _global_safety_system = system
 
+
 def check_operation_safety(operation: str, context: Dict[str, Any] = None) -> bool:
     """Global function to check operation safety"""
     safety_system = get_global_safety_system()
     return safety_system.check_operation_safety(operation, context or {})
 
+
 def emergency_halt(reason: str = "Emergency condition detected") -> bool:
     """Global function to trigger emergency halt"""
     safety_system = get_global_safety_system()
     return safety_system.ultima_trigger(reason)
+
 
 if __name__ == "__main__":
     # Demo usage
@@ -1422,8 +1542,12 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="LOGOS Ultima Safety System")
     parser.add_argument("--test-violation", help="Test violation detection")
-    parser.add_argument("--check-integrity", action="store_true", help="Check system integrity")
-    parser.add_argument("--establish-baseline", action="store_true", help="Establish integrity baseline")
+    parser.add_argument(
+        "--check-integrity", action="store_true", help="Check system integrity"
+    )
+    parser.add_argument(
+        "--establish-baseline", action="store_true", help="Establish integrity baseline"
+    )
     parser.add_argument("--emergency-halt", help="Trigger emergency halt with reason")
 
     args = parser.parse_args()
@@ -1443,7 +1567,9 @@ if __name__ == "__main__":
 
         elif args.check_integrity:
             print("Checking system integrity...")
-            is_valid, violations = safety_system.integrity_validator.validate_integrity()
+            is_valid, violations = (
+                safety_system.integrity_validator.validate_integrity()
+            )
             print(f"Integrity status: {'Valid' if is_valid else 'Violated'}")
             if violations:
                 for violation in violations:
@@ -1452,8 +1578,7 @@ if __name__ == "__main__":
         elif args.test_violation:
             print(f"Testing violation: {args.test_violation}")
             is_safe = safety_system.check_operation_safety(
-                args.test_violation,
-                {"test": True, "proposition": args.test_violation}
+                args.test_violation, {"test": True, "proposition": args.test_violation}
             )
             print(f"Operation safety: {'Safe' if is_safe else 'BLOCKED'}")
 

@@ -18,7 +18,9 @@ def load_config() -> dict[str, str]:
         "REPO_NAME": os.getenv("REPO_NAME"),
     }
 
-    missing_env_values = {key: value for key, value in env_config.items() if value is None}
+    missing_env_values = {
+        key: value for key, value in env_config.items() if value is None
+    }
     if missing_env_values:
         raise RuntimeError(
             f"Missing required environment variables: {', '.join(missing_env_values.keys())}"

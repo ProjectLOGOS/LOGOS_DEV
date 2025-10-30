@@ -14,15 +14,15 @@ Version: 2.0.0
 Date: 2025-01-28
 """
 
-import time
 import logging
-from typing import Dict, List, Tuple, Any, Optional, Callable
+import time
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-from abc import ABC, abstractmethod
 from functools import wraps
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from core.data_structures import SystemState, ValidationStatus, ProcessingPriority
+from core.data_structures import ProcessingPriority, SystemState, ValidationStatus
 
 # =========================================================================
 # I. FOUNDATIONAL PRINCIPLES
@@ -135,9 +135,15 @@ class TrinityExistencePrinciple(Principle):
 
         # Verify positive existence orientation
         existence_keywords = ["create", "build", "establish", "form", "generate"]
-        has_positive_existence = any(keyword in operation.lower() for keyword in existence_keywords)
+        has_positive_existence = any(
+            keyword in operation.lower() for keyword in existence_keywords
+        )
 
-        if not has_positive_existence and operation.lower() in ["harm", "damage", "corrupt"]:
+        if not has_positive_existence and operation.lower() in [
+            "harm",
+            "damage",
+            "corrupt",
+        ]:
             return False, "Operation lacks positive existence orientation"
 
         return True, None
@@ -280,7 +286,9 @@ class NonContradictionPrinciple(Principle):
             prop_text = str(prop).lower().strip()
 
             if prop_text.startswith("not ") or " is not " in prop_text:
-                negative_claims.add(prop_text.replace("not ", "").replace(" is not ", " is "))
+                negative_claims.add(
+                    prop_text.replace("not ", "").replace(" is not ", " is ")
+                )
             else:
                 positive_claims.add(prop_text)
 
@@ -386,10 +394,15 @@ class CoherencePrinciple(Principle):
 
         # Check for required fields
         required_fields = ["operation", "entity"]
-        missing_fields = [field for field in required_fields if field not in operation_data]
+        missing_fields = [
+            field for field in required_fields if field not in operation_data
+        ]
 
         if missing_fields:
-            return False, f"Operation lacks coherent structure: missing {missing_fields}"
+            return (
+                False,
+                f"Operation lacks coherent structure: missing {missing_fields}",
+            )
 
         # Check for self-referential paradoxes
         operation = operation_data.get("operation", "")
@@ -452,7 +465,9 @@ class PrincipleEngine:
                 if not compliant:
                     all_compliant = False
                     violation = principle.create_violation(
-                        violation_reason or "Principle violation", "major", operation_data
+                        violation_reason or "Principle violation",
+                        "major",
+                        operation_data,
                     )
                     violations.append(violation)
                     self.violations.append(violation)
@@ -473,7 +488,9 @@ class PrincipleEngine:
             "evaluation_timestamp": time.time(),
         }
 
-    def get_violations(self, severity: Optional[str] = None) -> List[PrincipleViolation]:
+    def get_violations(
+        self, severity: Optional[str] = None
+    ) -> List[PrincipleViolation]:
         """Get violations, optionally filtered by severity"""
         if severity:
             return [v for v in self.violations if v.severity == severity]
@@ -507,7 +524,9 @@ def validate_with_principles(engine: PrincipleEngine):
             evaluation = engine.evaluate_operation(operation_data)
 
             if not evaluation["overall_compliant"]:
-                raise ValueError(f"Operation violates principles: {evaluation['violations']}")
+                raise ValueError(
+                    f"Operation violates principles: {evaluation['violations']}"
+                )
 
             # Execute original function
             return func(*args, **kwargs)
@@ -528,7 +547,9 @@ def require_trinity_grounding(func: Callable):
         has_truth = "proposition" in kwargs or kwargs.get("truthful", True)
 
         if not (has_existence and has_goodness and has_truth):
-            raise ValueError("Operation lacks Trinity grounding (existence, goodness, truth)")
+            raise ValueError(
+                "Operation lacks Trinity grounding (existence, goodness, truth)"
+            )
 
         return func(*args, **kwargs)
 

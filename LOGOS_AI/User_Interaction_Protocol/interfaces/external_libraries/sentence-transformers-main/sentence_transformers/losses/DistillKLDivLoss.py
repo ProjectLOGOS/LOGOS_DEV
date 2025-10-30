@@ -10,7 +10,10 @@ from sentence_transformers import SentenceTransformer, util
 
 class DistillKLDivLoss(nn.Module):
     def __init__(
-        self, model: SentenceTransformer, similarity_fct=util.pairwise_dot_score, temperature: float = 1.0
+        self,
+        model: SentenceTransformer,
+        similarity_fct=util.pairwise_dot_score,
+        temperature: float = 1.0,
     ) -> None:
         """
         Compute the KL divergence loss between probability distributions derived from student and teacher models' similarity scores.
@@ -131,17 +134,27 @@ class DistillKLDivLoss(nn.Module):
         self.temperature = temperature
         self.loss_fct = nn.KLDivLoss(reduction="batchmean")
 
-    def forward(self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor) -> Tensor:
-        embeddings = [self.model(sentence_feature)["sentence_embedding"] for sentence_feature in sentence_features]
+    def forward(
+        self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor
+    ) -> Tensor:
+        embeddings = [
+            self.model(sentence_feature)["sentence_embedding"]
+            for sentence_feature in sentence_features
+        ]
 
         return self.compute_loss_from_embeddings(embeddings, labels)
 
-    def compute_loss_from_embeddings(self, embeddings: list[Tensor], labels: Tensor) -> Tensor:
+    def compute_loss_from_embeddings(
+        self, embeddings: list[Tensor], labels: Tensor
+    ) -> Tensor:
         embeddings_query = embeddings[0]
 
         # Compute student scores
         student_scores = torch.stack(
-            [self.similarity_fct(embeddings_query, embeddings_other) for embeddings_other in embeddings[1:]],
+            [
+                self.similarity_fct(embeddings_query, embeddings_other)
+                for embeddings_other in embeddings[1:]
+            ],
             dim=1,
         )
         # Scale student scores by temperature to soften distributions, then apply log-softmax

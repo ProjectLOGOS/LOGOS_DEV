@@ -1,8 +1,9 @@
+from typing import Any, List
+
 import numpy as np
 from sentence_transformers import SentenceTransformer
 from sklearn.cluster import DBSCAN
 from umap import UMAP
-from typing import List, Any
 
 
 class FeatureExtractor:
@@ -23,7 +24,11 @@ class FeatureExtractor:
 
 class ClusterAnalyzer:
     def __init__(
-        self, eps: float = 0.5, min_samples: int = 2, n_neighbors: int = 5, n_components: int = 2
+        self,
+        eps: float = 0.5,
+        min_samples: int = 2,
+        n_neighbors: int = 5,
+        n_components: int = 2,
     ):
         self.eps = eps
         self.min_samples = min_samples
@@ -34,7 +39,10 @@ class ClusterAnalyzer:
 
     def fit(self, features: np.ndarray) -> dict:
         if features.shape[0] < 2:
-            return {"embedding_2d": features.tolist(), "labels": [0] * features.shape[0]}
+            return {
+                "embedding_2d": features.tolist(),
+                "labels": [0] * features.shape[0],
+            }
 
         n_neighbors_val = min(features.shape[0] - 1, self.n_neighbors)
         if n_neighbors_val < 1:

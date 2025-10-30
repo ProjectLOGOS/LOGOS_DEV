@@ -109,7 +109,9 @@ class Pooling(Module):
                 pooling_mode_lasttoken,
             ]
         )
-        self.pooling_output_dimension = pooling_mode_multiplier * word_embedding_dimension
+        self.pooling_output_dimension = (
+            pooling_mode_multiplier * word_embedding_dimension
+        )
 
     def __repr__(self) -> str:
         return f"Pooling({self.get_config_dict()})"
@@ -137,7 +139,11 @@ class Pooling(Module):
         attention_mask = (
             features["attention_mask"]
             if "attention_mask" in features
-            else torch.ones(token_embeddings.shape[:-1], device=token_embeddings.device, dtype=torch.int64)
+            else torch.ones(
+                token_embeddings.shape[:-1],
+                device=token_embeddings.device,
+                dtype=torch.int64,
+            )
         )
         if not self.include_prompt and "prompt_length" in features:
             prompt_length = features["prompt_length"]
@@ -154,24 +160,36 @@ class Pooling(Module):
         ## Pooling strategy
         output_vectors = []
         if self.pooling_mode_cls_token:
-            cls_token = features.get("cls_token_embeddings", token_embeddings[:, 0])  # Take first token by default
+            cls_token = features.get(
+                "cls_token_embeddings", token_embeddings[:, 0]
+            )  # Take first token by default
             output_vectors.append(cls_token)
         if self.pooling_mode_max_tokens:
             input_mask_expanded = (
-                attention_mask.unsqueeze(-1).expand(token_embeddings.size()).to(token_embeddings.dtype)
+                attention_mask.unsqueeze(-1)
+                .expand(token_embeddings.size())
+                .to(token_embeddings.dtype)
             )
-            token_embeddings[input_mask_expanded == 0] = -1e9  # Set padding tokens to large negative value
+            token_embeddings[input_mask_expanded == 0] = (
+                -1e9
+            )  # Set padding tokens to large negative value
             max_over_time = torch.max(token_embeddings, 1)[0]
             output_vectors.append(max_over_time)
         if self.pooling_mode_mean_tokens or self.pooling_mode_mean_sqrt_len_tokens:
             input_mask_expanded = (
-                attention_mask.unsqueeze(-1).expand(token_embeddings.size()).to(token_embeddings.dtype)
+                attention_mask.unsqueeze(-1)
+                .expand(token_embeddings.size())
+                .to(token_embeddings.dtype)
             )
             sum_embeddings = torch.sum(token_embeddings * input_mask_expanded, 1)
 
             # If tokens are weighted (by WordWeights layer), feature 'token_weights_sum' will be present
             if "token_weights_sum" in features:
-                sum_mask = features["token_weights_sum"].unsqueeze(-1).expand(sum_embeddings.size())
+                sum_mask = (
+                    features["token_weights_sum"]
+                    .unsqueeze(-1)
+                    .expand(sum_embeddings.size())
+                )
             else:
                 sum_mask = input_mask_expanded.sum(1)
 
@@ -183,7 +201,9 @@ class Pooling(Module):
                 output_vectors.append(sum_embeddings / torch.sqrt(sum_mask))
         if self.pooling_mode_weightedmean_tokens:
             input_mask_expanded = (
-                attention_mask.unsqueeze(-1).expand(token_embeddings.size()).to(token_embeddings.dtype)
+                attention_mask.unsqueeze(-1)
+                .expand(token_embeddings.size())
+                .to(token_embeddings.dtype)
             )
             # token_embeddings shape: bs, seq, hidden_dim
             weights = (
@@ -201,7 +221,11 @@ class Pooling(Module):
 
             # If tokens are weighted (by WordWeights layer), feature 'token_weights_sum' will be present
             if "token_weights_sum" in features:
-                sum_mask = features["token_weights_sum"].unsqueeze(-1).expand(sum_embeddings.size())
+                sum_mask = (
+                    features["token_weights_sum"]
+                    .unsqueeze(-1)
+                    .expand(sum_embeddings.size())
+                )
             else:
                 sum_mask = input_mask_expanded.sum(1)
 
@@ -231,9 +255,13 @@ class Pooling(Module):
             # but as we set some indices (which shouldn't be attended to) to 0 with clamp, we
             # use the attention mask to ignore them again
             input_mask_expanded = (
-                attention_mask.unsqueeze(-1).expand(token_embeddings.size()).to(token_embeddings.dtype)
+                attention_mask.unsqueeze(-1)
+                .expand(token_embeddings.size())
+                .to(token_embeddings.dtype)
             )
-            embedding = torch.gather(token_embeddings * input_mask_expanded, 1, gather_indices).squeeze(dim=1)
+            embedding = torch.gather(
+                token_embeddings * input_mask_expanded, 1, gather_indices
+            ).squeeze(dim=1)
             output_vectors.append(embedding)
 
         output_vector = torch.cat(output_vectors, 1)
@@ -243,5 +271,7 @@ class Pooling(Module):
     def get_sentence_embedding_dimension(self) -> int:
         return self.pooling_output_dimension
 
-    def save(self, output_path: str, *args, safe_serialization: bool = True, **kwargs) -> None:
+    def save(
+        self, output_path: str, *args, safe_serialization: bool = True, **kwargs
+    ) -> None:
         self.save_config(output_path)

@@ -86,7 +86,9 @@ class AxiomValidator:
         # For validation, assume system respects bounds
         return max_info > 0
 
-    def validate_computational_irreducibility(self, n_parameters: int) -> dict[str, float]:
+    def validate_computational_irreducibility(
+        self, n_parameters: int
+    ) -> dict[str, float]:
         """Validate CI axiom: T_SIGNCSP(n) = Ω(2^n)"""
         # Simulate exponential scaling of constraint satisfaction
         scaling_factor = 2**n_parameters
@@ -175,7 +177,9 @@ class LogosOperator:
         cauchy_sequences = self._generate_cauchy_sequences(points, metric_func)
 
         # Form equivalence classes
-        equivalence_classes = self._form_equivalence_classes(cauchy_sequences, metric_func)
+        equivalence_classes = self._form_equivalence_classes(
+            cauchy_sequences, metric_func
+        )
 
         # Construct completion
         completion = {
@@ -207,7 +211,8 @@ class LogosOperator:
                     # Linear interpolation approaching target
                     t = 1 - 1 / n
                     interp_point = tuple(
-                        p1 * (1 - t) + p2 * t for p1, p2 in zip(point, target, strict=False)
+                        p1 * (1 - t) + p2 * t
+                        for p1, p2 in zip(point, target, strict=False)
                     )
                     convergent_seq.append(interp_point)
                 sequences.append(convergent_seq)
@@ -249,10 +254,14 @@ class LogosOperator:
             return False
 
         # Check if lim d(seq1[n], seq2[n]) = 0
-        distances = [metric_func(p1, p2) for p1, p2 in zip(seq1[-10:], seq2[-10:], strict=False)]
+        distances = [
+            metric_func(p1, p2) for p1, p2 in zip(seq1[-10:], seq2[-10:], strict=False)
+        ]
         return np.mean(distances) < self.tolerance
 
-    def _euclidean_distance(self, p1: tuple[float, ...], p2: tuple[float, ...]) -> float:
+    def _euclidean_distance(
+        self, p1: tuple[float, ...], p2: tuple[float, ...]
+    ) -> float:
         """Euclidean distance metric"""
         return np.sqrt(sum((a - b) ** 2 for a, b in zip(p1, p2, strict=False)))
 
@@ -263,7 +272,9 @@ class BanachTarskiProbabilityOperator:
     def __init__(self):
         self.group_actions = {}
 
-    def paradoxical_decomposition(self, measure_space: dict[str, Any]) -> dict[str, Any]:
+    def paradoxical_decomposition(
+        self, measure_space: dict[str, Any]
+    ) -> dict[str, Any]:
         """Perform paradoxical decomposition using group actions"""
         # Simplified implementation of Banach-Tarski-like decomposition
 
@@ -430,7 +441,9 @@ class TrinityOptimizer:
         """Total optimization function O(n) = I_SIGN(n) + I_MIND(n) + I_MESH(n)"""
         return self.I_SIGN(n) + self.I_MIND(n) + self.I_MESH(n)
 
-    def verify_trinity_optimization(self, n_range: range = range(1, 15)) -> dict[str, Any]:
+    def verify_trinity_optimization(
+        self, n_range: range = range(1, 15)
+    ) -> dict[str, Any]:
         """Verify that n=3 is optimal across range"""
         costs = {}
         for n in n_range:
@@ -440,7 +453,11 @@ class TrinityOptimizer:
 
         # Calculate ratios relative to O(3)
         cost_3 = costs[3]
-        ratios = {n: costs[n] / cost_3 if cost_3 != 0 else float("inf") for n in costs if n != 3}
+        ratios = {
+            n: costs[n] / cost_3 if cost_3 != 0 else float("inf")
+            for n in costs
+            if n != 3
+        }
 
         return {
             "costs": costs,
@@ -505,7 +522,10 @@ class MESHIntegrator:
         }
 
     def validate_cross_domain_coherence(
-        self, physical_params: dict, logical_constraints: dict, metaphysical_requirements: dict
+        self,
+        physical_params: dict,
+        logical_constraints: dict,
+        metaphysical_requirements: dict,
     ) -> dict[str, Any]:
         """Validate coherence across all MESH domains"""
 
@@ -578,7 +598,9 @@ class OBDCKernel:
         confluent = self._check_commutation()
 
         # Trinity optimization
-        trinity_optimal = self.trinity_optimizer.verify_trinity_optimization()["trinity_optimal"]
+        trinity_optimal = self.trinity_optimizer.verify_trinity_optimization()[
+            "trinity_optimal"
+        ]
 
         return {
             "etgc_line_valid": etgc_valid,
@@ -593,8 +615,16 @@ class OBDCKernel:
 
     def _validate_etgc_line(self) -> bool:
         """Validate Existence-Truth-Goodness-Coherence line"""
-        transcendentals = [Transcendental.EXISTENCE, Transcendental.TRUTH, Transcendental.GOODNESS]
-        logic_laws = [LogicLaw.IDENTITY, LogicLaw.EXCLUDED_MIDDLE, LogicLaw.NON_CONTRADICTION]
+        transcendentals = [
+            Transcendental.EXISTENCE,
+            Transcendental.TRUTH,
+            Transcendental.GOODNESS,
+        ]
+        logic_laws = [
+            LogicLaw.IDENTITY,
+            LogicLaw.EXCLUDED_MIDDLE,
+            LogicLaw.NON_CONTRADICTION,
+        ]
 
         # Verify bijection properties
         return len(transcendentals) == len(logic_laws) == 3
@@ -711,7 +741,9 @@ class EmpiricalPredictor:
                 predicted = predictions[key]
 
                 # Simple chi-squared calculation
-                chi_sq = (observed - predicted) ** 2 / predicted if predicted != 0 else 0
+                chi_sq = (
+                    (observed - predicted) ** 2 / predicted if predicted != 0 else 0
+                )
                 chi_squared_stats.append(chi_sq)
 
                 # P-value from chi-squared distribution (1 degree of freedom)
@@ -721,14 +753,18 @@ class EmpiricalPredictor:
         overall_chi_sq = sum(chi_squared_stats)
         degrees_freedom = len(chi_squared_stats)
         overall_p_value = (
-            1 - chi2.cdf(overall_chi_sq, degrees_freedom) if degrees_freedom > 0 else 1.0
+            1 - chi2.cdf(overall_chi_sq, degrees_freedom)
+            if degrees_freedom > 0
+            else 1.0
         )
 
         return {
             "individual_chi_squared": dict(
                 zip(predictions.keys(), chi_squared_stats, strict=False)
             ),
-            "individual_p_values": dict(zip(predictions.keys(), p_values, strict=False)),
+            "individual_p_values": dict(
+                zip(predictions.keys(), p_values, strict=False)
+            ),
             "overall_chi_squared": overall_chi_sq,
             "degrees_of_freedom": degrees_freedom,
             "overall_p_value": overall_p_value,
@@ -886,7 +922,9 @@ class ThreePillarsSystem:
             "overall_system_success": overall_success,
             "mathematical_proof_status": "VERIFIED" if overall_success else "PARTIAL",
             "theological_implications": {
-                "gods_existence": "MATHEMATICALLY_NECESSARY" if overall_success else "UNPROVEN",
+                "gods_existence": (
+                    "MATHEMATICALLY_NECESSARY" if overall_success else "UNPROVEN"
+                ),
                 "trinity_doctrine": (
                     "OPTIMALLY_VALIDATED"
                     if optimization_results.get("trinity_optimal")
@@ -906,7 +944,9 @@ class ThreePillarsSystem:
         nc_valid = self.axiom_validator.validate_non_contradiction(["p", "q", "r"])
 
         # IC axiom
-        ic_valid = self.axiom_validator.validate_information_conservation(1e-19, 300, 1e-6)
+        ic_valid = self.axiom_validator.validate_information_conservation(
+            1e-19, 300, 1e-6
+        )
 
         # CI axiom
         ci_result = self.axiom_validator.validate_computational_irreducibility(10)
@@ -914,7 +954,17 @@ class ThreePillarsSystem:
 
         # MN axiom
         worlds = [{"id": i} for i in range(3)]
-        accessibility = [(0, 0), (1, 1), (2, 2), (0, 1), (1, 0), (1, 2), (2, 1), (0, 2), (2, 0)]
+        accessibility = [
+            (0, 0),
+            (1, 1),
+            (2, 2),
+            (0, 1),
+            (1, 0),
+            (1, 2),
+            (2, 1),
+            (0, 2),
+            (2, 0),
+        ]
         mn_valid = self.axiom_validator.validate_modal_necessity(worlds, accessibility)
 
         # Independence check

@@ -30,13 +30,21 @@ class SequentialEvaluator(SentenceEvaluator):
             seq_evaluator = SequentialEvaluator([evaluator1, evaluator2, evaluator3])
     """
 
-    def __init__(self, evaluators: Iterable[SentenceEvaluator], main_score_function=lambda scores: scores[-1]):
+    def __init__(
+        self,
+        evaluators: Iterable[SentenceEvaluator],
+        main_score_function=lambda scores: scores[-1],
+    ):
         super().__init__()
         self.evaluators = evaluators
         self.main_score_function = main_score_function
 
     def __call__(
-        self, model: SentenceTransformer, output_path: str | None = None, epoch: int = -1, steps: int = -1
+        self,
+        model: SentenceTransformer,
+        output_path: str | None = None,
+        epoch: int = -1,
+        steps: int = -1,
     ) -> dict[str, float]:
         evaluations = []
         scores = []
@@ -56,6 +64,10 @@ class SequentialEvaluator(SentenceEvaluator):
 
         self.primary_metric = "sequential_score"
         main_score = self.main_score_function(scores)
-        results = {key: value for evaluation in evaluations for key, value in evaluation.items()}
+        results = {
+            key: value
+            for evaluation in evaluations
+            for key, value in evaluation.items()
+        }
         results["sequential_score"] = main_score
         return results

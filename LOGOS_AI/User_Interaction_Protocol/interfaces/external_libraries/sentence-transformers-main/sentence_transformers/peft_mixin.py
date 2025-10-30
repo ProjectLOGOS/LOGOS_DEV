@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from functools import wraps
 
-from transformers.integrations.peft import PeftAdapterMixin as PeftAdapterMixinTransformers
+from transformers.integrations.peft import (
+    PeftAdapterMixin as PeftAdapterMixinTransformers,
+)
 
 
 def peft_wrapper(func):

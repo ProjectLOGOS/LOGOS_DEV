@@ -1,8 +1,10 @@
-import os
-import pika
 import json
-import time
 import logging
+import os
+import time
+
+import pika
+
 from .ml_components import ClusterAnalyzer  # Using ML tools for analysis
 
 
@@ -16,7 +18,9 @@ class TetragnosScribeWorker:
 
     def cognitive_forging_loop(self):
         """The main, continuous loop for forging the new language."""
-        self.logger.info("Cognitive Forging Loop started. Monitoring for completed thoughts.")
+        self.logger.info(
+            "Cognitive Forging Loop started. Monitoring for completed thoughts."
+        )
         while self.is_running:
             try:
                 # 1. Harvest Data: In a real system, this would query the database
@@ -34,7 +38,9 @@ class TetragnosScribeWorker:
                 self.logger.info("Scribe going back to sleep.")
 
             except Exception as e:
-                self.logger.error(f"Error in cognitive forging loop: {e}", exc_info=True)
+                self.logger.error(
+                    f"Error in cognitive forging loop: {e}", exc_info=True
+                )
                 time.sleep(60)  # Wait longer on error
 
     def forge_glyph(self, hyper_node_data):
@@ -70,7 +76,8 @@ class TetragnosScribeWorker:
 
 if __name__ == "__main__":
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
     scribe = TetragnosScribeWorker()
     scribe.start()

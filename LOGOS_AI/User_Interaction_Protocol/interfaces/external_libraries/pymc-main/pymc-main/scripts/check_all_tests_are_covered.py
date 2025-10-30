@@ -81,7 +81,9 @@ def from_yaml():
                     )
                 for line in lines[:-1]:
                     if not line.endswith(" \\"):
-                        raise Exception(f"Missing ' \\' after '{line}' in Windows test-subset.")
+                        raise Exception(
+                            f"Missing ' \\' after '{line}' in Windows test-subset."
+                        )
                 lines = [line.rstrip(" \\") for line in lines]
 
             # Unpack lines with >1 item
@@ -89,8 +91,14 @@ def from_yaml():
             for line in lines:
                 testfiles += line.split(" ")
 
-            ignored = {item[8:].lstrip(" =") for item in testfiles if item.startswith("--ignore")}
-            included = {item for item in testfiles if item and not item.startswith("--ignore")}
+            ignored = {
+                item[8:].lstrip(" =")
+                for item in testfiles
+                if item.startswith("--ignore")
+            }
+            included = {
+                item for item in testfiles if item and not item.startswith("--ignore")
+            }
 
             if ignored and not included:
                 # if no testfile is specified explicitly pytest runs all except the ignored ones
@@ -103,7 +111,9 @@ def from_yaml():
     run_multiple_times = set(df[df.gt(1).any(axis=1)].index)
 
     # Print summary, warnings and raise errors on unwanted configurations
-    _log.info("Number of test runs (❌=0, ✅=once)\n%s", df.replace(0, "❌").replace(1, "✅"))
+    _log.info(
+        "Number of test runs (❌=0, ✅=once)\n%s", df.replace(0, "❌").replace(1, "✅")
+    )
 
     if ignored_by_all:
         raise AssertionError(

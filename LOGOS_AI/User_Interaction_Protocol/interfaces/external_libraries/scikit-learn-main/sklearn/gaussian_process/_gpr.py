@@ -307,10 +307,8 @@ class GaussianProcessRegressor(MultiOutputMixin, RegressorMixin, BaseEstimator):
 
             # First optimize starting from theta specified in kernel
             optima = [
-                (
-                    self._constrained_optimization(
-                        obj_func, self.kernel_.theta, self.kernel_.bounds
-                    )
+                self._constrained_optimization(
+                    obj_func, self.kernel_.theta, self.kernel_.bounds
                 )
             ]
 

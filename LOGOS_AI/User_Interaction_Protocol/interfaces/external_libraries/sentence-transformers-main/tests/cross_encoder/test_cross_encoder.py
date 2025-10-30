@@ -21,7 +21,9 @@ from tests.utils import SafeTemporaryDirectory
 
 
 def test_classifier_dropout_is_set() -> None:
-    model = CrossEncoder("cross-encoder-testing/reranker-bert-tiny-gooaq-bce", classifier_dropout=0.1234)
+    model = CrossEncoder(
+        "cross-encoder-testing/reranker-bert-tiny-gooaq-bce", classifier_dropout=0.1234
+    )
     assert model.config.classifier_dropout == 0.1234
     assert model.model.config.classifier_dropout == 0.1234
 
@@ -59,8 +61,12 @@ def test_load_with_revision() -> None:
 
     test_sentences = [["Hello there!", "Hello, World!"]]
     main_prob = main_model.predict(test_sentences, convert_to_tensor=True)
-    assert torch.equal(main_prob, latest_model.predict(test_sentences, convert_to_tensor=True))
-    assert not torch.equal(main_prob, older_model.predict(test_sentences, convert_to_tensor=True))
+    assert torch.equal(
+        main_prob, latest_model.predict(test_sentences, convert_to_tensor=True)
+    )
+    assert not torch.equal(
+        main_prob, older_model.predict(test_sentences, convert_to_tensor=True)
+    )
 
 
 @pytest.mark.parametrize(
@@ -126,18 +132,32 @@ def test_predict_softmax():
         "The girl is carrying a baby.",
         "A man is riding a horse.",
     ]
-    scores = model.predict([(query, doc) for doc in corpus], apply_softmax=True, convert_to_tensor=True)
-    assert torch.isclose(scores.sum(1), torch.ones(len(corpus), device=scores.device)).all()
-    scores = model.predict([(query, doc) for doc in corpus], apply_softmax=False, convert_to_tensor=True)
-    assert not torch.isclose(scores.sum(1), torch.ones(len(corpus), device=scores.device)).all()
+    scores = model.predict(
+        [(query, doc) for doc in corpus], apply_softmax=True, convert_to_tensor=True
+    )
+    assert torch.isclose(
+        scores.sum(1), torch.ones(len(corpus), device=scores.device)
+    ).all()
+    scores = model.predict(
+        [(query, doc) for doc in corpus], apply_softmax=False, convert_to_tensor=True
+    )
+    assert not torch.isclose(
+        scores.sum(1), torch.ones(len(corpus), device=scores.device)
+    ).all()
 
 
 @pytest.mark.parametrize(
-    "model_name", ["cross-encoder-testing/reranker-bert-tiny-gooaq-bce", "cross-encoder/nli-MiniLM2-L6-H768"]
+    "model_name",
+    [
+        "cross-encoder-testing/reranker-bert-tiny-gooaq-bce",
+        "cross-encoder/nli-MiniLM2-L6-H768",
+    ],
 )
 def test_predict_single_input(model_name: str):
     model = CrossEncoder(model_name)
-    nested_pair_score = model.predict([["A man is eating pasta.", "A man is eating food."]])
+    nested_pair_score = model.predict(
+        [["A man is eating pasta.", "A man is eating food."]]
+    )
     assert isinstance(nested_pair_score, np.ndarray)
     if model.num_labels == 1:
         assert nested_pair_score.shape == (1,)
@@ -195,7 +215,8 @@ def test_safe_serialization(safe_serialization: bool) -> None:
 
 def test_bfloat16() -> None:
     model = CrossEncoder(
-        "cross-encoder-testing/reranker-bert-tiny-gooaq-bce", automodel_args={"torch_dtype": torch.bfloat16}
+        "cross-encoder-testing/reranker-bert-tiny-gooaq-bce",
+        automodel_args={"torch_dtype": torch.bfloat16},
     )
     score = model.predict([["Hello there!", "Hello, World!"]])
     assert isinstance(score, np.ndarray)
@@ -204,17 +225,27 @@ def test_bfloat16() -> None:
     assert isinstance(ranking, list)
 
 
-@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA must be available to test moving devices effectively.")
+@pytest.mark.skipif(
+    not torch.cuda.is_available(),
+    reason="CUDA must be available to test moving devices effectively.",
+)
 @pytest.mark.parametrize("device", ["cpu", "cuda"])
 def test_device_assignment(device):
-    model = CrossEncoder("cross-encoder-testing/reranker-bert-tiny-gooaq-bce", device=device)
+    model = CrossEncoder(
+        "cross-encoder-testing/reranker-bert-tiny-gooaq-bce", device=device
+    )
     assert model.device.type == device
 
 
-@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA must be available to test moving devices effectively.")
+@pytest.mark.skipif(
+    not torch.cuda.is_available(),
+    reason="CUDA must be available to test moving devices effectively.",
+)
 def test_device_switching():
     # test assignment using .to
-    model = CrossEncoder("cross-encoder-testing/reranker-bert-tiny-gooaq-bce", device="cpu")
+    model = CrossEncoder(
+        "cross-encoder-testing/reranker-bert-tiny-gooaq-bce", device="cpu"
+    )
     assert model.device.type == "cpu"
     assert model.model.device.type == "cpu"
 
@@ -226,9 +257,14 @@ def test_device_switching():
     torch.cuda.empty_cache()
 
 
-@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA must be available to test moving devices effectively.")
+@pytest.mark.skipif(
+    not torch.cuda.is_available(),
+    reason="CUDA must be available to test moving devices effectively.",
+)
 def test_target_device_backwards_compat():
-    model = CrossEncoder("cross-encoder-testing/reranker-bert-tiny-gooaq-bce", device="cpu")
+    model = CrossEncoder(
+        "cross-encoder-testing/reranker-bert-tiny-gooaq-bce", device="cpu"
+    )
     assert model.device.type == "cpu"
 
     assert model._target_device.type == "cpu"
@@ -242,7 +278,9 @@ def test_num_labels_fresh_model():
 
 
 def test_push_to_hub(
-    reranker_bert_tiny_model: CrossEncoder, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+    reranker_bert_tiny_model: CrossEncoder,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     model = reranker_bert_tiny_model
 
@@ -274,32 +312,69 @@ def test_push_to_hub(
     monkeypatch.setattr(HfApi, "create_branch", mock_create_branch)
 
     url = model.push_to_hub("cross-encoder-testing/stsb-distilroberta-base")
-    assert mock_upload_folder_kwargs["repo_id"] == "cross-encoder-testing/stsb-distilroberta-base"
-    assert url == "https://huggingface.co/cross-encoder-testing/stsb-distilroberta-base/commit/123456"
+    assert (
+        mock_upload_folder_kwargs["repo_id"]
+        == "cross-encoder-testing/stsb-distilroberta-base"
+    )
+    assert (
+        url
+        == "https://huggingface.co/cross-encoder-testing/stsb-distilroberta-base/commit/123456"
+    )
     mock_upload_folder_kwargs.clear()
 
-    url = model.push_to_hub("cross-encoder-testing/stsb-distilroberta-base", revision="revision_test")
-    assert mock_upload_folder_kwargs["repo_id"] == "cross-encoder-testing/stsb-distilroberta-base"
+    url = model.push_to_hub(
+        "cross-encoder-testing/stsb-distilroberta-base", revision="revision_test"
+    )
+    assert (
+        mock_upload_folder_kwargs["repo_id"]
+        == "cross-encoder-testing/stsb-distilroberta-base"
+    )
     assert mock_upload_folder_kwargs["revision"] == "revision_test"
-    assert url == "https://huggingface.co/cross-encoder-testing/stsb-distilroberta-base/commit/678901"
+    assert (
+        url
+        == "https://huggingface.co/cross-encoder-testing/stsb-distilroberta-base/commit/678901"
+    )
     mock_upload_folder_kwargs.clear()
 
-    url = model.push_to_hub("cross-encoder-testing/stsb-distilroberta-base", create_pr=True)
-    assert mock_upload_folder_kwargs["repo_id"] == "cross-encoder-testing/stsb-distilroberta-base"
-    assert url == "https://huggingface.co/cross-encoder-testing/stsb-distilroberta-base/discussions/123"
+    url = model.push_to_hub(
+        "cross-encoder-testing/stsb-distilroberta-base", create_pr=True
+    )
+    assert (
+        mock_upload_folder_kwargs["repo_id"]
+        == "cross-encoder-testing/stsb-distilroberta-base"
+    )
+    assert (
+        url
+        == "https://huggingface.co/cross-encoder-testing/stsb-distilroberta-base/discussions/123"
+    )
     mock_upload_folder_kwargs.clear()
 
-    url = model.push_to_hub("cross-encoder-testing/stsb-distilroberta-base", tags="test-push-to-hub-tag-1")
-    assert mock_upload_folder_kwargs["repo_id"] == "cross-encoder-testing/stsb-distilroberta-base"
-    assert url == "https://huggingface.co/cross-encoder-testing/stsb-distilroberta-base/commit/123456"
+    url = model.push_to_hub(
+        "cross-encoder-testing/stsb-distilroberta-base", tags="test-push-to-hub-tag-1"
+    )
+    assert (
+        mock_upload_folder_kwargs["repo_id"]
+        == "cross-encoder-testing/stsb-distilroberta-base"
+    )
+    assert (
+        url
+        == "https://huggingface.co/cross-encoder-testing/stsb-distilroberta-base/commit/123456"
+    )
     mock_upload_folder_kwargs.clear()
     assert "test-push-to-hub-tag-1" in model.model_card_data.tags
 
     url = model.push_to_hub(
-        "cross-encoder-testing/stsb-distilroberta-base", tags=["test-push-to-hub-tag-2", "test-push-to-hub-tag-3"]
+        "cross-encoder-testing/stsb-distilroberta-base",
+        tags=["test-push-to-hub-tag-2", "test-push-to-hub-tag-3"],
     )
-    assert mock_upload_folder_kwargs["repo_id"] == "cross-encoder-testing/stsb-distilroberta-base"
-    assert url == "https://huggingface.co/cross-encoder-testing/stsb-distilroberta-base/commit/123456"
+    assert (
+        mock_upload_folder_kwargs["repo_id"]
+        == "cross-encoder-testing/stsb-distilroberta-base"
+    )
+    assert (
+        url
+        == "https://huggingface.co/cross-encoder-testing/stsb-distilroberta-base/commit/123456"
+    )
     mock_upload_folder_kwargs.clear()
     assert "test-push-to-hub-tag-2" in model.model_card_data.tags
     assert "test-push-to-hub-tag-3" in model.model_card_data.tags
@@ -310,7 +385,10 @@ def test_push_to_hub(
     [
         [
             tuple(),
-            {"model_name": "cross-encoder-testing/reranker-bert-tiny-gooaq-bce", "classifier_dropout": 0.1234},
+            {
+                "model_name": "cross-encoder-testing/reranker-bert-tiny-gooaq-bce",
+                "classifier_dropout": 0.1234,
+            },
             tuple(),
             {
                 "model_name_or_path": "cross-encoder-testing/reranker-bert-tiny-gooaq-bce",
@@ -396,7 +474,11 @@ def test_push_to_hub(
     ],
 )
 def test_init_args_decorator(
-    monkeypatch: pytest.MonkeyPatch, in_args: tuple, in_kwargs: dict, out_args: tuple, out_kwargs: dict
+    monkeypatch: pytest.MonkeyPatch,
+    in_args: tuple,
+    in_kwargs: dict,
+    out_args: tuple,
+    out_kwargs: dict,
 ):
     decorated_out_args = None
     decorated_out_kwargs = None
@@ -445,7 +527,11 @@ def test_init_args_decorator(
     ],
 )
 def test_predict_rank_args_decorator(
-    reranker_bert_tiny_model: CrossEncoder, monkeypatch: pytest.MonkeyPatch, caplog, in_kwargs: dict, out_kwargs: dict
+    reranker_bert_tiny_model: CrossEncoder,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog,
+    in_kwargs: dict,
+    out_kwargs: dict,
 ):
     model = reranker_bert_tiny_model
     decorated_out_kwargs = None
@@ -472,11 +558,15 @@ def test_logger_warning(caplog):
 
     with caplog.at_level(logging.WARNING):
         CrossEncoder(model_name, automodel_args={"torch_dtype": torch.float32})
-        assert "`automodel_args` argument was renamed and is now deprecated" in caplog.text
+        assert (
+            "`automodel_args` argument was renamed and is now deprecated" in caplog.text
+        )
 
     with caplog.at_level(logging.WARNING):
         CrossEncoder(model_name, tokenizer_args={"model_max_length": 8192})
-        assert "`tokenizer_args` argument was renamed and is now deprecated" in caplog.text
+        assert (
+            "`tokenizer_args` argument was renamed and is now deprecated" in caplog.text
+        )
 
     with caplog.at_level(logging.WARNING):
         CrossEncoder(model_name, config_args={"classifier_dropout": 0.2})
@@ -518,8 +608,12 @@ def test_logger_warning(caplog):
         ],
     ],
 )
-def test_load_activation_fn_from_kwargs(num_labels: int, activation_fn: str, saved_activation_fn: str, tmp_path: Path):
-    model = CrossEncoder("prajjwal1/bert-tiny", num_labels=num_labels, activation_fn=activation_fn)
+def test_load_activation_fn_from_kwargs(
+    num_labels: int, activation_fn: str, saved_activation_fn: str, tmp_path: Path
+):
+    model = CrossEncoder(
+        "prajjwal1/bert-tiny", num_labels=num_labels, activation_fn=activation_fn
+    )
     assert fullname(model.activation_fn) == saved_activation_fn
 
     model.save_pretrained(tmp_path)
@@ -532,9 +626,14 @@ def test_load_activation_fn_from_kwargs(num_labels: int, activation_fn: str, sav
     assert fullname(loaded_model.activation_fn) == saved_activation_fn
 
     # Setting the activation function via a prediction updates the instance, but not the config
-    loaded_model.predict([["Hello there!", "Hello, World!"]], activation_fn=torch.nn.Identity())
+    loaded_model.predict(
+        [["Hello there!", "Hello, World!"]], activation_fn=torch.nn.Identity()
+    )
     assert fullname(loaded_model.activation_fn) == "torch.nn.modules.linear.Identity"
-    assert loaded_model.config.sentence_transformers["activation_fn"] == saved_activation_fn
+    assert (
+        loaded_model.config.sentence_transformers["activation_fn"]
+        == saved_activation_fn
+    )
 
 
 @pytest.mark.parametrize(
@@ -560,13 +659,17 @@ def test_load_activation_fn_from_config(tanh_model_name: str, tmp_path):
     assert fullname(loaded_model.activation_fn) == saved_activation_fn
 
 
-def test_load_activation_fn_from_config_custom(reranker_bert_tiny_model: CrossEncoder, tmp_path: Path, caplog):
+def test_load_activation_fn_from_config_custom(
+    reranker_bert_tiny_model: CrossEncoder, tmp_path: Path, caplog
+):
     model = reranker_bert_tiny_model
 
     model.save_pretrained(tmp_path)
     with open(tmp_path / "config.json") as f:
         config = json.load(f)
-    config["sentence_transformers"]["activation_fn"] = "sentence_transformers.custom.activations.CustomActivation"
+    config["sentence_transformers"][
+        "activation_fn"
+    ] = "sentence_transformers.custom.activations.CustomActivation"
     with open(tmp_path / "config.json", "w") as f:
         json.dump(config, f)
 
@@ -586,9 +689,13 @@ def test_default_activation_fn(reranker_bert_tiny_model: CrossEncoder):
     model = reranker_bert_tiny_model
     assert fullname(model.activation_fn) == "torch.nn.modules.activation.Sigmoid"
     with pytest.warns(
-        DeprecationWarning, match="The `default_activation_function` property was renamed and is now deprecated.*"
+        DeprecationWarning,
+        match="The `default_activation_function` property was renamed and is now deprecated.*",
     ):
-        assert fullname(model.default_activation_function) == "torch.nn.modules.activation.Sigmoid"
+        assert (
+            fullname(model.default_activation_function)
+            == "torch.nn.modules.activation.Sigmoid"
+        )
 
 
 def test_bge_reranker_max_length():

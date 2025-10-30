@@ -22,7 +22,7 @@ __version__ = "1.0.0"
 __author__ = "LOGOS AGI Development Team"
 __subsystem__ = "TETRAGNOS"
 
-from .tetragnos_worker import TetragnosWorker, TetragnosCoreEngine
+from .tetragnos_worker import TetragnosCoreEngine, TetragnosWorker
 
 __all__ = ["TetragnosWorker", "TetragnosCoreEngine"]
 

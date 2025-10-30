@@ -38,7 +38,9 @@ class MockModule(InputModule):
     def tokenize(self, texts, **kwargs):
         return {}
 
-    def save(self, output_path: str, *args, safe_serialization: bool = True, **kwargs) -> None:
+    def save(
+        self, output_path: str, *args, safe_serialization: bool = True, **kwargs
+    ) -> None:
         pass
 
 
@@ -145,7 +147,9 @@ def test_router_init_with_default_route():
     query_module = MockModuleWithMaxLength()
     doc_module = MockModuleWithMaxLength()
 
-    router = Router({"query": [query_module], "document": [doc_module]}, default_route="document")
+    router = Router(
+        {"query": [query_module], "document": [doc_module]}, default_route="document"
+    )
 
     assert router.default_route == "document"
 
@@ -155,7 +159,9 @@ def test_router_init_without_default_route():
     query_module = MockModuleWithMaxLength()
     doc_module = MockModuleWithMaxLength()
 
-    router = Router({"query": [query_module], "document": [doc_module]}, allow_empty_key=False)
+    router = Router(
+        {"query": [query_module], "document": [doc_module]}, allow_empty_key=False
+    )
 
     assert router.default_route is None
 
@@ -164,14 +170,18 @@ def test_router_init_invalid_default_route():
     """Test initialization with invalid default route raises ValueError."""
     module = MockModuleWithMaxLength()
 
-    with pytest.raises(ValueError, match="Default route 'invalid' not found in route keys"):
+    with pytest.raises(
+        ValueError, match="Default route 'invalid' not found in route keys"
+    ):
         Router({"query": [module]}, default_route="invalid")
 
 
 def test_router_init_multiple_modules_per_route():
     """Test initialization with multiple modules per route."""
     module1 = MockModuleWithMaxLength()
-    module2 = MockModuleWithMaxLength()  # Technically, this should be a Module subclass, not an InputModule subclass
+    module2 = (
+        MockModuleWithMaxLength()
+    )  # Technically, this should be a Module subclass, not an InputModule subclass
     module3 = MockModuleWithMaxLength()
 
     router = Router({"query": [module1, module2], "document": [module3]})
@@ -183,7 +193,9 @@ def test_router_init_multiple_modules_per_route():
 def test_router_encode(static_embedding_model):
     """Test encoding with Router."""
     # Create a Router with StaticEmbedding modules
-    router = Router({"query": [static_embedding_model], "document": [static_embedding_model]})
+    router = Router(
+        {"query": [static_embedding_model], "document": [static_embedding_model]}
+    )
 
     # Replace the dictionary with our tracking version
     tracking_dict = TaskTypesTrackingModuleDict(router.sub_modules)
@@ -216,7 +228,10 @@ def test_router_encode(static_embedding_model):
 
     # Test with an incorrect route
     with pytest.raises(
-        ValueError, match=re.escape("No route found for task type 'invalid'. Available routes: ['query', 'document']")
+        ValueError,
+        match=re.escape(
+            "No route found for task type 'invalid'. Available routes: ['query', 'document']"
+        ),
     ):
         model.encode("This should fail", task="invalid")
 
@@ -241,22 +256,37 @@ def test_router_backwards_compatibility(static_embedding_model):
     """Test that Router can load models saved with Asym."""
 
     # Create a mock Asym model
-    asym_model = Asym({"query": [static_embedding_model], "document": [static_embedding_model]})
+    asym_model = Asym(
+        {"query": [static_embedding_model], "document": [static_embedding_model]}
+    )
 
     # Replace the dictionary with our tracking version
     tracking_dict = TaskTypesTrackingModuleDict(asym_model.sub_modules)
     asym_model.sub_modules = tracking_dict
 
     model = SentenceTransformer(modules=[asym_model])
-    model.encode([{"query": "What is the capital of France?"}, {"query": "The capital of France is Paris."}])
+    model.encode(
+        [
+            {"query": "What is the capital of France?"},
+            {"query": "The capital of France is Paris."},
+        ]
+    )
     assert tracking_dict.tasks == ["query", "query"]
     tracking_dict.tasks = []
 
-    model.encode([{"document": "What is the capital of France?"}, {"document": "The capital of France is Paris."}])
+    model.encode(
+        [
+            {"document": "What is the capital of France?"},
+            {"document": "The capital of France is Paris."},
+        ]
+    )
     assert tracking_dict.tasks == ["document", "document"]
     tracking_dict.tasks = []
 
-    with pytest.raises(ValueError, match=r"You cannot pass a list of dictionaries with different task types\. .*"):
+    with pytest.raises(
+        ValueError,
+        match=r"You cannot pass a list of dictionaries with different task types\. .*",
+    ):
         model.encode(
             [
                 {"document": "What is the capital of France?"},
@@ -290,7 +320,9 @@ def test_asym_import(module_names: list[str], module_attributes: list[object]) -
 def test_router_save_load(static_embedding_model: StaticEmbedding, tmp_path: Path):
     """Test saving and loading a SentenceTransformer model with Router."""
     # Create a Router with StaticEmbedding modules
-    router = Router({"query": [static_embedding_model], "document": [static_embedding_model]})
+    router = Router(
+        {"query": [static_embedding_model], "document": [static_embedding_model]}
+    )
     model = SentenceTransformer(modules=[router])
 
     # Test data for encoding
@@ -324,10 +356,13 @@ def test_router_save_load(static_embedding_model: StaticEmbedding, tmp_path: Pat
     assert (doc_embeddings_original == doc_embeddings_loaded).all()
 
 
-def test_router_save_load_with_custom_default_route(static_embedding_model: StaticEmbedding, tmp_path: Path):
+def test_router_save_load_with_custom_default_route(
+    static_embedding_model: StaticEmbedding, tmp_path: Path
+):
     """Test saving and loading a model with custom default route."""
     router = Router(
-        {"query": [static_embedding_model], "document": [static_embedding_model]}, default_route="document"
+        {"query": [static_embedding_model], "document": [static_embedding_model]},
+        default_route="document",
     )
     model = SentenceTransformer(modules=[router])
 
@@ -347,9 +382,14 @@ def test_router_save_load_with_custom_default_route(static_embedding_model: Stat
     assert (default_embeddings == doc_embeddings).all()
 
 
-def test_router_save_load_without_default_route(static_embedding_model: StaticEmbedding, tmp_path: Path):
+def test_router_save_load_without_default_route(
+    static_embedding_model: StaticEmbedding, tmp_path: Path
+):
     """Test saving and loading a model without a default route."""
-    router = Router({"query": [static_embedding_model], "document": [static_embedding_model]}, allow_empty_key=False)
+    router = Router(
+        {"query": [static_embedding_model], "document": [static_embedding_model]},
+        allow_empty_key=False,
+    )
     model = SentenceTransformer(modules=[router])
 
     model_path = os.path.join(tmp_path, "test_model")
@@ -371,12 +411,17 @@ def test_router_save_load_without_default_route(static_embedding_model: StaticEm
         loaded_model.encode(["Test text"])
 
 
-def test_router_save_load_with_multiple_modules_per_route(static_embedding_model: StaticEmbedding, tmp_path: Path):
+def test_router_save_load_with_multiple_modules_per_route(
+    static_embedding_model: StaticEmbedding, tmp_path: Path
+):
     """Test saving and loading a model with multiple modules per route."""
     # Create two different mock modules for testing
     static_embedding_model_one = deepcopy(static_embedding_model)
     static_embedding_model_two = deepcopy(static_embedding_model)
-    dense = Dense(in_features=static_embedding_model.get_sentence_embedding_dimension(), out_features=128)
+    dense = Dense(
+        in_features=static_embedding_model.get_sentence_embedding_dimension(),
+        out_features=128,
+    )
     normalize_one = Normalize()
     normalize_two = Normalize()
     router = Router(
@@ -415,17 +460,28 @@ def test_router_with_trainer(static_embedding_model: StaticEmbedding, tmp_path: 
     """Test Router works correctly with a training setup using router_mapping."""
 
     # Create a Router with StaticEmbedding modules
-    router = Router({"query": [static_embedding_model], "document": [static_embedding_model]}, allow_empty_key=False)
+    router = Router(
+        {"query": [static_embedding_model], "document": [static_embedding_model]},
+        allow_empty_key=False,
+    )
     model = SentenceTransformer(modules=[router])
-    model.model_card_data.generate_widget_examples = False  # Disable widget examples generation for testing
+    model.model_card_data.generate_widget_examples = (
+        False  # Disable widget examples generation for testing
+    )
 
     tracking_dict = TaskTypesTrackingModuleDict(router.sub_modules)
     router.sub_modules = tracking_dict
 
     train_dataset = Dataset.from_dict(
         {
-            "question": ["What is the capital of France?", "What is the largest ocean?"],
-            "answer": ["The capital of France is Paris.", "The largest ocean is the Pacific Ocean."],
+            "question": [
+                "What is the capital of France?",
+                "What is the largest ocean?",
+            ],
+            "answer": [
+                "The capital of France is Paris.",
+                "The largest ocean is the Pacific Ocean.",
+            ],
         }
     )
 
@@ -453,18 +509,28 @@ def test_router_with_trainer(static_embedding_model: StaticEmbedding, tmp_path: 
     assert tracking_dict.tasks == ["query", "document"] * 6
 
 
-def test_router_with_trainer_without_router_mapping(static_embedding_model: StaticEmbedding, tmp_path: Path):
+def test_router_with_trainer_without_router_mapping(
+    static_embedding_model: StaticEmbedding, tmp_path: Path
+):
     """Test Router crashes with a useful ValueError when training without router_mapping."""
 
     # Create a Router with StaticEmbedding modules
-    router = Router.for_query_document([static_embedding_model], [static_embedding_model], allow_empty_key=False)
+    router = Router.for_query_document(
+        [static_embedding_model], [static_embedding_model], allow_empty_key=False
+    )
     router.default_route = None  # Ensure no default route is set
     model = SentenceTransformer(modules=[router])
 
     train_dataset = Dataset.from_dict(
         {
-            "question": ["What is the capital of France?", "What is the largest ocean?"],
-            "answer": ["The capital of France is Paris.", "The largest ocean is the Pacific Ocean."],
+            "question": [
+                "What is the capital of France?",
+                "What is the largest ocean?",
+            ],
+            "answer": [
+                "The capital of France is Paris.",
+                "The largest ocean is the Pacific Ocean.",
+            ],
         }
     )
 
@@ -499,13 +565,17 @@ def test_router_module_forward_kwargs():
             # Just return the features for testing
             for key in kwargs.keys():
                 self.kwargs_tracker.add(key)
-            features["sentence_embedding"] = features.get("sentence_embedding", torch.rand(1, 768))
+            features["sentence_embedding"] = features.get(
+                "sentence_embedding", torch.rand(1, 768)
+            )
             return features
 
         def tokenize(self, texts, **kwargs):
             return {}
 
-        def save(self, output_path: str, *args, safe_serialization: bool = True, **kwargs) -> None:
+        def save(
+            self, output_path: str, *args, safe_serialization: bool = True, **kwargs
+        ) -> None:
             pass
 
     class ExampleModuleWithForwardKwargsTwo(ExampleModuleWithForwardKwargsOne):
@@ -518,7 +588,10 @@ def test_router_module_forward_kwargs():
     module_two = ExampleModuleWithForwardKwargsTwo()
     module_three = ExampleModuleWithForwardKwargsThree()
 
-    router = Router({"query": [module_one], "document": [module_two, module_three]}, allow_empty_key=False)
+    router = Router(
+        {"query": [module_one], "document": [module_two, module_three]},
+        allow_empty_key=False,
+    )
     model = SentenceTransformer(modules=[router])
 
     model.encode(
@@ -573,17 +646,24 @@ def test_router_module_forward_kwargs():
 @pytest.mark.parametrize("legacy_config", [True, False])
 @pytest.mark.parametrize("module_in_root", [True, False])
 def test_router_load_with_config(
-    legacy_config: bool, module_in_root: bool, static_embedding_model: StaticEmbedding, tmp_path: Path
+    legacy_config: bool,
+    module_in_root: bool,
+    static_embedding_model: StaticEmbedding,
+    tmp_path: Path,
 ):
     """Test that Router can be loaded from a saved directory with config file."""
     if module_in_root and legacy_config:
-        pytest.skip("Cannot have both module in root and legacy config at the same time.")
+        pytest.skip(
+            "Cannot have both module in root and legacy config at the same time."
+        )
 
     # Create and save a Router
     query_module = static_embedding_model
     doc_module = static_embedding_model
 
-    router = Router({"query": [query_module], "document": [doc_module]}, default_route="query")
+    router = Router(
+        {"query": [query_module], "document": [doc_module]}, default_route="query"
+    )
     model = SentenceTransformer(modules=[router])
 
     model.save_pretrained(tmp_path)
@@ -592,7 +672,10 @@ def test_router_load_with_config(
 
     if legacy_config:
         # Rename the config file to legacy name
-        os.rename(os.path.join(tmp_path, "router_config.json"), os.path.join(tmp_path, "config.json"))
+        os.rename(
+            os.path.join(tmp_path, "router_config.json"),
+            os.path.join(tmp_path, "config.json"),
+        )
 
     if module_in_root:
         # Move the module to the root directory
@@ -618,14 +701,19 @@ def test_router_load_with_config(
     assert loaded_router.default_route == router.default_route
 
 
-def test_router_as_middle_module(static_embedding_model: StaticEmbedding, tmp_path: Path):
+def test_router_as_middle_module(
+    static_embedding_model: StaticEmbedding, tmp_path: Path
+):
     """Test SentenceTransformer with multiple modules including a Router."""
 
     # Create a Router with different module configurations for each route
     router = Router(
         {
             "query": [InvertMockModule()],  # Simple route with single module
-            "document": [InvertMockModule(), InvertMockModule()],  # Route with two modules
+            "document": [
+                InvertMockModule(),
+                InvertMockModule(),
+            ],  # Route with two modules
         }
     )
 
@@ -659,10 +747,16 @@ def test_router_as_middle_module(static_embedding_model: StaticEmbedding, tmp_pa
     # Test that the model processes through all modules (static_embedding + router)
     # by checking the embedding dimensions match what we expect
     query_embedding = model.encode_query(query_texts)
-    assert query_embedding.shape[1] == static_embedding_model.get_sentence_embedding_dimension()
+    assert (
+        query_embedding.shape[1]
+        == static_embedding_model.get_sentence_embedding_dimension()
+    )
 
     doc_embedding = model.encode_document(doc_texts)
-    assert doc_embedding.shape[1] == static_embedding_model.get_sentence_embedding_dimension()
+    assert (
+        doc_embedding.shape[1]
+        == static_embedding_model.get_sentence_embedding_dimension()
+    )
 
     # Test that default encode uses the default route (query)
     default_embedding = model.encode(query_texts)
@@ -676,7 +770,10 @@ def test_router_as_middle_module(static_embedding_model: StaticEmbedding, tmp_pa
     assert torch.equal(query_embedding, -doc_embedding)
 
     # Also test that we can save and load the model with the Router as a middle module
-    test_texts = ["This is a test text for both query and document.", "Another test text for validation."]
+    test_texts = [
+        "This is a test text for both query and document.",
+        "Another test text for validation.",
+    ]
 
     # Get original embeddings
     original_query_embedding = model.encode_query(test_texts)
@@ -704,6 +801,10 @@ def test_router_as_middle_module(static_embedding_model: StaticEmbedding, tmp_pa
     assert (original_doc_embedding == loaded_doc_embedding).all()
 
     # Verify that using the same text for both query and document still gives exactly opposite embeddings
-    loaded_query_embedding = loaded_model.encode_query(test_texts, convert_to_tensor=True)
-    loaded_doc_embedding = loaded_model.encode_document(test_texts, convert_to_tensor=True)
+    loaded_query_embedding = loaded_model.encode_query(
+        test_texts, convert_to_tensor=True
+    )
+    loaded_doc_embedding = loaded_model.encode_document(
+        test_texts, convert_to_tensor=True
+    )
     assert torch.equal(loaded_query_embedding, -loaded_doc_embedding)

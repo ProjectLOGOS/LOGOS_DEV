@@ -62,7 +62,11 @@ def ask(inp: AskIn):
     # Test ARCHON dispatch
     if t.lower().startswith("test archon"):
         try:
-            d = {"task_type": "test", "payload": {}, "provenance": {"src": "probe_test"}}
+            d = {
+                "task_type": "test",
+                "payload": {},
+                "provenance": {"src": "probe_test"},
+            }
             r = requests.post(f"{ARCHON}/dispatch", json=d, timeout=15)
             return {"status": r.status_code, "response": r.text}
         except Exception as e:

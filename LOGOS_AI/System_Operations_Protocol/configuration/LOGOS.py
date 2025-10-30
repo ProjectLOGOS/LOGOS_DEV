@@ -4,11 +4,13 @@ LOGOS AGI System Launcher
 Single-command launcher for the complete LOGOS AGI system with comprehensive initialization checks
 """
 
-from core.system_imports import *
 import subprocess
+
+from core.system_imports import *
 
 # Add LOGOS to path
 sys.path.insert(0, str(Path(__file__).parent))
+
 
 class LOGOSLauncher:
     """Comprehensive LOGOS AGI system launcher with health checks"""
@@ -31,6 +33,7 @@ class LOGOSLauncher:
             self.log("Initializing LOGOS Core System...")
 
             from entry import get_logos_core
+
             self.core_system = get_logos_core()
 
             self.log("✅ LOGOS Core System initialized successfully")
@@ -49,7 +52,7 @@ class LOGOSLauncher:
             "overall_status": "UNKNOWN",
             "subsystems": {},
             "warnings": [],
-            "errors": []
+            "errors": [],
         }
 
         try:
@@ -61,7 +64,7 @@ class LOGOSLauncher:
             core_ok = core_status.get("status") == "operational"
             health_report["subsystems"]["logos_core"] = {
                 "status": "PASS" if core_ok else "FAIL",
-                "details": core_status
+                "details": core_status,
             }
 
             # Check Integrity Safeguard
@@ -69,7 +72,7 @@ class LOGOSLauncher:
             safeguard_ok = not safeguard_status.get("system_halted", True)
             health_report["subsystems"]["integrity_safeguard"] = {
                 "status": "PASS" if safeguard_ok else "FAIL",
-                "details": safeguard_status
+                "details": safeguard_status,
             }
 
             # Check IEL System
@@ -79,15 +82,17 @@ class LOGOSLauncher:
             active_domains = len(iel_status.get("active_domains", []))
             total_domains = len(iel_status.get("available_domains", []))
 
-            iel_ok = iel_available and registry_loaded and active_domains == total_domains
+            iel_ok = (
+                iel_available and registry_loaded and active_domains == total_domains
+            )
             health_report["subsystems"]["iel_system"] = {
                 "status": "PASS" if iel_ok else "WARN",
                 "details": {
                     "available": iel_available,
                     "registry_loaded": registry_loaded,
                     "active_domains": active_domains,
-                    "total_domains": total_domains
-                }
+                    "total_domains": total_domains,
+                },
             }
 
             # Check Reference Monitor
@@ -95,23 +100,31 @@ class LOGOSLauncher:
             monitor_ok = "pxl_server" in monitor_status
             health_report["subsystems"]["reference_monitor"] = {
                 "status": "PASS" if monitor_ok else "WARN",
-                "details": monitor_status
+                "details": monitor_status,
             }
 
             # Determine overall status
-            subsystem_statuses = [sub["status"] for sub in health_report["subsystems"].values()]
+            subsystem_statuses = [
+                sub["status"] for sub in health_report["subsystems"].values()
+            ]
             if "FAIL" in subsystem_statuses:
                 health_report["overall_status"] = "CRITICAL"
                 health_report["errors"].append("Critical subsystem failure detected")
             elif "WARN" in subsystem_statuses:
                 health_report["overall_status"] = "DEGRADED"
-                health_report["warnings"].append("Some subsystems operating in degraded mode")
+                health_report["warnings"].append(
+                    "Some subsystems operating in degraded mode"
+                )
             else:
                 health_report["overall_status"] = "HEALTHY"
 
             # Log results
             for subsystem, info in health_report["subsystems"].items():
-                status_icon = "✅" if info["status"] == "PASS" else "⚠️" if info["status"] == "WARN" else "❌"
+                status_icon = (
+                    "✅"
+                    if info["status"] == "PASS"
+                    else "⚠️" if info["status"] == "WARN" else "❌"
+                )
                 self.log(f"{status_icon} {subsystem}: {info['status']}")
 
             return health_report
@@ -138,7 +151,10 @@ class LOGOSLauncher:
             if iel_integration:
                 domains = iel_integration.list_available_domains()
                 if len(domains) < 12:
-                    self.log(f"⚠️ IEL coherence check: only {len(domains)} domains available (expected 12+)", "WARN")
+                    self.log(
+                        f"⚠️ IEL coherence check: only {len(domains)} domains available (expected 12+)",
+                        "WARN",
+                    )
                     # Don't fail for this - it's a warning
                 else:
                     self.log(f"✅ IEL coherence: {len(domains)} domains available")
@@ -147,7 +163,9 @@ class LOGOSLauncher:
                 if domains:
                     first_domain = domains[0]
                     components = iel_integration.get_domain_components(first_domain)
-                    self.log(f"✅ Domain '{first_domain}' has {len(components)} components")
+                    self.log(
+                        f"✅ Domain '{first_domain}' has {len(components)} components"
+                    )
 
             # Test safety system basic functionality
             safety_status = self.core_system._safety_system.get_safety_status()
@@ -174,8 +192,10 @@ class LOGOSLauncher:
 
         try:
             # Check if safety monitoring is active
-            if hasattr(self.core_system._safety_system, '_monitoring_threads'):
-                monitoring_threads = len(self.core_system._safety_system._monitoring_threads)
+            if hasattr(self.core_system._safety_system, "_monitoring_threads"):
+                monitoring_threads = len(
+                    self.core_system._safety_system._monitoring_threads
+                )
                 if monitoring_threads == 0:
                     self.log("⚠️ No safety monitoring threads active", "WARN")
                     return False
@@ -204,21 +224,30 @@ class LOGOSLauncher:
             # Check modal logic tool (basic status check instead of evaluation)
             try:
                 # Just check if the method exists and system is initialized
-                tool_status["modal_logic"] = hasattr(self.core_system, 'evaluate_modal_logic') and self.core_system._initialized
+                tool_status["modal_logic"] = (
+                    hasattr(self.core_system, "evaluate_modal_logic")
+                    and self.core_system._initialized
+                )
             except:
                 tool_status["modal_logic"] = False
 
             # Check IEL tools
             try:
                 iel_integration = self.core_system._iel_integration
-                tool_status["iel_domains"] = len(iel_integration.list_available_domains()) > 0 if iel_integration else False
+                tool_status["iel_domains"] = (
+                    len(iel_integration.list_available_domains()) > 0
+                    if iel_integration
+                    else False
+                )
             except:
                 tool_status["iel_domains"] = False
 
             # Check safety tools
             try:
                 safety_status = self.core_system._safety_system.get_safety_status()
-                tool_status["safety_system"] = not safety_status.get("system_halted", True)
+                tool_status["safety_system"] = not safety_status.get(
+                    "system_halted", True
+                )
             except:
                 tool_status["safety_system"] = False
 
@@ -246,12 +275,18 @@ class LOGOSLauncher:
             self.log("Launching LOGOS GUI Interface...")
 
             # Check if we're in a codespace environment
-            is_codespace = os.environ.get('CODESPACES', '').lower() == 'true' or 'github.dev' in os.environ.get('GITHUB_SERVER_URL', '')
+            is_codespace = os.environ.get(
+                "CODESPACES", ""
+            ).lower() == "true" or "github.dev" in os.environ.get(
+                "GITHUB_SERVER_URL", ""
+            )
 
             # Launch GUI in background
-            self.gui_process = subprocess.Popen([
-                sys.executable, "demo_gui.py"
-            ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            self.gui_process = subprocess.Popen(
+                [sys.executable, "demo_gui.py"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
 
             # Wait a moment for GUI to start
             time.sleep(2)
@@ -261,7 +296,9 @@ class LOGOSLauncher:
                 if is_codespace:
                     self.log("📱 Access interface at: http://localhost:7860")
                 else:
-                    self.log("📱 Browser should open automatically to: http://localhost:7860")
+                    self.log(
+                        "📱 Browser should open automatically to: http://localhost:7860"
+                    )
                 return True
             else:
                 stdout, stderr = self.gui_process.communicate()
@@ -299,7 +336,10 @@ class LOGOSLauncher:
         total_tools = len(tool_status)
 
         if ready_tools < total_tools * 0.7:  # Require 70% of tools ready
-            self.log(f"⚠️ Only {ready_tools}/{total_tools} tools ready - proceeding with caution", "WARN")
+            self.log(
+                f"⚠️ Only {ready_tools}/{total_tools} tools ready - proceeding with caution",
+                "WARN",
+            )
 
         self.log("✅ System readiness check completed")
         return True
@@ -321,19 +361,26 @@ class LOGOSLauncher:
             health_report = self.run_comprehensive_health_check()
 
             if health_report["overall_status"] == "CRITICAL":
-                self.log("❌ Critical system failures detected - aborting launch", "ERROR")
+                self.log(
+                    "❌ Critical system failures detected - aborting launch", "ERROR"
+                )
                 return 1
 
             # Phase 3: Subsystem Coherence Validation
             self.log("🔗 PHASE 3: Subsystem Coherence Validation")
             if not self.validate_subsystem_coherence():
-                self.log("❌ Subsystem coherence validation failed - aborting launch", "ERROR")
+                self.log(
+                    "❌ Subsystem coherence validation failed - aborting launch",
+                    "ERROR",
+                )
                 return 1
 
             # Phase 4: Passive Process Verification
             self.log("⚙️ PHASE 4: Passive Process Verification")
             if not self.check_passive_processes():
-                self.log("❌ Passive process verification failed - aborting launch", "ERROR")
+                self.log(
+                    "❌ Passive process verification failed - aborting launch", "ERROR"
+                )
                 return 1
 
             # Phase 5: Final Readiness Assessment
@@ -403,11 +450,13 @@ class LOGOSLauncher:
 
         self.log("👋 LOGOS system shutdown complete")
 
+
 def main():
     """Main entry point"""
     launcher = LOGOSLauncher()
     exit_code = launcher.launch_system()
     return exit_code
+
 
 if __name__ == "__main__":
     sys.exit(main())

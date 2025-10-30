@@ -14,17 +14,18 @@ Version: 2.0.0
 Date: 2025-01-28
 """
 
-import numpy as np
-import sqlite3
-import json
-import time
-import logging
 import hashlib
+import json
+import logging
 import math
-from typing import Dict, List, Tuple, Optional, Any, Union
+import sqlite3
+import time
+import uuid
 from dataclasses import dataclass, field
 from enum import Enum
-import uuid
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import numpy as np
 
 # =========================================================================
 # I. SEMANTIC DOMAIN FRAMEWORK
@@ -174,8 +175,12 @@ class UniversalLanguagePlaneProjector:
         hash_part2 = int(text_hash[16:32], 16)  # Next 16 chars
 
         # Map to plane coordinates (-500 to +500)
-        ulp_x = ((hash_part1 % self.hash_modulus) / self.hash_modulus - 0.5) * self.plane_width
-        ulp_y = ((hash_part2 % self.hash_modulus) / self.hash_modulus - 0.5) * self.plane_height
+        ulp_x = (
+            (hash_part1 % self.hash_modulus) / self.hash_modulus - 0.5
+        ) * self.plane_width
+        ulp_y = (
+            (hash_part2 % self.hash_modulus) / self.hash_modulus - 0.5
+        ) * self.plane_height
 
         return ulp_x, ulp_y
 
@@ -231,7 +236,9 @@ class UniversalLanguagePlaneProjector:
         ulp_x, ulp_y = self.project_text_to_ulp(content)
 
         # Calculate geometric properties
-        center_x, center_y, radius = self.calculate_geometric_properties(content, ulp_x, ulp_y)
+        center_x, center_y, radius = self.calculate_geometric_properties(
+            content, ulp_x, ulp_y
+        )
 
         # Calculate fractal dimension
         fractal_dimension = self.calculate_fractal_dimension(content)
@@ -274,7 +281,11 @@ class TrinityOptimizationEngine:
 
         # Domain-specific Trinity weight distributions
         domain_weights = {
-            SemanticDomain.MATHEMATICAL: (0.4, 0.3, 0.3),  # Higher existence (precision)
+            SemanticDomain.MATHEMATICAL: (
+                0.4,
+                0.3,
+                0.3,
+            ),  # Higher existence (precision)
             SemanticDomain.LOGICAL: (0.3, 0.3, 0.4),  # Higher truth (validity)
             SemanticDomain.CAUSAL: (0.35, 0.35, 0.3),  # Balanced E&G (causation)
             SemanticDomain.LINGUISTIC: (0.3, 0.4, 0.3),  # Higher goodness (meaning)
@@ -299,7 +310,9 @@ class TrinityOptimizationEngine:
 
         return glyph
 
-    def calculate_trinity_score(self, existence: float, goodness: float, truth: float) -> float:
+    def calculate_trinity_score(
+        self, existence: float, goodness: float, truth: float
+    ) -> float:
         """Calculate Trinity optimization score"""
         # Trinity product maximization
         product = abs(existence * goodness * truth)
@@ -357,7 +370,9 @@ class SemanticGlyphDatabase:
 
         # Create indexes for faster queries
         conn.execute("CREATE INDEX IF NOT EXISTS idx_domain ON semantic_glyphs(domain)")
-        conn.execute("CREATE INDEX IF NOT EXISTS idx_ulp_coords ON semantic_glyphs(ulp_x, ulp_y)")
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_ulp_coords ON semantic_glyphs(ulp_x, ulp_y)"
+        )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_trinity_product ON semantic_glyphs(existence_weight, goodness_weight, truth_weight)"
         )
@@ -431,7 +446,10 @@ class SemanticGlyphDatabase:
             self.spatial_index[grid_key].append(glyph.glyph_id)
 
     def find_similar_glyphs(
-        self, target_glyph: FractalSemanticGlyph, max_distance: float = 100.0, limit: int = 10
+        self,
+        target_glyph: FractalSemanticGlyph,
+        max_distance: float = 100.0,
+        limit: int = 10,
     ) -> List[FractalSemanticGlyph]:
         """Find semantically similar glyphs using geometric proximity"""
 
@@ -451,7 +469,9 @@ class SemanticGlyphDatabase:
                     for glyph_id in self.spatial_index[grid_key]:
                         glyph = self.get_glyph(glyph_id)
                         if glyph:
-                            distance = self._calculate_geometric_distance(target_glyph, glyph)
+                            distance = self._calculate_geometric_distance(
+                                target_glyph, glyph
+                            )
                             if distance <= max_distance:
                                 similar_glyphs.append((glyph, distance))
 
@@ -536,7 +556,9 @@ class SemanticGlyphDatabase:
             total_glyphs = cursor.fetchone()[0]
 
             # Glyphs by domain
-            cursor = conn.execute("SELECT domain, COUNT(*) FROM semantic_glyphs GROUP BY domain")
+            cursor = conn.execute(
+                "SELECT domain, COUNT(*) FROM semantic_glyphs GROUP BY domain"
+            )
             domain_counts = dict(cursor.fetchall())
 
             # Average Trinity product
@@ -585,9 +607,7 @@ class CognitiveForger:
         tetragnos_insight = tetragnos_output.get("pattern_recognition", "")
 
         # Weighted synthesis (Trinity-balanced)
-        synthesis_content = (
-            f"TELOS: {telos_insight} | THONOC: {thonoc_insight} | TETRAGNOS: {tetragnos_insight}"
-        )
+        synthesis_content = f"TELOS: {telos_insight} | THONOC: {thonoc_insight} | TETRAGNOS: {tetragnos_insight}"
 
         # Calculate synthesis weights using geometric mean
         telos_weight = telos_output.get("confidence", 0.5)
@@ -595,9 +615,15 @@ class CognitiveForger:
         tetragnos_weight = tetragnos_output.get("confidence", 0.5)
 
         # Trinity-weighted geometric mean
-        existence_score = (telos_weight**0.5) * (tetragnos_weight**0.3) * (thonoc_weight**0.2)
-        goodness_score = (telos_weight**0.3) * (tetragnos_weight**0.5) * (thonoc_weight**0.2)
-        truth_score = (telos_weight**0.2) * (tetragnos_weight**0.3) * (thonoc_weight**0.5)
+        existence_score = (
+            (telos_weight**0.5) * (tetragnos_weight**0.3) * (thonoc_weight**0.2)
+        )
+        goodness_score = (
+            (telos_weight**0.3) * (tetragnos_weight**0.5) * (thonoc_weight**0.2)
+        )
+        truth_score = (
+            (telos_weight**0.2) * (tetragnos_weight**0.3) * (thonoc_weight**0.5)
+        )
 
         # Normalize to Trinity proportions
         total = existence_score + goodness_score + truth_score
@@ -649,10 +675,14 @@ class UniversalCognitiveInterface:
         """Complete cognitive processing of a query"""
 
         # 1. Project query to semantic glyph
-        query_glyph = self.projector.project_to_glyph(query_text, domain, CognitiveColor.LOGOS)
+        query_glyph = self.projector.project_to_glyph(
+            query_text, domain, CognitiveColor.LOGOS
+        )
 
         # 2. Optimize for Trinity alignment
-        optimized_glyph = self.trinity_optimizer.optimize_trinity_weights(query_glyph, domain)
+        optimized_glyph = self.trinity_optimizer.optimize_trinity_weights(
+            query_glyph, domain
+        )
 
         # 3. Store in database
         self.database.store_glyph(optimized_glyph)
@@ -673,7 +703,9 @@ class UniversalCognitiveInterface:
             "processing_timestamp": time.time(),
         }
 
-    def semantic_search(self, search_query: str, max_results: int = 10) -> List[Dict[str, Any]]:
+    def semantic_search(
+        self, search_query: str, max_results: int = 10
+    ) -> List[Dict[str, Any]]:
         """Perform semantic search across the knowledge base"""
 
         # Project search query to find semantic neighborhood
@@ -687,7 +719,9 @@ class UniversalCognitiveInterface:
         )
 
         # Also search by content
-        content_results = self.database.search_by_content(search_query, limit=max_results // 2)
+        content_results = self.database.search_by_content(
+            search_query, limit=max_results // 2
+        )
 
         # Combine and deduplicate results
         all_results = nearby_glyphs + content_results
@@ -695,7 +729,9 @@ class UniversalCognitiveInterface:
         for glyph in all_results:
             unique_results[glyph.glyph_id] = glyph
 
-        return [glyph.to_dict() for glyph in list(unique_results.values())[:max_results]]
+        return [
+            glyph.to_dict() for glyph in list(unique_results.values())[:max_results]
+        ]
 
     def get_system_statistics(self) -> Dict[str, Any]:
         """Get comprehensive system statistics"""

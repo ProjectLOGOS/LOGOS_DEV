@@ -99,14 +99,18 @@ class BatchSemiHardTripletLoss(nn.Module):
         self.margin = margin
         self.distance_metric = distance_metric
 
-    def forward(self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor) -> Tensor:
+    def forward(
+        self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor
+    ) -> Tensor:
         rep = self.sentence_embedder(sentence_features[0])["sentence_embedding"]
         return self.batch_semi_hard_triplet_loss(labels, rep)
 
     # Semi-Hard Triplet Loss
     # Based on: https://github.com/tensorflow/addons/blob/master/tensorflow_addons/losses/triplet.py#L71
     # Paper: FaceNet: A Unified Embedding for Face Recognition and Clustering: https://arxiv.org/pdf/1503.03832.pdf
-    def batch_semi_hard_triplet_loss(self, labels: Tensor, embeddings: Tensor) -> Tensor:
+    def batch_semi_hard_triplet_loss(
+        self, labels: Tensor, embeddings: Tensor
+    ) -> Tensor:
         """Build the triplet loss over a batch of embeddings.
         We generate all the valid triplets and average the loss over the positive ones.
         Args:
@@ -128,29 +132,45 @@ class BatchSemiHardTripletLoss(nn.Module):
         batch_size = torch.numel(labels)
         pdist_matrix_tile = pdist_matrix.repeat([batch_size, 1])
 
-        mask = adjacency_not.repeat([batch_size, 1]) & (pdist_matrix_tile > torch.reshape(pdist_matrix.t(), [-1, 1]))
+        mask = adjacency_not.repeat([batch_size, 1]) & (
+            pdist_matrix_tile > torch.reshape(pdist_matrix.t(), [-1, 1])
+        )
 
-        mask_final = torch.reshape(torch.sum(mask, 1, keepdims=True) > 0.0, [batch_size, batch_size])
+        mask_final = torch.reshape(
+            torch.sum(mask, 1, keepdims=True) > 0.0, [batch_size, batch_size]
+        )
         mask_final = mask_final.t()
 
         negatives_outside = torch.reshape(
-            BatchSemiHardTripletLoss._masked_minimum(pdist_matrix_tile, mask), [batch_size, batch_size]
+            BatchSemiHardTripletLoss._masked_minimum(pdist_matrix_tile, mask),
+            [batch_size, batch_size],
         )
         negatives_outside = negatives_outside.t()
 
-        negatives_inside = BatchSemiHardTripletLoss._masked_maximum(pdist_matrix, adjacency_not)
+        negatives_inside = BatchSemiHardTripletLoss._masked_maximum(
+            pdist_matrix, adjacency_not
+        )
         negatives_inside = negatives_inside.repeat([1, batch_size])
 
-        semi_hard_negatives = torch.where(mask_final, negatives_outside, negatives_inside)
+        semi_hard_negatives = torch.where(
+            mask_final, negatives_outside, negatives_inside
+        )
 
         loss_mat = (pdist_matrix - semi_hard_negatives) + self.margin
 
-        mask_positives = adjacency.float().to(labels.device) - torch.eye(batch_size, device=labels.device)
+        mask_positives = adjacency.float().to(labels.device) - torch.eye(
+            batch_size, device=labels.device
+        )
         mask_positives = mask_positives.to(labels.device)
         num_positives = torch.sum(mask_positives)
 
         triplet_loss = (
-            torch.sum(torch.max(loss_mat * mask_positives, torch.tensor([0.0], device=labels.device))) / num_positives
+            torch.sum(
+                torch.max(
+                    loss_mat * mask_positives, torch.tensor([0.0], device=labels.device)
+                )
+            )
+            / num_positives
         )
 
         return triplet_loss

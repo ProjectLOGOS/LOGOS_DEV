@@ -9,7 +9,10 @@ from sentence_transformers.util import is_training_available
 @pytest.mark.parametrize(
     ("revision", "expected_base_revision"),
     [
-        ("f3cb857cba53019a20df283396bcca179cf051a4", "f3cb857cba53019a20df283396bcca179cf051a4"),
+        (
+            "f3cb857cba53019a20df283396bcca179cf051a4",
+            "f3cb857cba53019a20df283396bcca179cf051a4",
+        ),
         ("f3cb857", "f3cb857"),
         ("main", "valid-revision"),
         (None, "valid-revision"),
@@ -28,7 +31,8 @@ def test_model_card_data(revision, expected_base_revision) -> None:
 
 
 @pytest.mark.skipif(
-    not is_training_available(), reason='Sentence Transformers was not installed with the `["train"]` extra.'
+    not is_training_available(),
+    reason='Sentence Transformers was not installed with the `["train"]` extra.',
 )
 def test_generated_from_trainer_tag(stsb_bert_tiny_model: SentenceTransformer) -> None:
     model = stsb_bert_tiny_model

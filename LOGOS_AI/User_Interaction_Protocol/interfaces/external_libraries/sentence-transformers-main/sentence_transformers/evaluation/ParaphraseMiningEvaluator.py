@@ -122,7 +122,11 @@ class ParaphraseMiningEvaluator(SentenceEvaluator):
         self.top_k = top_k
         self.truncate_dim = truncate_dim
 
-        self.duplicates = duplicates_dict if duplicates_dict is not None else defaultdict(lambda: defaultdict(bool))
+        self.duplicates = (
+            duplicates_dict
+            if duplicates_dict is not None
+            else defaultdict(lambda: defaultdict(bool))
+        )
         if duplicates_list is not None:
             for id1, id2 in duplicates_list:
                 if id1 in sentences_map and id2 in sentences_map:
@@ -149,12 +153,24 @@ class ParaphraseMiningEvaluator(SentenceEvaluator):
             name = "_" + name
 
         self.csv_file: str = "paraphrase_mining_evaluation" + name + "_results.csv"
-        self.csv_headers = ["epoch", "steps", "precision", "recall", "f1", "threshold", "average_precision"]
+        self.csv_headers = [
+            "epoch",
+            "steps",
+            "precision",
+            "recall",
+            "f1",
+            "threshold",
+            "average_precision",
+        ]
         self.write_csv = write_csv
         self.primary_metric = "average_precision"
 
     def __call__(
-        self, model: SentenceTransformer, output_path: str | None = None, epoch: int = -1, steps: int = -1
+        self,
+        model: SentenceTransformer,
+        output_path: str | None = None,
+        epoch: int = -1,
+        steps: int = -1,
     ) -> dict[str, float]:
         if epoch != -1:
             if steps == -1:
@@ -166,7 +182,9 @@ class ParaphraseMiningEvaluator(SentenceEvaluator):
         if self.truncate_dim is not None:
             out_txt += f" (truncated to {self.truncate_dim})"
 
-        logger.info(f"Paraphrase Mining Evaluation of the model on the {self.name} dataset{out_txt}:")
+        logger.info(
+            f"Paraphrase Mining Evaluation of the model on the {self.name} dataset{out_txt}:"
+        )
 
         # Compute embedding for the sentences
         pairs_list = paraphrase_mining(
@@ -207,7 +225,10 @@ class ParaphraseMiningEvaluator(SentenceEvaluator):
                     best_f1 = f1
                     best_precision = precision
                     best_recall = recall
-                    threshold = (pairs_list[idx][0] + pairs_list[min(idx + 1, len(pairs_list) - 1)][0]) / 2
+                    threshold = (
+                        pairs_list[idx][0]
+                        + pairs_list[min(idx + 1, len(pairs_list) - 1)][0]
+                    ) / 2
 
         average_precision = average_precision / self.total_num_duplicates
 
@@ -223,11 +244,31 @@ class ParaphraseMiningEvaluator(SentenceEvaluator):
                 with open(csv_path, newline="", mode="w", encoding="utf-8") as f:
                     writer = csv.writer(f)
                     writer.writerow(self.csv_headers)
-                    writer.writerow([epoch, steps, best_precision, best_recall, best_f1, threshold, average_precision])
+                    writer.writerow(
+                        [
+                            epoch,
+                            steps,
+                            best_precision,
+                            best_recall,
+                            best_f1,
+                            threshold,
+                            average_precision,
+                        ]
+                    )
             else:
                 with open(csv_path, newline="", mode="a", encoding="utf-8") as f:
                     writer = csv.writer(f)
-                    writer.writerow([epoch, steps, best_precision, best_recall, best_f1, threshold, average_precision])
+                    writer.writerow(
+                        [
+                            epoch,
+                            steps,
+                            best_precision,
+                            best_recall,
+                            best_f1,
+                            threshold,
+                            average_precision,
+                        ]
+                    )
 
         metrics = {
             "average_precision": average_precision,
@@ -260,8 +301,12 @@ class ParaphraseMiningEvaluator(SentenceEvaluator):
                 connected_subgraph_nodes = list(connected_subgraph_nodes)
                 for i in range(len(connected_subgraph_nodes) - 1):
                     for j in range(i + 1, len(connected_subgraph_nodes)):
-                        graph[connected_subgraph_nodes[i]][connected_subgraph_nodes[j]] = True
-                        graph[connected_subgraph_nodes[j]][connected_subgraph_nodes[i]] = True
+                        graph[connected_subgraph_nodes[i]][
+                            connected_subgraph_nodes[j]
+                        ] = True
+                        graph[connected_subgraph_nodes[j]][
+                            connected_subgraph_nodes[i]
+                        ] = True
 
                         nodes_visited.add(connected_subgraph_nodes[i])
                         nodes_visited.add(connected_subgraph_nodes[j])

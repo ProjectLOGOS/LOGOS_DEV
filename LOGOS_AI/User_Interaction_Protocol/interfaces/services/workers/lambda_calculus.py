@@ -14,13 +14,13 @@ Version: 2.0.0
 Date: 2025-01-28
 """
 
-import time
-import logging
 import json
-from typing import Dict, List, Tuple, Any, Optional, Union, Set
+import logging
+import time
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from abc import ABC, abstractmethod
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 from core.data_structures import TrinityVector
 from core.principles import PrincipleEngine
@@ -44,7 +44,9 @@ class ExpressionType(Enum):
 class LambdaExpression(ABC):
     """Abstract base class for lambda expressions"""
 
-    expression_id: str = field(default_factory=lambda: f"expr_{int(time.time())}_{id(object())}")
+    expression_id: str = field(
+        default_factory=lambda: f"expr_{int(time.time())}_{id(object())}"
+    )
     trinity_grounding: TrinityVector = field(
         default_factory=lambda: TrinityVector(1 / 3, 1 / 3, 1 / 3)
     )
@@ -61,7 +63,9 @@ class LambdaExpression(ABC):
         pass
 
     @abstractmethod
-    def substitute(self, var: str, replacement: "LambdaExpression") -> "LambdaExpression":
+    def substitute(
+        self, var: str, replacement: "LambdaExpression"
+    ) -> "LambdaExpression":
         """Substitute variable with replacement expression"""
         pass
 
@@ -122,10 +126,13 @@ class Abstraction(LambdaExpression):
                     replacement_free_vars | self.body.free_variables()
                 )
                 new_body = self.body.substitute(self.parameter, Variable(new_param))
-                return Abstraction(parameter=new_param, body=new_body.substitute(var, replacement))
+                return Abstraction(
+                    parameter=new_param, body=new_body.substitute(var, replacement)
+                )
             else:
                 return Abstraction(
-                    parameter=self.parameter, body=self.body.substitute(var, replacement)
+                    parameter=self.parameter,
+                    body=self.body.substitute(var, replacement),
                 )
 
         return self
@@ -148,7 +155,9 @@ class Abstraction(LambdaExpression):
             return self.body == other.body
 
         # α-equivalence: rename bound variables to fresh names and compare
-        fresh_var = self._generate_fresh_variable(self.free_variables() | other.free_variables())
+        fresh_var = self._generate_fresh_variable(
+            self.free_variables() | other.free_variables()
+        )
 
         self_renamed = self.body.substitute(self.parameter, Variable(fresh_var))
         other_renamed = other.body.substitute(other.parameter, Variable(fresh_var))
@@ -177,8 +186,12 @@ class Application(LambdaExpression):
         return free_vars
 
     def substitute(self, var: str, replacement: LambdaExpression) -> LambdaExpression:
-        new_function = self.function.substitute(var, replacement) if self.function else None
-        new_argument = self.argument.substitute(var, replacement) if self.argument else None
+        new_function = (
+            self.function.substitute(var, replacement) if self.function else None
+        )
+        new_argument = (
+            self.argument.substitute(var, replacement) if self.argument else None
+        )
 
         return Application(function=new_function, argument=new_argument)
 
@@ -271,7 +284,8 @@ class TrinityCombinator(LambdaExpression):
 
     def alpha_equivalent(self, other: LambdaExpression) -> bool:
         return (
-            isinstance(other, TrinityCombinator) and self.combinator_type == other.combinator_type
+            isinstance(other, TrinityCombinator)
+            and self.combinator_type == other.combinator_type
         )
 
 
@@ -323,7 +337,9 @@ class LambdaReducer:
         self.goodness_weight = 0.33
         self.truth_weight = 0.34
 
-    def reduce(self, expression: LambdaExpression) -> Tuple[LambdaExpression, List[ReductionStep]]:
+    def reduce(
+        self, expression: LambdaExpression
+    ) -> Tuple[LambdaExpression, List[ReductionStep]]:
         """Reduce lambda expression to normal form"""
 
         steps = []
@@ -353,7 +369,9 @@ class LambdaReducer:
 
             # Check for loops (simplified)
             if step_count > 10:
-                recent_expressions = [s.expression_after.to_string() for s in steps[-5:]]
+                recent_expressions = [
+                    s.expression_after.to_string() for s in steps[-5:]
+                ]
                 if len(set(recent_expressions)) < len(recent_expressions):
                     self.logger.warning("Potential infinite loop detected")
                     break
@@ -381,22 +399,33 @@ class LambdaReducer:
 
         if isinstance(expr, Application):
             # Check if function is abstraction (β-reduction possible)
-            if isinstance(expr.function, Abstraction) and expr.function.body is not None:
+            if (
+                isinstance(expr.function, Abstraction)
+                and expr.function.body is not None
+            ):
                 # Perform β-reduction
-                reduced = expr.function.body.substitute(expr.function.parameter, expr.argument)
+                reduced = expr.function.body.substitute(
+                    expr.function.parameter, expr.argument
+                )
                 return reduced, "β-reduction"
 
             # Try to reduce function first
             func_reduction = self._find_leftmost_outermost_reduction(expr.function)
             if func_reduction is not None:
                 reduced_func, reduction_type = func_reduction
-                return Application(function=reduced_func, argument=expr.argument), reduction_type
+                return (
+                    Application(function=reduced_func, argument=expr.argument),
+                    reduction_type,
+                )
 
             # Then try to reduce argument
             arg_reduction = self._find_leftmost_outermost_reduction(expr.argument)
             if arg_reduction is not None:
                 reduced_arg, reduction_type = arg_reduction
-                return Application(function=expr.function, argument=reduced_arg), reduction_type
+                return (
+                    Application(function=expr.function, argument=reduced_arg),
+                    reduction_type,
+                )
 
         elif isinstance(expr, Abstraction):
             # Try to reduce body
@@ -404,7 +433,10 @@ class LambdaReducer:
                 body_reduction = self._find_leftmost_outermost_reduction(expr.body)
                 if body_reduction is not None:
                     reduced_body, reduction_type = body_reduction
-                    return Abstraction(parameter=expr.parameter, body=reduced_body), reduction_type
+                    return (
+                        Abstraction(parameter=expr.parameter, body=reduced_body),
+                        reduction_type,
+                    )
 
         return None  # No reduction possible
 
@@ -419,7 +451,10 @@ class LambdaReducer:
                 arg_reduction = self._find_leftmost_innermost_reduction(expr.argument)
                 if arg_reduction is not None:
                     reduced_arg, reduction_type = arg_reduction
-                    return Application(function=expr.function, argument=reduced_arg), reduction_type
+                    return (
+                        Application(function=expr.function, argument=reduced_arg),
+                        reduction_type,
+                    )
 
             # Then try to reduce function
             if expr.function is not None:
@@ -432,8 +467,13 @@ class LambdaReducer:
                     )
 
             # Finally, if both are in normal form, try β-reduction
-            if isinstance(expr.function, Abstraction) and expr.function.body is not None:
-                reduced = expr.function.body.substitute(expr.function.parameter, expr.argument)
+            if (
+                isinstance(expr.function, Abstraction)
+                and expr.function.body is not None
+            ):
+                reduced = expr.function.body.substitute(
+                    expr.function.parameter, expr.argument
+                )
                 return reduced, "β-reduction"
 
         elif isinstance(expr, Abstraction):
@@ -442,7 +482,10 @@ class LambdaReducer:
                 body_reduction = self._find_leftmost_innermost_reduction(expr.body)
                 if body_reduction is not None:
                     reduced_body, reduction_type = body_reduction
-                    return Abstraction(parameter=expr.parameter, body=reduced_body), reduction_type
+                    return (
+                        Abstraction(parameter=expr.parameter, body=reduced_body),
+                        reduction_type,
+                    )
 
         return None
 
@@ -474,16 +517,25 @@ class LambdaReducer:
 
         if isinstance(expr, Application):
             # β-reduction opportunity
-            if isinstance(expr.function, Abstraction) and expr.function.body is not None:
-                reduced = expr.function.body.substitute(expr.function.parameter, expr.argument)
+            if (
+                isinstance(expr.function, Abstraction)
+                and expr.function.body is not None
+            ):
+                reduced = expr.function.body.substitute(
+                    expr.function.parameter, expr.argument
+                )
                 trinity_score = self._calculate_trinity_score(expr, reduced)
                 reductions.append((reduced, "β-reduction", trinity_score))
 
             # Recurse into subexpressions
             if expr.function is not None:
-                self._collect_trinity_reductions(expr.function, reductions, path + ["function"])
+                self._collect_trinity_reductions(
+                    expr.function, reductions, path + ["function"]
+                )
             if expr.argument is not None:
-                self._collect_trinity_reductions(expr.argument, reductions, path + ["argument"])
+                self._collect_trinity_reductions(
+                    expr.argument, reductions, path + ["argument"]
+                )
 
         elif isinstance(expr, Abstraction):
             if expr.body is not None:
@@ -496,7 +548,9 @@ class LambdaReducer:
 
         # Existence: Does reduction preserve essential structure?
         existence_score = (
-            1.0 if len(reduced.free_variables()) <= len(original.free_variables()) else 0.5
+            1.0
+            if len(reduced.free_variables()) <= len(original.free_variables())
+            else 0.5
         )
 
         # Goodness: Does reduction simplify (reduce complexity)?
@@ -525,8 +579,12 @@ class LambdaReducer:
             body_complexity = self._calculate_complexity(expr.body) if expr.body else 0
             return 2 + body_complexity  # λ and parameter add complexity
         elif isinstance(expr, Application):
-            func_complexity = self._calculate_complexity(expr.function) if expr.function else 0
-            arg_complexity = self._calculate_complexity(expr.argument) if expr.argument else 0
+            func_complexity = (
+                self._calculate_complexity(expr.function) if expr.function else 0
+            )
+            arg_complexity = (
+                self._calculate_complexity(expr.argument) if expr.argument else 0
+            )
             return 1 + func_complexity + arg_complexity  # Application adds complexity
         elif isinstance(expr, TrinityCombinator):
             return 1  # Combinators are atomic
@@ -549,7 +607,9 @@ class LambdaEngine:
 
         # Expression cache for performance
         self.expression_cache: Dict[str, LambdaExpression] = {}
-        self.reduction_cache: Dict[str, Tuple[LambdaExpression, List[ReductionStep]]] = {}
+        self.reduction_cache: Dict[
+            str, Tuple[LambdaExpression, List[ReductionStep]]
+        ] = {}
 
     def parse_expression(self, expression_string: str) -> Optional[LambdaExpression]:
         """Parse string into lambda expression (simplified parser)"""
@@ -671,7 +731,8 @@ class LambdaEngine:
         # Apply Trinity combinator: TRINITY e_expr g_expr t_expr
         result = Application(
             function=Application(
-                function=Application(function=trinity_combinator, argument=e_expr), argument=g_expr
+                function=Application(function=trinity_combinator, argument=e_expr),
+                argument=g_expr,
             ),
             argument=t_expr,
         )

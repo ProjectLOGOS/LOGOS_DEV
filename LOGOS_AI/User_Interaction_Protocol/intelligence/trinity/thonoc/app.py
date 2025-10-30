@@ -4,10 +4,11 @@ Thonoc Subsystem FastAPI Application
 Provides REST API interface for the Thonoc symbolic reasoning subsystem.
 """
 
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
 import logging
 import os
+
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -16,12 +17,14 @@ logger = logging.getLogger("thonoc_app")
 app = FastAPI(
     title="Thonoc Symbolic Reasoning API",
     description="Advanced symbolic reasoning and formal verification subsystem",
-    version="1.0.0"
+    version="1.0.0",
 )
+
 
 class ProofRequest(BaseModel):
     claim: str
     counter_claims: list[str] = None
+
 
 class ProofResponse(BaseModel):
     claim: str
@@ -31,16 +34,20 @@ class ProofResponse(BaseModel):
     success: bool
     message: str
 
+
 class LambdaRequest(BaseModel):
     expression: str
+
 
 class LambdaResponse(BaseModel):
     result: str
     success: bool
     message: str
 
+
 class ValidationRequest(BaseModel):
     operation_payload: dict
+
 
 class ValidationResponse(BaseModel):
     authorized: bool
@@ -48,30 +55,32 @@ class ValidationResponse(BaseModel):
     success: bool
     message: str
 
+
 def construct_formal_proof(claim, counter_claims=None):
     """Construct a simple formal proof (placeholder)"""
     return {
         "claim": claim,
         "proof_status": "valid",
         "steps": ["Assumption", "Inference", "Conclusion"],
-        "counter_claims_addressed": len(counter_claims or [])
+        "counter_claims_addressed": len(counter_claims or []),
     }
+
 
 def evaluate_lambda_expression(expression):
     """Simple lambda expression evaluation (placeholder)"""
     return f"λ-result: {expression}"
 
+
 def validate_formal_operation(payload):
     """Validate operation against formal constraints (placeholder)"""
-    return {
-        "authorized": True,
-        "reason": "Validation passed"
-    }
+    return {"authorized": True, "reason": "Validation passed"}
+
 
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
     return {"status": "healthy", "subsystem": "thonoc"}
+
 
 @app.post("/prove", response_model=ProofResponse)
 async def construct_proof(request: ProofRequest):
@@ -88,12 +97,15 @@ async def construct_proof(request: ProofRequest):
             steps=result.get("steps", []),
             counter_claims_addressed=result.get("counter_claims_addressed", 0),
             success=True,
-            message="Proof construction completed"
+            message="Proof construction completed",
         )
 
     except Exception as e:
         logger.error(f"Proof construction failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Proof construction failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Proof construction failed: {str(e)}"
+        )
+
 
 @app.post("/lambda", response_model=LambdaResponse)
 async def evaluate_lambda(request: LambdaRequest):
@@ -105,14 +117,15 @@ async def evaluate_lambda(request: LambdaRequest):
         result = evaluate_lambda_expression(request.expression)
 
         return LambdaResponse(
-            result=result,
-            success=True,
-            message="Lambda evaluation completed"
+            result=result, success=True, message="Lambda evaluation completed"
         )
 
     except Exception as e:
         logger.error(f"Lambda evaluation failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Lambda evaluation failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Lambda evaluation failed: {str(e)}"
+        )
+
 
 @app.post("/validate", response_model=ValidationResponse)
 async def validate_operation(request: ValidationRequest):
@@ -127,12 +140,13 @@ async def validate_operation(request: ValidationRequest):
             authorized=result.get("authorized", False),
             reason=result.get("reason", "Unknown"),
             success=True,
-            message="Validation completed"
+            message="Validation completed",
         )
 
     except Exception as e:
         logger.error(f"Validation failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Validation failed: {str(e)}")
+
 
 @app.get("/status")
 async def get_status():
@@ -141,8 +155,9 @@ async def get_status():
         "subsystem": "thonoc",
         "status": "active",
         "capabilities": ["formal_proofs", "lambda_calculus", "formal_validation"],
-        "version": "1.0.0"
+        "version": "1.0.0",
     }
+
 
 @app.post("/process")
 async def process_task(request: dict):
@@ -170,7 +185,9 @@ async def process_task(request: dict):
         logger.error(f"Task processing failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Task processing failed: {str(e)}")
 
+
 if __name__ == "__main__":
     import uvicorn
+
     port = int(os.getenv("PORT", 8067))
     uvicorn.run(app, host="0.0.0.0", port=port)

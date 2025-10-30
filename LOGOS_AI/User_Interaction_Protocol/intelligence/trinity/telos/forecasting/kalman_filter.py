@@ -2,7 +2,9 @@
 Forecasting Toolkit: Kalman Filter Utility
 Scaffold + operational code
 """
+
 import numpy as np
+
 
 class KalmanFilter:
     def __init__(self, A, B, H, Q, R, x0, P0):

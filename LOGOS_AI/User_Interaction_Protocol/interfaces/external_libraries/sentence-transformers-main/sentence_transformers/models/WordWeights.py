@@ -15,7 +15,12 @@ class WordWeights(Module):
 
     config_keys: list[str] = ["vocab", "word_weights", "unknown_word_weight"]
 
-    def __init__(self, vocab: list[str], word_weights: dict[str, float], unknown_word_weight: float = 1):
+    def __init__(
+        self,
+        vocab: list[str],
+        word_weights: dict[str, float],
+        unknown_word_weight: float = 1,
+    ):
         """
         Initializes the WordWeights class.
 
@@ -48,7 +53,9 @@ class WordWeights(Module):
         )
 
         self.emb_layer = nn.Embedding(len(vocab), 1)
-        self.emb_layer.load_state_dict({"weight": torch.FloatTensor(weights).unsqueeze(1)})
+        self.emb_layer.load_state_dict(
+            {"weight": torch.FloatTensor(weights).unsqueeze(1)}
+        )
 
     def forward(self, features: dict[str, Tensor]):
         attention_mask = features["attention_mask"]
@@ -60,11 +67,20 @@ class WordWeights(Module):
         token_weights_sum = torch.sum(token_weights, 1)
 
         # Multiply embedding by token weight value
-        token_weights_expanded = token_weights.unsqueeze(-1).expand(token_embeddings.size())
+        token_weights_expanded = token_weights.unsqueeze(-1).expand(
+            token_embeddings.size()
+        )
         token_embeddings = token_embeddings * token_weights_expanded
 
-        features.update({"token_embeddings": token_embeddings, "token_weights_sum": token_weights_sum})
+        features.update(
+            {
+                "token_embeddings": token_embeddings,
+                "token_weights_sum": token_weights_sum,
+            }
+        )
         return features
 
-    def save(self, output_path: str, *args, safe_serialization: bool = True, **kwargs) -> None:
+    def save(
+        self, output_path: str, *args, safe_serialization: bool = True, **kwargs
+    ) -> None:
         self.save_config(output_path)

@@ -8,7 +8,7 @@ and iterative refinement requirements.
 
 Core Architecture:
 - Trinity Workflow Architect: Designs and coordinates multi-pass strategies
-- Trinity Knowledge Orchestrator: Manages cross-system knowledge exchange  
+- Trinity Knowledge Orchestrator: Manages cross-system knowledge exchange
 - Dynamic Intelligence Loader: Adaptively imports specialized modules on-demand
 
 Dynamic Intelligence Modules:
@@ -36,12 +36,12 @@ Prediction Accuracy Integration:
 - Multi-angle validation ensures maximum analytical rigor
 """
 
-from .trinity_workflow_architect import TrinityWorkflowArchitect
-from .trinity_knowledge_orchestrator import TrinityKnowledgeOrchestrator  
 from .dynamic_intelligence_loader import DynamicIntelligenceLoader
+from .trinity_knowledge_orchestrator import TrinityKnowledgeOrchestrator
+from .trinity_workflow_architect import TrinityWorkflowArchitect
 
 __all__ = [
-    'TrinityWorkflowArchitect',
-    'TrinityKnowledgeOrchestrator', 
-    'DynamicIntelligenceLoader'
+    "TrinityWorkflowArchitect",
+    "TrinityKnowledgeOrchestrator",
+    "DynamicIntelligenceLoader",
 ]

@@ -175,7 +175,11 @@ class AuditLog:
             Dict with validation results
         """
         if not os.path.exists(self.audit_path):
-            return {"valid": True, "message": "No audit log exists yet", "malformed_lines": 0}
+            return {
+                "valid": True,
+                "message": "No audit log exists yet",
+                "malformed_lines": 0,
+            }
 
         total_lines = 0
         malformed_lines = 0
@@ -198,5 +202,8 @@ class AuditLog:
             "valid": malformed_lines == 0,
             "total_lines": total_lines,
             "malformed_lines": malformed_lines,
-            "integrity_percentage": ((total_lines - malformed_lines) / max(total_lines, 1)) * 100,
+            "integrity_percentage": (
+                (total_lines - malformed_lines) / max(total_lines, 1)
+            )
+            * 100,
         }

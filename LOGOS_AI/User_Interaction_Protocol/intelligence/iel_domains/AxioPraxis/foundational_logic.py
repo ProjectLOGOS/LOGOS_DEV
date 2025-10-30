@@ -6,6 +6,7 @@ for mathematics and reasoning, including first-order logic,
 higher-order logic, and type theory.
 """
 
+
 class FoundationalLogic:
     """
     Base class for foundational logical systems.
@@ -13,7 +14,7 @@ class FoundationalLogic:
     Provides common functionality for logical reasoning and proof systems.
     """
 
-    def __init__(self, logic_type: str = 'first_order'):
+    def __init__(self, logic_type: str = "first_order"):
         """
         Initialize a foundational logic system.
 
@@ -25,7 +26,7 @@ class FoundationalLogic:
         self.formulas = []
         self.axioms = []
 
-    def add_symbol(self, symbol: str, symbol_type: str = 'constant'):
+    def add_symbol(self, symbol: str, symbol_type: str = "constant"):
         """
         Add a symbol to the logical system.
 
@@ -44,9 +45,9 @@ class FoundationalLogic:
             name: Optional name for the formula
         """
         formula_entry = {
-            'formula': formula,
-            'name': name,
-            'well_formed': self._check_well_formed(formula)
+            "formula": formula,
+            "name": name,
+            "well_formed": self._check_well_formed(formula),
         }
         self.formulas.append(formula_entry)
 
@@ -62,11 +63,11 @@ class FoundationalLogic:
         """
         # Placeholder well-formedness check
         # In practice, would implement proper parsing and validation
-        required_chars = set('∀∃→↔∧∨¬()')
+        required_chars = set("∀∃→↔∧∨¬()")
         formula_chars = set(formula)
 
         # Basic check for balanced parentheses and logical connectives
-        if formula.count('(') != formula.count(')'):
+        if formula.count("(") != formula.count(")"):
             return False
 
         return True
@@ -87,17 +88,9 @@ class FoundationalLogic:
 
         # Simple check for identical premise and conclusion
         if conclusion in premises:
-            return {
-                'proved': True,
-                'proof_length': 1,
-                'method': 'premise_restoration'
-            }
+            return {"proved": True, "proof_length": 1, "method": "premise_restoration"}
 
-        return {
-            'proved': False,
-            'proof_length': 0,
-            'method': None
-        }
+        return {"proved": False, "proof_length": 0, "method": None}
 
     def check_completeness(self) -> dict:
         """
@@ -108,9 +101,12 @@ class FoundationalLogic:
         """
         # Placeholder - completeness is a deep metamathematical property
         return {
-            'complete': None,  # Unknown for most systems
-            'analysis': 'Gödel\'s incompleteness theorems apply to sufficiently powerful systems',
-            'limitations': ['Cannot prove all true statements', 'Cannot prove own consistency']
+            "complete": None,  # Unknown for most systems
+            "analysis": "Gödel's incompleteness theorems apply to sufficiently powerful systems",
+            "limitations": [
+                "Cannot prove all true statements",
+                "Cannot prove own consistency",
+            ],
         }
 
     def get_model(self) -> dict:
@@ -122,7 +118,7 @@ class FoundationalLogic:
         """
         # Placeholder model
         return {
-            'domain': 'placeholder_domain',
-            'interpretation': {},
-            'satisfies_all': False
+            "domain": "placeholder_domain",
+            "interpretation": {},
+            "satisfies_all": False,
         }

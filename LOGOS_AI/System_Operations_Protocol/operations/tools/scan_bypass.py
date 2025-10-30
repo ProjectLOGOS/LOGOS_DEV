@@ -52,8 +52,13 @@ def scan_for_bypasses():
             if str(py_file) in proof_required_files or any(
                 req in str(py_file) for req in proof_required_files
             ):
-                if "require_proof_token" not in content and "reference_monitor" not in content:
-                    issues.append(f"{py_file}: Should contain proof gate calls but doesn't")
+                if (
+                    "require_proof_token" not in content
+                    and "reference_monitor" not in content
+                ):
+                    issues.append(
+                        f"{py_file}: Should contain proof gate calls but doesn't"
+                    )
 
         except Exception as e:
             print(f"Warning: Could not scan {py_file}: {e}")

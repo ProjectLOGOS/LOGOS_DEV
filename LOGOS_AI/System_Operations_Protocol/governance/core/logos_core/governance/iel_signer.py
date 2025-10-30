@@ -20,25 +20,27 @@ Safety Constraints:
 - Emergency revocation capabilities
 """
 
+import base64
 import hashlib
 import hmac
+import json
 import logging
 import secrets
-from typing import Dict, List, Set, Optional, Any, Tuple
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-import json
-import base64
-from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import rsa, padding
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from typing import Any, Dict, List, Optional, Set, Tuple
+
 from cryptography.fernet import Fernet
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import padding, rsa
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 
 @dataclass
 class SigningKey:
     """Represents a signing key with metadata"""
+
     key_id: str
     key_type: str  # "rsa", "ed25519", "hmac"
     key_size: int
@@ -63,6 +65,7 @@ class SigningKey:
 @dataclass
 class IELSignature:
     """Represents a cryptographic signature of an IEL"""
+
     signature_id: str
     iel_id: str
     signature_value: str
@@ -80,7 +83,7 @@ class IELSignature:
         return data
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'IELSignature':
+    def from_dict(cls, data: Dict[str, Any]) -> "IELSignature":
         """Create from dictionary"""
         data["signed_at"] = datetime.fromisoformat(data["signed_at"])
         return cls(**data)
@@ -89,6 +92,7 @@ class IELSignature:
 @dataclass
 class SigningConfig:
     """Configuration for IEL signing operations"""
+
     key_storage_path: str = "keys/iel_signing/"
     signature_algorithm: str = "rsa_pss"  # "rsa_pss", "ed25519", "hmac_sha256"
     key_size: int = 2048
@@ -135,14 +139,16 @@ class IELSigner:
         if not logger.handlers:
             handler = logging.StreamHandler()
             formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
             )
             handler.setFormatter(formatter)
             logger.addHandler(handler)
             logger.setLevel(logging.INFO)
         return logger
 
-    def generate_signing_key(self, authority_level: str = "standard", purpose: str = "iel_signing") -> str:
+    def generate_signing_key(
+        self, authority_level: str = "standard", purpose: str = "iel_signing"
+    ) -> str:
         """
         Generate new signing key pair
 
@@ -159,8 +165,7 @@ class IELSigner:
 
             # Generate RSA key pair
             private_key = rsa.generate_private_key(
-                public_exponent=65537,
-                key_size=self.config.key_size
+                public_exponent=65537, key_size=self.config.key_size
             )
 
             # Extract public key
@@ -170,13 +175,13 @@ class IELSigner:
             private_key_pem = private_key.private_bytes(
                 encoding=serialization.Encoding.PEM,
                 format=serialization.PrivateFormat.PKCS8,
-                encryption_algorithm=serialization.NoEncryption()
+                encryption_algorithm=serialization.NoEncryption(),
             )
 
             public_key_pem = public_key.public_bytes(
                 encoding=serialization.Encoding.PEM,
-                format=serialization.PublicFormat.SubjectPublicKeyInfo
-            ).decode('utf-8')
+                format=serialization.PublicFormat.SubjectPublicKeyInfo,
+            ).decode("utf-8")
 
             # Encrypt private key
             encrypted_private_key = self._encrypt_private_key(private_key_pem)
@@ -189,9 +194,10 @@ class IELSigner:
                 public_key_pem=public_key_pem,
                 private_key_encrypted=encrypted_private_key,
                 created_at=datetime.now(),
-                expires_at=datetime.now() + timedelta(days=self.config.signature_validity_days),
+                expires_at=datetime.now()
+                + timedelta(days=self.config.signature_validity_days),
                 purpose=purpose,
-                authority_level=authority_level
+                authority_level=authority_level,
             )
 
             # Store key
@@ -205,8 +211,13 @@ class IELSigner:
             self.logger.error(f"Failed to generate signing key: {e}")
             raise
 
-    def sign_iel(self, iel_id: str, iel_content: str, proof_hash: Optional[str] = None,
-                 verification_level: str = "standard") -> IELSignature:
+    def sign_iel(
+        self,
+        iel_id: str,
+        iel_content: str,
+        proof_hash: Optional[str] = None,
+        verification_level: str = "standard",
+    ) -> IELSignature:
         """
         Sign an IEL with cryptographic signature
 
@@ -227,10 +238,14 @@ class IELSigner:
             # Select appropriate signing key
             signing_key = self._select_signing_key(verification_level)
             if not signing_key:
-                raise ValueError(f"No valid signing key for verification level: {verification_level}")
+                raise ValueError(
+                    f"No valid signing key for verification level: {verification_level}"
+                )
 
             # Prepare content for signing
-            sign_content = self._prepare_signing_content(iel_id, iel_content, proof_hash)
+            sign_content = self._prepare_signing_content(
+                iel_id, iel_content, proof_hash
+            )
 
             # Generate signature
             signature_value = self._generate_signature(signing_key, sign_content)
@@ -247,15 +262,17 @@ class IELSigner:
                 verification_level=verification_level,
                 signature_metadata={
                     "content_hash": hashlib.sha256(iel_content.encode()).hexdigest(),
-                    "signer_authority": signing_key.authority_level
-                }
+                    "signer_authority": signing_key.authority_level,
+                },
             )
 
             # Store signature
             self._store_signature(signature)
             self._signatures[signature.signature_id] = signature
 
-            self.logger.info(f"Signed IEL {iel_id} with signature {signature.signature_id}")
+            self.logger.info(
+                f"Signed IEL {iel_id} with signature {signature.signature_id}"
+            )
             return signature
 
         except Exception as e:
@@ -291,12 +308,16 @@ class IELSigner:
             )
 
             # Verify signature
-            is_valid = self._verify_signature_value(signing_key, verify_content, signature.signature_value)
+            is_valid = self._verify_signature_value(
+                signing_key, verify_content, signature.signature_value
+            )
 
             if is_valid:
                 self.logger.info(f"Signature verified: {signature.signature_id}")
             else:
-                self.logger.warning(f"Signature verification failed: {signature.signature_id}")
+                self.logger.warning(
+                    f"Signature verification failed: {signature.signature_id}"
+                )
 
             return is_valid
 
@@ -343,19 +364,21 @@ class IELSigner:
         """
         try:
             new_key_ids = []
-            rotation_threshold = datetime.now() - timedelta(days=self.config.key_rotation_days)
+            rotation_threshold = datetime.now() - timedelta(
+                days=self.config.key_rotation_days
+            )
 
             # Find keys that need rotation
             keys_to_rotate = [
-                key for key in self._signing_keys.values()
+                key
+                for key in self._signing_keys.values()
                 if key.created_at < rotation_threshold and key.is_valid()
             ]
 
             for old_key in keys_to_rotate:
                 # Generate new key with same properties
                 new_key_id = self.generate_signing_key(
-                    authority_level=old_key.authority_level,
-                    purpose=old_key.purpose
+                    authority_level=old_key.authority_level, purpose=old_key.purpose
                 )
                 new_key_ids.append(new_key_id)
 
@@ -386,7 +409,7 @@ class IELSigner:
         try:
             key_files = list(self._key_storage_path.glob("*.key"))
             for key_file in key_files:
-                with open(key_file, 'r') as f:
+                with open(key_file, "r") as f:
                     key_data = json.load(f)
 
                 signing_key = SigningKey(
@@ -396,10 +419,18 @@ class IELSigner:
                     public_key_pem=key_data["public_key_pem"],
                     private_key_encrypted=key_data["private_key_encrypted"],
                     created_at=datetime.fromisoformat(key_data["created_at"]),
-                    expires_at=datetime.fromisoformat(key_data["expires_at"]) if key_data.get("expires_at") else None,
-                    revoked_at=datetime.fromisoformat(key_data["revoked_at"]) if key_data.get("revoked_at") else None,
+                    expires_at=(
+                        datetime.fromisoformat(key_data["expires_at"])
+                        if key_data.get("expires_at")
+                        else None
+                    ),
+                    revoked_at=(
+                        datetime.fromisoformat(key_data["revoked_at"])
+                        if key_data.get("revoked_at")
+                        else None
+                    ),
                     purpose=key_data.get("purpose", "iel_signing"),
-                    authority_level=key_data.get("authority_level", "standard")
+                    authority_level=key_data.get("authority_level", "standard"),
                 )
 
                 self._signing_keys[signing_key.key_id] = signing_key
@@ -421,13 +452,21 @@ class IELSigner:
                 "public_key_pem": signing_key.public_key_pem,
                 "private_key_encrypted": signing_key.private_key_encrypted,
                 "created_at": signing_key.created_at.isoformat(),
-                "expires_at": signing_key.expires_at.isoformat() if signing_key.expires_at else None,
-                "revoked_at": signing_key.revoked_at.isoformat() if signing_key.revoked_at else None,
+                "expires_at": (
+                    signing_key.expires_at.isoformat()
+                    if signing_key.expires_at
+                    else None
+                ),
+                "revoked_at": (
+                    signing_key.revoked_at.isoformat()
+                    if signing_key.revoked_at
+                    else None
+                ),
                 "purpose": signing_key.purpose,
-                "authority_level": signing_key.authority_level
+                "authority_level": signing_key.authority_level,
             }
 
-            with open(key_file, 'w') as f:
+            with open(key_file, "w") as f:
                 json.dump(key_data, f, indent=2)
 
         except Exception as e:
@@ -442,7 +481,7 @@ class IELSigner:
 
             sig_file = sig_dir / f"{signature.signature_id}.sig"
 
-            with open(sig_file, 'w') as f:
+            with open(sig_file, "w") as f:
                 json.dump(signature.to_dict(), f, indent=2)
 
         except Exception as e:
@@ -453,11 +492,11 @@ class IELSigner:
         master_key_file = self._key_storage_path / "master.key"
 
         if master_key_file.exists():
-            with open(master_key_file, 'rb') as f:
+            with open(master_key_file, "rb") as f:
                 return f.read()
         else:
             master_key = Fernet.generate_key()
-            with open(master_key_file, 'wb') as f:
+            with open(master_key_file, "wb") as f:
                 f.write(master_key)
             return master_key
 
@@ -465,12 +504,12 @@ class IELSigner:
         """Encrypt private key with master key"""
         fernet = Fernet(self._master_key)
         encrypted = fernet.encrypt(private_key_pem)
-        return base64.b64encode(encrypted).decode('utf-8')
+        return base64.b64encode(encrypted).decode("utf-8")
 
     def _decrypt_private_key(self, encrypted_private_key: str) -> bytes:
         """Decrypt private key with master key"""
         fernet = Fernet(self._master_key)
-        encrypted_data = base64.b64decode(encrypted_private_key.encode('utf-8'))
+        encrypted_data = base64.b64decode(encrypted_private_key.encode("utf-8"))
         return fernet.decrypt(encrypted_data)
 
     def _select_signing_key(self, verification_level: str) -> Optional[SigningKey]:
@@ -479,23 +518,29 @@ class IELSigner:
 
         # Filter by authority level
         if verification_level == "formal":
-            valid_keys = [key for key in valid_keys if key.authority_level in ["elevated", "root"]]
+            valid_keys = [
+                key for key in valid_keys if key.authority_level in ["elevated", "root"]
+            ]
         elif verification_level == "elevated":
-            valid_keys = [key for key in valid_keys if key.authority_level in ["elevated", "root"]]
+            valid_keys = [
+                key for key in valid_keys if key.authority_level in ["elevated", "root"]
+            ]
 
         # Return newest valid key
         if valid_keys:
             return max(valid_keys, key=lambda k: k.created_at)
         return None
 
-    def _prepare_signing_content(self, iel_id: str, iel_content: str, proof_hash: Optional[str]) -> bytes:
+    def _prepare_signing_content(
+        self, iel_id: str, iel_content: str, proof_hash: Optional[str]
+    ) -> bytes:
         """Prepare content for signing"""
         content_parts = [iel_id, iel_content]
         if proof_hash:
             content_parts.append(proof_hash)
 
         content_str = "|".join(content_parts)
-        return content_str.encode('utf-8')
+        return content_str.encode("utf-8")
 
     def _generate_signature(self, signing_key: SigningKey, content: bytes) -> str:
         """Generate cryptographic signature"""
@@ -503,33 +548,31 @@ class IELSigner:
         private_key_pem = self._decrypt_private_key(signing_key.private_key_encrypted)
 
         # Load private key
-        private_key = serialization.load_pem_private_key(
-            private_key_pem,
-            password=None
-        )
+        private_key = serialization.load_pem_private_key(private_key_pem, password=None)
 
         # Generate signature
         signature = private_key.sign(
             content,
             padding.PSS(
-                mgf=padding.MGF1(hashes.SHA256()),
-                salt_length=padding.PSS.MAX_LENGTH
+                mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.MAX_LENGTH
             ),
-            hashes.SHA256()
+            hashes.SHA256(),
         )
 
-        return base64.b64encode(signature).decode('utf-8')
+        return base64.b64encode(signature).decode("utf-8")
 
-    def _verify_signature_value(self, signing_key: SigningKey, content: bytes, signature_value: str) -> bool:
+    def _verify_signature_value(
+        self, signing_key: SigningKey, content: bytes, signature_value: str
+    ) -> bool:
         """Verify signature value"""
         try:
             # Load public key
             public_key = serialization.load_pem_public_key(
-                signing_key.public_key_pem.encode('utf-8')
+                signing_key.public_key_pem.encode("utf-8")
             )
 
             # Decode signature
-            signature_bytes = base64.b64decode(signature_value.encode('utf-8'))
+            signature_bytes = base64.b64decode(signature_value.encode("utf-8"))
 
             # Verify signature
             public_key.verify(
@@ -537,9 +580,9 @@ class IELSigner:
                 content,
                 padding.PSS(
                     mgf=padding.MGF1(hashes.SHA256()),
-                    salt_length=padding.PSS.MAX_LENGTH
+                    salt_length=padding.PSS.MAX_LENGTH,
                 ),
-                hashes.SHA256()
+                hashes.SHA256(),
             )
 
             return True
@@ -551,16 +594,16 @@ class IELSigner:
 def main():
     """Main entry point for IEL signer command-line interface"""
     import argparse
-    import sys
     import os
+    import sys
 
-    parser = argparse.ArgumentParser(description='LOGOS IEL Signer')
-    parser.add_argument('--sign', help='Sign an IEL file')
-    parser.add_argument('--key', help='Path to signing key file')
-    parser.add_argument('--out', help='Output signature file')
-    parser.add_argument('--verify', help='Verify a signed IEL file')
-    parser.add_argument('--sig', help='Signature file to verify')
-    parser.add_argument('--generate-key', help='Generate new signing key pair')
+    parser = argparse.ArgumentParser(description="LOGOS IEL Signer")
+    parser.add_argument("--sign", help="Sign an IEL file")
+    parser.add_argument("--key", help="Path to signing key file")
+    parser.add_argument("--out", help="Output signature file")
+    parser.add_argument("--verify", help="Verify a signed IEL file")
+    parser.add_argument("--sig", help="Signature file to verify")
+    parser.add_argument("--generate-key", help="Generate new signing key pair")
 
     args = parser.parse_args()
 
@@ -579,7 +622,7 @@ def main():
             print("Generating signature for IEL candidate...")
 
             # Read IEL content
-            with open(args.sign, 'r') as f:
+            with open(args.sign, "r") as f:
                 iel_content = f.read()
 
             # For demonstration, create a simple signature
@@ -590,11 +633,11 @@ def main():
                 ).decode(),
                 "key_id": "mock_key_001",
                 "timestamp": datetime.now().isoformat(),
-                "algorithm": "RSA-PSS-SHA256"
+                "algorithm": "RSA-PSS-SHA256",
             }
 
             # Write signature
-            with open(args.out, 'w') as f:
+            with open(args.out, "w") as f:
                 json.dump(signature_data, f, indent=2)
 
             print(f"Signed IEL: {args.sign}")
@@ -603,10 +646,10 @@ def main():
 
         elif args.verify and args.sig:
             # Verify signature
-            with open(args.sig, 'r') as f:
+            with open(args.sig, "r") as f:
                 sig_data = json.load(f)
 
-            with open(args.verify, 'r') as f:
+            with open(args.verify, "r") as f:
                 content = f.read()
 
             # Simple verification - check hash
@@ -614,7 +657,7 @@ def main():
                 hashlib.sha256(content.encode()).digest()
             ).decode()
 
-            if sig_data.get('signature') == expected_hash:
+            if sig_data.get("signature") == expected_hash:
                 print("Signature verification: PASSED")
             else:
                 print("Signature verification: FAILED")
@@ -628,5 +671,5 @@ def main():
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

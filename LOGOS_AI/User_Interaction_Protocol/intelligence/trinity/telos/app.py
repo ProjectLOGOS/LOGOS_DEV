@@ -4,11 +4,12 @@ Telos Subsystem FastAPI Application
 Provides REST API interface for the Telos causal reasoning subsystem.
 """
 
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
 import logging
 import os
+
 import numpy as np
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -17,12 +18,14 @@ logger = logging.getLogger("telos_app")
 app = FastAPI(
     title="Telos Causal Reasoning API",
     description="Advanced causal reasoning and forecasting subsystem",
-    version="1.0.0"
+    version="1.0.0",
 )
+
 
 class ForecastingRequest(BaseModel):
     series_data: list[float]
     steps_ahead: int = 5
+
 
 class ForecastingResponse(BaseModel):
     forecast: list[float]
@@ -31,9 +34,11 @@ class ForecastingResponse(BaseModel):
     success: bool
     message: str
 
+
 class CausalRequest(BaseModel):
     data: list[dict]
     dag: dict = None
+
 
 class CausalResponse(BaseModel):
     fitted: bool
@@ -41,16 +46,19 @@ class CausalResponse(BaseModel):
     success: bool
     message: str
 
+
 class CounterfactualRequest(BaseModel):
     scm_data: dict
     target: str
     context: dict
     intervention: dict
 
+
 class CounterfactualResponse(BaseModel):
     probability: float
     success: bool
     message: str
+
 
 def perform_forecasting(series_data, steps_ahead=5):
     """Perform simple time series forecasting using linear extrapolation"""
@@ -79,7 +87,7 @@ def perform_forecasting(series_data, steps_ahead=5):
             "forecast": forecast,
             "confidence": 0.75,
             "model": "LinearExtrapolation",
-            "success": True
+            "success": True,
         }
     except Exception as e:
         return {
@@ -87,26 +95,27 @@ def perform_forecasting(series_data, steps_ahead=5):
             "confidence": 0.5,
             "model": "fallback",
             "success": False,
-            "error": str(e)
+            "error": str(e),
         }
+
 
 def fit_causal_model(data, dag=None):
     """Simple causal model fitting (placeholder)"""
-    return {
-        "fitted": True,
-        "samples": len(data),
-        "success": True
-    }
+    return {"fitted": True, "samples": len(data), "success": True}
+
 
 def evaluate_counterfactual(scm_data, target, context, intervention):
     """Simple counterfactual evaluation (placeholder)"""
     return 0.75
 
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+
 import logging
 import os
-from .telos_worker import ForecastingNexus, SCM, evaluate_counterfactual
+
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+
+from .telos_worker import SCM, ForecastingNexus, evaluate_counterfactual
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -115,15 +124,17 @@ logger = logging.getLogger("telos_app")
 app = FastAPI(
     title="Telos Causal Reasoning API",
     description="Advanced causal reasoning and forecasting subsystem",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 # Initialize core components
 forecasting_nexus = ForecastingNexus()
 
+
 class ForecastingRequest(BaseModel):
     series_data: list[float]
     steps_ahead: int = 5
+
 
 class ForecastingResponse(BaseModel):
     forecast: list[float]
@@ -132,9 +143,11 @@ class ForecastingResponse(BaseModel):
     success: bool
     message: str
 
+
 class CausalRequest(BaseModel):
     data: list[dict]
     dag: dict = None
+
 
 class CausalResponse(BaseModel):
     fitted: bool
@@ -142,27 +155,33 @@ class CausalResponse(BaseModel):
     success: bool
     message: str
 
+
 class CounterfactualRequest(BaseModel):
     scm_data: dict
     target: str
     context: dict
     intervention: dict
 
+
 class CounterfactualResponse(BaseModel):
     probability: float
     success: bool
     message: str
+
 
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
     return {"status": "healthy", "subsystem": "telos"}
 
+
 @app.post("/forecast", response_model=ForecastingResponse)
 async def forecast_series(request: ForecastingRequest):
     """Perform time series forecasting"""
     try:
-        logger.info(f"Processing forecasting request with {len(request.series_data)} data points")
+        logger.info(
+            f"Processing forecasting request with {len(request.series_data)} data points"
+        )
 
         # Execute forecasting
         result = perform_forecasting(request.series_data, request.steps_ahead)
@@ -172,12 +191,13 @@ async def forecast_series(request: ForecastingRequest):
             confidence=result.get("confidence", 0.0),
             model=result.get("model", "unknown"),
             success=True,
-            message="Forecasting completed successfully"
+            message="Forecasting completed successfully",
         )
 
     except Exception as e:
         logger.error(f"Forecasting failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Forecasting failed: {str(e)}")
+
 
 @app.post("/causal-model", response_model=CausalResponse)
 async def fit_causal_model_endpoint(request: CausalRequest):
@@ -192,12 +212,13 @@ async def fit_causal_model_endpoint(request: CausalRequest):
             fitted=result.get("fitted", False),
             samples=result.get("samples", 0),
             success=True,
-            message="Causal model fitted successfully"
+            message="Causal model fitted successfully",
         )
 
     except Exception as e:
         logger.error(f"Causal modeling failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Causal modeling failed: {str(e)}")
+
 
 @app.post("/counterfactual", response_model=CounterfactualResponse)
 async def evaluate_counterfactual_query(request: CounterfactualRequest):
@@ -207,21 +228,21 @@ async def evaluate_counterfactual_query(request: CounterfactualRequest):
 
         # Evaluate counterfactual
         probability = evaluate_counterfactual(
-            request.scm_data,
-            request.target,
-            request.context,
-            request.intervention
+            request.scm_data, request.target, request.context, request.intervention
         )
 
         return CounterfactualResponse(
             probability=probability,
             success=True,
-            message="Counterfactual evaluation completed"
+            message="Counterfactual evaluation completed",
         )
 
     except Exception as e:
         logger.error(f"Counterfactual evaluation failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Counterfactual evaluation failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Counterfactual evaluation failed: {str(e)}"
+        )
+
 
 @app.get("/status")
 async def get_status():
@@ -230,8 +251,9 @@ async def get_status():
         "subsystem": "telos",
         "status": "active",
         "capabilities": ["forecasting", "causal_modeling", "counterfactual_reasoning"],
-        "version": "1.0.0"
+        "version": "1.0.0",
     }
+
 
 @app.post("/process")
 async def process_task(request: dict):
@@ -259,7 +281,9 @@ async def process_task(request: dict):
         logger.error(f"Task processing failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Task processing failed: {str(e)}")
 
+
 if __name__ == "__main__":
     import uvicorn
+
     port = int(os.getenv("PORT", 8066))
     uvicorn.run(app, host="0.0.0.0", port=port)

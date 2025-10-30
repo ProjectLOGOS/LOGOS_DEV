@@ -89,9 +89,15 @@ class MegaBatchMarginLoss(nn.Module):
         self.positive_margin = positive_margin
         self.negative_margin = negative_margin
         self.mini_batch_size = mini_batch_size
-        self.forward = self.forward_mini_batched if use_mini_batched_version else self.forward_non_mini_batched
+        self.forward = (
+            self.forward_mini_batched
+            if use_mini_batched_version
+            else self.forward_non_mini_batched
+        )
 
-    def forward_mini_batched(self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor) -> Tensor:
+    def forward_mini_batched(
+        self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor
+    ) -> Tensor:
         anchor, positive = sentence_features
         feature_names = list(anchor.keys())
 
@@ -100,14 +106,16 @@ class MegaBatchMarginLoss(nn.Module):
             all_positive_emb = self.model(positive)["sentence_embedding"].detach()
             self.model.train()
 
-        diagonal_matrix = torch.eye(len(all_positive_emb), len(all_positive_emb), device=all_positive_emb.device)
+        diagonal_matrix = torch.eye(
+            len(all_positive_emb), len(all_positive_emb), device=all_positive_emb.device
+        )
 
         # Iterate over the triplets (anchor, positive, hardest_negative) in smaller mini_batch sizes
         for start_idx in range(0, len(all_positive_emb), self.mini_batch_size):
             end_idx = start_idx + self.mini_batch_size
-            anchor_emb = self.model({key: anchor[key][start_idx:end_idx] for key in feature_names})[
-                "sentence_embedding"
-            ]
+            anchor_emb = self.model(
+                {key: anchor[key][start_idx:end_idx] for key in feature_names}
+            )["sentence_embedding"]
 
             # Find hard negatives. For each anchor, find the hardest negative
             # Store them in the triplets (anchor, positive, hardest_negative)
@@ -127,9 +135,9 @@ class MegaBatchMarginLoss(nn.Module):
                 hard_negative_features[key] = torch.stack(hard_negative_features[key])
 
             # Compute differentiable negative and positive embeddings
-            positive_emb = self.model({key: positive[key][start_idx:end_idx] for key in feature_names})[
-                "sentence_embedding"
-            ]
+            positive_emb = self.model(
+                {key: positive[key][start_idx:end_idx] for key in feature_names}
+            )["sentence_embedding"]
             negative_emb = self.model(hard_negative_features)["sentence_embedding"]
 
             assert anchor_emb.shape == positive_emb.shape
@@ -138,7 +146,9 @@ class MegaBatchMarginLoss(nn.Module):
             # Compute loss
             pos_cosine = F.cosine_similarity(anchor_emb, positive_emb)
             neg_cosine = F.cosine_similarity(anchor_emb, negative_emb)
-            losses = F.relu(self.positive_margin - pos_cosine) + F.relu(neg_cosine - self.negative_margin)
+            losses = F.relu(self.positive_margin - pos_cosine) + F.relu(
+                neg_cosine - self.negative_margin
+            )
             losses = losses.mean()
 
             # Backpropagate unless it is the last mini batch. The last mini-batch will be back propagated by the outside train loop
@@ -148,8 +158,13 @@ class MegaBatchMarginLoss(nn.Module):
         return losses
 
     ##### Non mini-batched version ###
-    def forward_non_mini_batched(self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor) -> Tensor:
-        reps = [self.model(sentence_feature)["sentence_embedding"] for sentence_feature in sentence_features]
+    def forward_non_mini_batched(
+        self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor
+    ) -> Tensor:
+        reps = [
+            self.model(sentence_feature)["sentence_embedding"]
+            for sentence_feature in sentence_features
+        ]
         embeddings_a, embeddings_b = reps
 
         cos_scores = util.pytorch_cos_sim(embeddings_a, embeddings_b)
@@ -158,7 +173,9 @@ class MegaBatchMarginLoss(nn.Module):
             2 * torch.eye(*cos_scores.shape, device=cos_scores.device)
         )  # Remove positive scores along the diagonal
         negatives_max, _ = torch.max(negative_scores, dim=1)
-        losses = F.relu(self.positive_margin - positive_scores) + F.relu(negatives_max - self.negative_margin)
+        losses = F.relu(self.positive_margin - positive_scores) + F.relu(
+            negatives_max - self.negative_margin
+        )
         return losses.mean()
 
     @property

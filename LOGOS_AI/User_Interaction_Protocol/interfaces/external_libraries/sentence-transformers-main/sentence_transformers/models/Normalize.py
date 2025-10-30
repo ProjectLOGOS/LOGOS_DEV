@@ -18,10 +18,18 @@ class Normalize(Module):
         super().__init__()
 
     def forward(self, features: dict[str, Tensor]) -> dict[str, Tensor]:
-        features.update({"sentence_embedding": F.normalize(features["sentence_embedding"], p=2, dim=1)})
+        features.update(
+            {
+                "sentence_embedding": F.normalize(
+                    features["sentence_embedding"], p=2, dim=1
+                )
+            }
+        )
         return features
 
-    def save(self, output_path: str, *args, safe_serialization: bool = True, **kwargs) -> None:
+    def save(
+        self, output_path: str, *args, safe_serialization: bool = True, **kwargs
+    ) -> None:
         return
 
     @classmethod

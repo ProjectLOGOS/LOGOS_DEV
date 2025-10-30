@@ -2,11 +2,12 @@
 # Structural Causal Discovery using PC Algorithm with do-calculus extensions
 # function of essencenode (0,0,0 in mvf) runs continually, predicts new nodes, if dicscovered, sends to banach generator for node generation
 
-from causallearn.search.ConstraintBased.PC import pc
-from causallearn.utils.GraphUtils import GraphUtils
-from causallearn.utils.cit import fisherz
-import numpy as np
 import logging
+
+import numpy as np
+from causallearn.search.ConstraintBased.PC import pc
+from causallearn.utils.cit import fisherz
+from causallearn.utils.GraphUtils import GraphUtils
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -25,7 +26,9 @@ def run_pc_causal_discovery(data, alpha=0.05):
     """
     logger.info("Running PC causal discovery.")
     cg = pc(data, alpha=alpha, ci_test=fisherz, verbose=True)
-    GraphUtils.to_nx_graph(cg.G, labels=range(data.shape[1]))  # Visual inspection placeholder
+    GraphUtils.to_nx_graph(
+        cg.G, labels=range(data.shape[1])
+    )  # Visual inspection placeholder
     logger.info("PC algorithm completed.")
     return cg
 

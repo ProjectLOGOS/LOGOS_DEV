@@ -86,11 +86,15 @@ class EmbeddingSimilarityEvaluator(SentenceEvaluator):
         scores: list[float],
         batch_size: int = 16,
         main_similarity: str | SimilarityFunction | None = None,
-        similarity_fn_names: list[Literal["cosine", "euclidean", "manhattan", "dot"]] | None = None,
+        similarity_fn_names: (
+            list[Literal["cosine", "euclidean", "manhattan", "dot"]] | None
+        ) = None,
         name: str = "",
         show_progress_bar: bool = False,
         write_csv: bool = True,
-        precision: Literal["float32", "int8", "uint8", "binary", "ubinary"] | None = None,
+        precision: (
+            Literal["float32", "int8", "uint8", "binary", "ubinary"] | None
+        ) = None,
         truncate_dim: int | None = None,
     ):
         super().__init__()
@@ -104,7 +108,9 @@ class EmbeddingSimilarityEvaluator(SentenceEvaluator):
         assert len(self.sentences1) == len(self.sentences2)
         assert len(self.sentences1) == len(self.scores)
 
-        self.main_similarity = SimilarityFunction(main_similarity) if main_similarity else None
+        self.main_similarity = (
+            SimilarityFunction(main_similarity) if main_similarity else None
+        )
         self.similarity_fn_names = similarity_fn_names or []
         if self.similarity_fn_names == [] and self.main_similarity is not None:
             self.similarity_fn_names = [self.main_similarity.value]
@@ -114,7 +120,8 @@ class EmbeddingSimilarityEvaluator(SentenceEvaluator):
         self.batch_size = batch_size
         if show_progress_bar is None:
             show_progress_bar = (
-                logger.getEffectiveLevel() == logging.INFO or logger.getEffectiveLevel() == logging.DEBUG
+                logger.getEffectiveLevel() == logging.INFO
+                or logger.getEffectiveLevel() == logging.DEBUG
             )
         self.show_progress_bar = show_progress_bar
 
@@ -151,7 +158,11 @@ class EmbeddingSimilarityEvaluator(SentenceEvaluator):
         return cls(sentences1, sentences2, scores, **kwargs)
 
     def __call__(
-        self, model: SentenceTransformer, output_path: str | None = None, epoch: int = -1, steps: int = -1
+        self,
+        model: SentenceTransformer,
+        output_path: str | None = None,
+        epoch: int = -1,
+        steps: int = -1,
     ) -> dict[str, float]:
         if epoch != -1:
             if steps == -1:
@@ -163,7 +174,9 @@ class EmbeddingSimilarityEvaluator(SentenceEvaluator):
         if self.truncate_dim is not None:
             out_txt += f" (truncated to {self.truncate_dim})"
 
-        logger.info(f"EmbeddingSimilarityEvaluator: Evaluating the model on the {self.name} dataset{out_txt}:")
+        logger.info(
+            f"EmbeddingSimilarityEvaluator: Evaluating the model on the {self.name} dataset{out_txt}:"
+        )
 
         embeddings1 = self.embed_inputs(model, self.sentences1)
         embeddings2 = self.embed_inputs(model, self.sentences2)
@@ -191,7 +204,12 @@ class EmbeddingSimilarityEvaluator(SentenceEvaluator):
         metrics = {}
         for fn_name in self.similarity_fn_names:
             if fn_name in similarity_functions:
-                scores = similarity_functions[fn_name](embeddings1, embeddings2).detach().cpu().numpy()
+                scores = (
+                    similarity_functions[fn_name](embeddings1, embeddings2)
+                    .detach()
+                    .cpu()
+                    .numpy()
+                )
                 eval_pearson, _ = pearsonr(labels, scores)
                 eval_spearman, _ = spearmanr(labels, scores)
                 metrics[f"pearson_{fn_name}"] = eval_pearson
@@ -203,7 +221,12 @@ class EmbeddingSimilarityEvaluator(SentenceEvaluator):
         if output_path is not None and self.write_csv:
             csv_path = os.path.join(output_path, self.csv_file)
             output_file_exists = os.path.isfile(csv_path)
-            with open(csv_path, newline="", mode="a" if output_file_exists else "w", encoding="utf-8") as f:
+            with open(
+                csv_path,
+                newline="",
+                mode="a" if output_file_exists else "w",
+                encoding="utf-8",
+            ) as f:
                 writer = csv.writer(f)
                 if not output_file_exists:
                     writer.writerow(self.csv_headers)
@@ -221,8 +244,12 @@ class EmbeddingSimilarityEvaluator(SentenceEvaluator):
                 )
 
         if len(self.similarity_fn_names) > 1:
-            metrics["pearson_max"] = max(metrics[f"pearson_{fn_name}"] for fn_name in self.similarity_fn_names)
-            metrics["spearman_max"] = max(metrics[f"spearman_{fn_name}"] for fn_name in self.similarity_fn_names)
+            metrics["pearson_max"] = max(
+                metrics[f"pearson_{fn_name}"] for fn_name in self.similarity_fn_names
+            )
+            metrics["spearman_max"] = max(
+                metrics[f"spearman_{fn_name}"] for fn_name in self.similarity_fn_names
+            )
 
         if self.main_similarity:
             self.primary_metric = {

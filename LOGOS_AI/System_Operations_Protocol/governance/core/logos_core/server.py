@@ -75,7 +75,10 @@ def authorize_action(inp: AuthIn):
             # Log successful authorization
             try:
                 audit.log_decision(
-                    inp.action, "authorized", tok, {"obligation": obl, "source": "ReferenceMonitor"}
+                    inp.action,
+                    "authorized",
+                    tok,
+                    {"obligation": obl, "source": "ReferenceMonitor"},
                 )
             except Exception as e:
                 print(f"Audit logging error: {e}")
@@ -98,7 +101,9 @@ def authorize_action(inp: AuthIn):
     if _privative_deny(inp.action) or inp.action not in safe:
         # Log denial
         try:
-            reason = "privative_deny" if _privative_deny(inp.action) else "not_in_allowlist"
+            reason = (
+                "privative_deny" if _privative_deny(inp.action) else "not_in_allowlist"
+            )
             audit.log_decision(
                 inp.action,
                 "denied",
@@ -140,6 +145,7 @@ class LogosAPIServer:
     def start(self):
         """Start the API server"""
         import uvicorn
+
         uvicorn.run(self.app, host=self.host, port=self.port)
 
     def stop(self):

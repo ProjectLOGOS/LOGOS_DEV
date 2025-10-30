@@ -7,19 +7,21 @@ multi-modal input (text, voice, file), and graph visualization.
 Run with: pytest tests/test_trinity_gui.py -v
 """
 
-import pytest
 import json
 import os
-import tempfile
-from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
-from fastapi.testclient import TestClient
 
 # Import Trinity GUI app
 import sys
+import tempfile
+from pathlib import Path
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
+from fastapi.testclient import TestClient
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from logos_trinity_gui import app, ConnectionManager, SystemState, system_state
+from logos_trinity_gui import ConnectionManager, SystemState, app, system_state
 
 
 class TestTrinityGUIBasics:
@@ -45,7 +47,9 @@ class TestTrinityGUIBasics:
         assert data["libraries_loaded"] >= 0
         assert data["total_libraries"] >= 0
 
-        print(f"✓ Health check passed: {data['libraries_loaded']}/{data['total_libraries']} libraries")
+        print(
+            f"✓ Health check passed: {data['libraries_loaded']}/{data['total_libraries']} libraries"
+        )
 
     def test_02_static_files_served(self, client):
         """Test static files are served correctly."""
@@ -73,12 +77,16 @@ class TestTrinityGUIBasics:
             # Old format
             assert "libraries" in data
             assert isinstance(data["libraries"], list)
-            print(f"✓ Extensions status (old format): {data['loaded']}/{data['total']} libraries")
+            print(
+                f"✓ Extensions status (old format): {data['loaded']}/{data['total']} libraries"
+            )
         else:
             # New format from extensions_manager
             assert "libraries" in data
             assert isinstance(data["libraries"], dict)
-            loaded_count = sum(1 for lib in data["libraries"].values() if lib.get("loaded"))
+            loaded_count = sum(
+                1 for lib in data["libraries"].values() if lib.get("loaded")
+            )
             print(f"✓ Extensions status (new format): {loaded_count} libraries loaded")
 
 
@@ -109,15 +117,13 @@ class TestWebSocketCommunication:
         """Test text query submission and state transitions."""
         with client.websocket_connect("/ws/test-query-session") as websocket:
             # Send a text query
-            websocket.send_json({
-                "type": "query",
-                "query": "What is LOGOS?"
-            })
+            websocket.send_json({"type": "query", "query": "What is LOGOS?"})
 
             # Collect all responses (without timeout parameter)
             responses = []
             try:
                 import time
+
                 start_time = time.time()
                 while time.time() - start_time < 3.0:  # 3 second timeout
                     msg = websocket.receive_json()
@@ -139,7 +145,9 @@ class TestWebSocketCommunication:
             # Check for response
             response_msgs = [r for r in responses if r.get("type") == "response"]
 
-            print(f"✓ Query processing flow: {len(state_changes)} state changes, {len(response_msgs)} responses, {len(responses)} total messages")
+            print(
+                f"✓ Query processing flow: {len(state_changes)} state changes, {len(response_msgs)} responses, {len(responses)} total messages"
+            )
 
     def test_06_multiple_concurrent_connections(self, client):
         """Test multiple WebSocket connections simultaneously."""
@@ -185,7 +193,7 @@ class TestFileUpload:
 
         response = client.post(
             "/api/upload",
-            files={"file": ("large_test.txt", large_content, "text/plain")}
+            files={"file": ("large_test.txt", large_content, "text/plain")},
         )
 
         # Should reject with 413 Payload Too Large or 500 if validation fails
@@ -204,7 +212,7 @@ class TestFileUpload:
 
         response = client.post(
             "/api/upload",
-            files={"file": ("test_proof.txt", small_content, "text/plain")}
+            files={"file": ("test_proof.txt", small_content, "text/plain")},
         )
 
         # Should succeed
@@ -225,23 +233,20 @@ class TestFileUpload:
         # First upload a file
         test_content = b"Theorem test: forall x, x = x.\nProof. reflexivity. Qed."
         upload_response = client.post(
-            "/api/upload",
-            files={"file": ("theorem.v", test_content, "text/plain")}
+            "/api/upload", files={"file": ("theorem.v", test_content, "text/plain")}
         )
         assert upload_response.status_code == 200
         file_path = upload_response.json()["path"]
 
         # Now send file processing request via WebSocket
         with client.websocket_connect("/ws/test-file-process") as websocket:
-            websocket.send_json({
-                "type": "file_upload",
-                "file_path": file_path
-            })
+            websocket.send_json({"type": "file_upload", "file_path": file_path})
 
             # Collect responses
             responses = []
             try:
                 import time
+
                 start_time = time.time()
                 while time.time() - start_time < 3.0:
                     msg = websocket.receive_json()
@@ -253,14 +258,21 @@ class TestFileUpload:
 
             # Should have processing messages (or may be empty if NLP not initialized)
             if len(responses) == 0:
-                print("⚠ File processing: No responses (NLP processor may need initialization)")
+                print(
+                    "⚠ File processing: No responses (NLP processor may need initialization)"
+                )
             else:
                 # Check for state changes to PROCESSING
-                processing_states = [r for r in responses
-                                    if r.get("type") == "state_change"
-                                    and r.get("state") == "processing"]
+                processing_states = [
+                    r
+                    for r in responses
+                    if r.get("type") == "state_change"
+                    and r.get("state") == "processing"
+                ]
 
-                print(f"✓ File processing via WebSocket: {len(responses)} messages received")
+                print(
+                    f"✓ File processing via WebSocket: {len(responses)} messages received"
+                )
 
 
 class TestGraphVisualization:
@@ -275,15 +287,13 @@ class TestGraphVisualization:
         """Test NetworkX graph visualization generation."""
         with client.websocket_connect("/ws/test-graph-viz") as websocket:
             # Request graph generation
-            websocket.send_json({
-                "type": "graph",
-                "query": "karate club"
-            })
+            websocket.send_json({"type": "graph", "query": "karate club"})
 
             # Collect responses
             responses = []
             try:
                 import time
+
                 start_time = time.time()
                 while time.time() - start_time < 5.0:  # Longer timeout for graph
                     msg = websocket.receive_json()
@@ -296,10 +306,14 @@ class TestGraphVisualization:
                 pass
 
             # Should have graph visualization message
-            graph_msgs = [r for r in responses if r.get("type") == "graph_visualization"]
+            graph_msgs = [
+                r for r in responses if r.get("type") == "graph_visualization"
+            ]
 
             if len(graph_msgs) == 0:
-                print("⚠ Graph generation: No graph data received (NetworkX may need initialization)")
+                print(
+                    "⚠ Graph generation: No graph data received (NetworkX may need initialization)"
+                )
                 return  # Skip assertion
 
             # Verify graph structure
@@ -318,7 +332,9 @@ class TestGraphVisualization:
             assert "num_edges" in analysis
             assert analysis["num_nodes"] == len(graph_data["nodes"])
 
-            print(f"✓ Graph generation: {analysis['num_nodes']} nodes, {analysis['num_edges']} edges")
+            print(
+                f"✓ Graph generation: {analysis['num_nodes']} nodes, {analysis['num_edges']} edges"
+            )
 
 
 class TestAnimationStates:
@@ -333,15 +349,13 @@ class TestAnimationStates:
         """Test system state transitions through query lifecycle."""
         with client.websocket_connect("/ws/test-state-transitions") as websocket:
             # Send query
-            websocket.send_json({
-                "type": "query",
-                "query": "Test state transitions"
-            })
+            websocket.send_json({"type": "query", "query": "Test state transitions"})
 
             # Track state transitions
             states_seen = []
             try:
                 import time
+
                 start_time = time.time()
                 while time.time() - start_time < 3.0:
                     msg = websocket.receive_json()
@@ -354,12 +368,18 @@ class TestAnimationStates:
 
             # Should see state transitions (or may be empty if NLP not initialized)
             if len(states_seen) == 0:
-                print("⚠ State transitions: No state changes (NLP processor may need initialization)")
+                print(
+                    "⚠ State transitions: No state changes (NLP processor may need initialization)"
+                )
                 return  # Skip assertion
 
             # Valid states
-            valid_states = {SystemState.STASIS, SystemState.LISTENING,
-                          SystemState.PROCESSING, SystemState.SPEAKING}
+            valid_states = {
+                SystemState.STASIS,
+                SystemState.LISTENING,
+                SystemState.PROCESSING,
+                SystemState.SPEAKING,
+            }
             for state in states_seen:
                 assert state in valid_states, f"Invalid state: {state}"
 
@@ -369,10 +389,9 @@ class TestAnimationStates:
         """Test voice input triggers LISTENING state."""
         with client.websocket_connect("/ws/test-voice-state") as websocket:
             # Request voice input
-            websocket.send_json({
-                "type": "voice_start",
-                "duration": 1  # Short duration for testing
-            })
+            websocket.send_json(
+                {"type": "voice_start", "duration": 1}  # Short duration for testing
+            )
 
             # Should receive voice_listening message
             try:
@@ -382,9 +401,13 @@ class TestAnimationStates:
                 if msg.get("type") == "voice_listening":
                     print("✓ Voice input state: LISTENING state triggered")
                 else:
-                    print(f"⚠ Voice input unavailable: {msg.get('message', 'Unknown error')}")
+                    print(
+                        f"⚠ Voice input unavailable: {msg.get('message', 'Unknown error')}"
+                    )
             except:
-                print("⚠ Voice input timeout (may not be available in test environment)")
+                print(
+                    "⚠ Voice input timeout (may not be available in test environment)"
+                )
 
 
 class TestSessionManagement:
@@ -402,10 +425,7 @@ class TestSessionManagement:
         # Create session via WebSocket
         with client.websocket_connect(f"/ws/{session_id}") as websocket:
             # Send a query to generate audit log entries
-            websocket.send_json({
-                "type": "query",
-                "query": "Test audit logging"
-            })
+            websocket.send_json({"type": "query", "query": "Test audit logging"})
 
             # Wait for response
             try:
@@ -460,10 +480,7 @@ class TestErrorHandling:
         """Test handling of malformed WebSocket messages."""
         with client.websocket_connect("/ws/test-malformed") as websocket:
             # Send invalid message type
-            websocket.send_json({
-                "type": "invalid_nonexistent_type",
-                "data": "garbage"
-            })
+            websocket.send_json({"type": "invalid_nonexistent_type", "data": "garbage"})
 
             # Should not crash - may receive error or be ignored
             try:
@@ -478,10 +495,7 @@ class TestErrorHandling:
         """Test handling of empty query string."""
         with client.websocket_connect("/ws/test-empty-query") as websocket:
             # Send empty query
-            websocket.send_json({
-                "type": "query",
-                "query": ""
-            })
+            websocket.send_json({"type": "query", "query": ""})
 
             # Should handle gracefully
             try:
@@ -517,21 +531,19 @@ class TestProofGating:
         test_content = b"Test proof obligation content"
         upload_response = client.post(
             "/api/upload",
-            files={"file": ("proof_test.txt", test_content, "text/plain")}
+            files={"file": ("proof_test.txt", test_content, "text/plain")},
         )
         assert upload_response.status_code == 200
         file_path = upload_response.json()["path"]
 
         # Process via WebSocket
         with client.websocket_connect(f"/ws/{session_id}") as websocket:
-            websocket.send_json({
-                "type": "file_upload",
-                "file_path": file_path
-            })
+            websocket.send_json({"type": "file_upload", "file_path": file_path})
 
             # Wait for processing
             try:
                 import time
+
                 start_time = time.time()
                 while time.time() - start_time < 2.0:
                     websocket.receive_json()
@@ -546,14 +558,21 @@ class TestProofGating:
 
         # Should have some audit entries (or may be empty if not fully initialized)
         if len(audit_log) == 0:
-            print("⚠ Proof-gating audit: No entries (audit logging may need initialization)")
+            print(
+                "⚠ Proof-gating audit: No entries (audit logging may need initialization)"
+            )
             return  # Skip assertion
 
         # In development mode, proof_status should be present
-        status_entries = [entry for entry in audit_log
-                         if "proof_status" in entry or "proof" in str(entry).lower()]
+        status_entries = [
+            entry
+            for entry in audit_log
+            if "proof_status" in entry or "proof" in str(entry).lower()
+        ]
 
-        print(f"✓ Proof-gating audit: {len(audit_log)} total entries, {len(status_entries)} with proof references")
+        print(
+            f"✓ Proof-gating audit: {len(audit_log)} total entries, {len(status_entries)} with proof references"
+        )
 
     def test_19_proof_gating_development_mode(self, client):
         """Test that proof-gating runs in development mode (bypass with logging)."""
@@ -561,10 +580,7 @@ class TestProofGating:
 
         # Send a query (triggers proof-gating)
         with client.websocket_connect(f"/ws/{session_id}") as websocket:
-            websocket.send_json({
-                "type": "query",
-                "query": "Test proof obligation"
-            })
+            websocket.send_json({"type": "query", "query": "Test proof obligation"})
 
             # Wait for processing
             try:
@@ -578,8 +594,11 @@ class TestProofGating:
         audit_log = response.json()["audit_log"]
 
         # Look for development mode bypass indicator
-        dev_mode_entries = [entry for entry in audit_log
-                           if "development_mode" in str(entry.get("proof_status", "")).lower()]
+        dev_mode_entries = [
+            entry
+            for entry in audit_log
+            if "development_mode" in str(entry.get("proof_status", "")).lower()
+        ]
 
         # May or may not have explicit dev mode markers, but should have processed
         print(f"✓ Proof-gating development mode: {len(audit_log)} total audit entries")

@@ -1,5 +1,5 @@
-from core.system_imports import *
 import pika
+from core.system_imports import *
 
 
 class AxiomaticProofEngine:
@@ -52,12 +52,16 @@ class ThonocWorker:
     def _connect_rabbitmq(self, host):
         for _ in range(10):
             try:
-                connection = pika.BlockingConnection(pika.ConnectionParameters(host, heartbeat=600))
+                connection = pika.BlockingConnection(
+                    pika.ConnectionParameters(host, heartbeat=600)
+                )
                 channel = connection.channel()
                 self.logger.info("Thonoc worker connected to RabbitMQ.")
                 return connection, channel
             except pika.exceptions.AMQPConnectionError:
-                self.logger.warning(f"Thonoc worker could not connect. Retrying in 5s...")
+                self.logger.warning(
+                    f"Thonoc worker could not connect. Retrying in 5s..."
+                )
                 time.sleep(5)
         raise ConnectionError("Thonoc worker could not connect to RabbitMQ")
 
@@ -123,14 +127,17 @@ class ThonocWorker:
         ch.basic_ack(delivery_tag=method.delivery_tag)
 
     def start(self):
-        self.channel.basic_consume(queue="thonoc_task_queue", on_message_callback=self.process_task)
+        self.channel.basic_consume(
+            queue="thonoc_task_queue", on_message_callback=self.process_task
+        )
         self.logger.info("Thonoc worker started and waiting for tasks.")
         self.channel.start_consuming()
 
 
 if __name__ == "__main__":
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
     worker = ThonocWorker(os.getenv("RABBITMQ_HOST", "rabbitmq"))
     worker.start()

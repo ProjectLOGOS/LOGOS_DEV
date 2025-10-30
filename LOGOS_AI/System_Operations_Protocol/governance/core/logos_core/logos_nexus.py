@@ -19,7 +19,9 @@ class LogosNexus:
         if config_path is None:
             # Default to config in parent directory
             current_dir = os.path.dirname(os.path.abspath(__file__))
-            config_path = os.path.join(os.path.dirname(current_dir), "configs", "config.json")
+            config_path = os.path.join(
+                os.path.dirname(current_dir), "configs", "config.json"
+            )
         self.validator = UnifiedFormalismValidator(config_path)
 
     def handle_request(

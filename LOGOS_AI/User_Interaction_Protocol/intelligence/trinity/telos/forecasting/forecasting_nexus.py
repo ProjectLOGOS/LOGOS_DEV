@@ -1,6 +1,7 @@
 import traceback
-from pmdarima import auto_arima
+
 from arch import arch_model
+from pmdarima import auto_arima
 
 
 class ForecastingNexus:
@@ -20,7 +21,9 @@ class ForecastingNexus:
                 raise ValueError("Not enough data for GARCH model.")
             garch_fit = arch_model(returns, vol="Garch", p=1, q=1).fit(disp="off")
             garch_fc = garch_fit.forecast(horizon=horizon)
-            report.append({"stage": "garch", "output": garch_fc.variance.iloc[-1].tolist()})
+            report.append(
+                {"stage": "garch", "output": garch_fc.variance.iloc[-1].tolist()}
+            )
         except Exception as e:
             report.append({"stage": "garch", "error": str(e)})
         return report

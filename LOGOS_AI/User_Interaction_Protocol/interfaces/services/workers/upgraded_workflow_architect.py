@@ -13,13 +13,13 @@ Core Capabilities:
 Dependencies: networkx, numpy
 """
 
-import logging
 import json
+import logging
 import uuid
-from typing import Dict, List, Any, Set, Optional, Tuple
-from datetime import datetime
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 import networkx as nx
 import numpy as np
@@ -170,21 +170,35 @@ class AdvancedWorkflowArchitect:
             required_capabilities.add("logical_reasoning")
 
         # Symbolic computation keywords
-        if any(keyword in goal_lower for keyword in ["equation", "symbolic", "lambda", "calculus"]):
+        if any(
+            keyword in goal_lower
+            for keyword in ["equation", "symbolic", "lambda", "calculus"]
+        ):
             required_capabilities.add("symbolic_computation")
 
         # Time series keywords
         if any(
-            keyword in goal_lower for keyword in ["time series", "forecast", "trend", "temporal"]
+            keyword in goal_lower
+            for keyword in ["time series", "forecast", "trend", "temporal"]
         ):
             required_capabilities.add("time_series_analysis")
 
         # Determine complexity level
-        complexity_indicators = ["complex", "comprehensive", "detailed", "thorough", "multi-step"]
-        complexity_level = sum(1 for indicator in complexity_indicators if indicator in goal_lower)
+        complexity_indicators = [
+            "complex",
+            "comprehensive",
+            "detailed",
+            "thorough",
+            "multi-step",
+        ]
+        complexity_level = sum(
+            1 for indicator in complexity_indicators if indicator in goal_lower
+        )
 
         # Template matching
-        template_match = self._find_matching_template(required_capabilities, complexity_level)
+        template_match = self._find_matching_template(
+            required_capabilities, complexity_level
+        )
 
         return {
             "required_capabilities": required_capabilities,
@@ -194,7 +208,9 @@ class AdvancedWorkflowArchitect:
             "estimated_resources": self._estimate_resource_requirements(
                 required_capabilities, complexity_level
             ),
-            "parallel_opportunities": self._identify_parallel_opportunities(required_capabilities),
+            "parallel_opportunities": self._identify_parallel_opportunities(
+                required_capabilities
+            ),
         }
 
     def _build_from_template(self, goal_analysis: Dict[str, Any]) -> nx.DiGraph:
@@ -214,7 +230,9 @@ class AdvancedWorkflowArchitect:
         # Add dependencies from template
         for prereq, dependent in template.dependency_rules:
             if prereq in task_nodes and dependent in task_nodes:
-                workflow_dag.add_edge(task_nodes[prereq].task_id, task_nodes[dependent].task_id)
+                workflow_dag.add_edge(
+                    task_nodes[prereq].task_id, task_nodes[dependent].task_id
+                )
 
         return workflow_dag
 
@@ -410,7 +428,9 @@ class AdvancedWorkflowArchitect:
             for synthesis_task in synthesis:
                 dag.add_edge(reasoning_task.task_id, synthesis_task.task_id)
 
-    def _add_intra_stage_dependencies(self, dag: nx.DiGraph, reasoning_tasks: List[TaskNode]):
+    def _add_intra_stage_dependencies(
+        self, dag: nx.DiGraph, reasoning_tasks: List[TaskNode]
+    ):
         """Add dependencies within reasoning stage where logical."""
         # Find causal discovery and causal model tasks
         causal_discovery = None
@@ -426,7 +446,9 @@ class AdvancedWorkflowArchitect:
         if causal_discovery and causal_model:
             dag.add_edge(causal_discovery.task_id, causal_model.task_id)
 
-    def _optimize_workflow(self, dag: nx.DiGraph, goal_analysis: Dict[str, Any]) -> nx.DiGraph:
+    def _optimize_workflow(
+        self, dag: nx.DiGraph, goal_analysis: Dict[str, Any]
+    ) -> nx.DiGraph:
         """Optimize workflow structure for efficiency and resource utilization."""
         optimized_dag = dag.copy()
 
@@ -453,14 +475,18 @@ class AdvancedWorkflowArchitect:
 
         return parallel_groups
 
-    def _balance_resource_utilization(self, dag: nx.DiGraph, parallel_groups: List[List[str]]):
+    def _balance_resource_utilization(
+        self, dag: nx.DiGraph, parallel_groups: List[List[str]]
+    ):
         """Balance resource utilization across parallel task groups."""
         for group in parallel_groups:
             total_cpu = sum(
-                dag.nodes[task_id]["task_node"].resource_requirements["cpu"] for task_id in group
+                dag.nodes[task_id]["task_node"].resource_requirements["cpu"]
+                for task_id in group
             )
             total_memory = sum(
-                dag.nodes[task_id]["task_node"].resource_requirements["memory"] for task_id in group
+                dag.nodes[task_id]["task_node"].resource_requirements["memory"]
+                for task_id in group
             )
 
             # Log resource utilization for monitoring
@@ -483,7 +509,8 @@ class AdvancedWorkflowArchitect:
                 try:
                     for path in nx.all_simple_paths(dag, source, sink):
                         path_duration = sum(
-                            dag.nodes[task_id]["task_node"].estimated_duration for task_id in path
+                            dag.nodes[task_id]["task_node"].estimated_duration
+                            for task_id in path
                         )
                         if path_duration > max_duration:
                             max_duration = path_duration
@@ -510,7 +537,9 @@ class AdvancedWorkflowArchitect:
 
         # Check connectivity
         if not nx.is_weakly_connected(dag):
-            self.logger.warning("Workflow DAG is not connected - may have isolated components")
+            self.logger.warning(
+                "Workflow DAG is not connected - may have isolated components"
+            )
 
         # Check for reasonable size
         if dag.number_of_nodes() > 50:
@@ -700,7 +729,9 @@ class AdvancedWorkflowArchitect:
         subsystem_str = task_spec.get("subsystem", "")
 
         # Convert strings to enums
-        task_type = TaskType(task_type_str) if task_type_str else TaskType.ANALYZE_PATTERNS
+        task_type = (
+            TaskType(task_type_str) if task_type_str else TaskType.ANALYZE_PATTERNS
+        )
         subsystem = Subsystem(subsystem_str) if subsystem_str else Subsystem.TETRAGNOS
 
         return TaskNode(

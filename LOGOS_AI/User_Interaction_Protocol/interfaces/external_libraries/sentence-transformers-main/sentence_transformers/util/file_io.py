@@ -176,7 +176,10 @@ def http_get(url: str, path: str) -> None:
 
     req = requests.get(url, stream=True)
     if req.status_code != 200:
-        print(f"Exception when trying to download {url}. Response {req.status_code}", file=sys.stderr)
+        print(
+            f"Exception when trying to download {url}. Response {req.status_code}",
+            file=sys.stderr,
+        )
         req.raise_for_status()
         return
 

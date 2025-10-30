@@ -7,4 +7,4 @@ Simplified to single core processor per refactor requirements.
 
 from .lambda_core import normalize_structure
 
-__all__ = ['normalize_structure']
+__all__ = ["normalize_structure"]

@@ -8,7 +8,11 @@ import pytest
 import torch
 from tokenizers.processors import TemplateProcessing
 
-from sentence_transformers import SparseEncoder, SparseEncoderTrainer, SparseEncoderTrainingArguments
+from sentence_transformers import (
+    SparseEncoder,
+    SparseEncoderTrainer,
+    SparseEncoderTrainingArguments,
+)
 from sentence_transformers.sparse_encoder import losses
 from sentence_transformers.util import is_datasets_available, is_training_available
 from tests.utils import SafeTemporaryDirectory
@@ -108,7 +112,9 @@ def test_trainer(
             logging_steps=1,
             remove_unused_columns=False,  # Important for custom dict datasets
         )
-        with context:  # context is nullcontext unless streaming causes issues not caught here
+        with (
+            context
+        ):  # context is nullcontext unless streaming causes issues not caught here
             trainer = SparseEncoderTrainer(
                 model=model,
                 args=args,
@@ -179,14 +185,26 @@ def test_data_collator(
 
     # Check that we can update the tokenizer in this way
     if has_eos_token:
-        assert model.tokenize(["dummy text"])["input_ids"].flatten()[-1] == dummy_eos_token_id
+        assert (
+            model.tokenize(["dummy text"])["input_ids"].flatten()[-1]
+            == dummy_eos_token_id
+        )
     else:
-        assert model.tokenize(["dummy text"])["input_ids"].flatten()[-1] != dummy_eos_token_id
+        assert (
+            model.tokenize(["dummy text"])["input_ids"].flatten()[-1]
+            != dummy_eos_token_id
+        )
 
     if has_bos_token:
-        assert model.tokenize(["dummy text"])["input_ids"].flatten()[0] == dummy_bos_token_id
+        assert (
+            model.tokenize(["dummy text"])["input_ids"].flatten()[0]
+            == dummy_bos_token_id
+        )
     else:
-        assert model.tokenize(["dummy text"])["input_ids"].flatten()[0] != dummy_bos_token_id
+        assert (
+            model.tokenize(["dummy text"])["input_ids"].flatten()[0]
+            != dummy_bos_token_id
+        )
 
     train_dataset = stsb_dataset_dict["train"].select(range(10))
     eval_dataset = stsb_dataset_dict["validation"].select(range(10))
@@ -215,7 +233,11 @@ def test_data_collator(
     trainer.train()
 
     # Check that the data collator correctly recognizes the prompt length
-    only_prompt_length = len(model.tokenizer(["Prompt: "], add_special_tokens=False)["input_ids"][0])
+    only_prompt_length = len(
+        model.tokenizer(["Prompt: "], add_special_tokens=False)["input_ids"][0]
+    )
     if has_bos_token:
         only_prompt_length += 1
-    assert trainer.data_collator._prompt_length_mapping == {("Prompt: ", None): only_prompt_length}
+    assert trainer.data_collator._prompt_length_mapping == {
+        ("Prompt: ", None): only_prompt_length
+    }

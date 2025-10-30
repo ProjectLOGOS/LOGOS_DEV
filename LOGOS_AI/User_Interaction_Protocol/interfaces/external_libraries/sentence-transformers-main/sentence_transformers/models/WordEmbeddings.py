@@ -39,7 +39,9 @@ class WordEmbeddings(Module):
         if isinstance(tokenizer, PreTrainedTokenizerBase):
             tokenizer = TransformersTokenizerWrapper(tokenizer)
         elif not isinstance(tokenizer, WordTokenizer):
-            raise ValueError("tokenizer must be a WordTokenizer or a HuggingFace tokenizer. ")
+            raise ValueError(
+                "tokenizer must be a WordTokenizer or a HuggingFace tokenizer. "
+            )
         if isinstance(embedding_weights, list):
             embedding_weights = np.asarray(embedding_weights)
 
@@ -122,11 +124,17 @@ class WordEmbeddings(Module):
         }
         config = cls.load_config(model_name_or_path=model_name_or_path, **hub_kwargs)
         tokenizer_class = import_from_string(config.pop("tokenizer_class"))
-        tokenizer_local_path = cls.load_dir_path(model_name_or_path=model_name_or_path, **hub_kwargs)
+        tokenizer_local_path = cls.load_dir_path(
+            model_name_or_path=model_name_or_path, **hub_kwargs
+        )
         tokenizer = tokenizer_class.load(tokenizer_local_path)
 
-        weights = cls.load_torch_weights(model_name_or_path=model_name_or_path, **hub_kwargs)
-        model = cls(tokenizer=tokenizer, embedding_weights=weights["emb_layer.weight"], **config)
+        weights = cls.load_torch_weights(
+            model_name_or_path=model_name_or_path, **hub_kwargs
+        )
+        model = cls(
+            tokenizer=tokenizer, embedding_weights=weights["emb_layer.weight"], **config
+        )
         return model
 
     @classmethod
@@ -141,12 +149,17 @@ class WordEmbeddings(Module):
         logger.info(f"Read in embeddings file {embeddings_file_path}")
 
         if not os.path.exists(embeddings_file_path):
-            logger.info(f"{embeddings_file_path} does not exist, try to download from server")
+            logger.info(
+                f"{embeddings_file_path} does not exist, try to download from server"
+            )
 
             if "/" in embeddings_file_path or "\\" in embeddings_file_path:
                 raise ValueError(f"Embeddings file not found: {embeddings_file_path}")
 
-            url = "https://public.ukp.informatik.tu-darmstadt.de/reimers/embeddings/" + embeddings_file_path
+            url = (
+                "https://public.ukp.informatik.tu-darmstadt.de/reimers/embeddings/"
+                + embeddings_file_path
+            )
             http_get(url, embeddings_file_path)
 
         embeddings_dimension = None
@@ -156,8 +169,8 @@ class WordEmbeddings(Module):
         with (
             gzip.open(embeddings_file_path, "rt", encoding="utf8")
             if embeddings_file_path.endswith(".gz")
-            else open(embeddings_file_path, encoding="utf8") as fIn
-        ):
+            else open(embeddings_file_path, encoding="utf8")
+        ) as fIn:
             iterator = tqdm(fIn, desc="Load Word Embeddings", unit="Embeddings")
             for line in iterator:
                 split = line.rstrip().split(item_separator)
@@ -184,10 +197,18 @@ class WordEmbeddings(Module):
                 embeddings.append(vector)
                 vocab.append(word)
 
-                if max_vocab_size is not None and max_vocab_size > 0 and len(vocab) > max_vocab_size:
+                if (
+                    max_vocab_size is not None
+                    and max_vocab_size > 0
+                    and len(vocab) > max_vocab_size
+                ):
                     break
 
             embeddings = np.asarray(embeddings)
 
             tokenizer.set_vocab(vocab)
-            return cls(tokenizer=tokenizer, embedding_weights=embeddings, update_embeddings=update_embeddings)
+            return cls(
+                tokenizer=tokenizer,
+                embedding_weights=embeddings,
+                update_embeddings=update_embeddings,
+            )

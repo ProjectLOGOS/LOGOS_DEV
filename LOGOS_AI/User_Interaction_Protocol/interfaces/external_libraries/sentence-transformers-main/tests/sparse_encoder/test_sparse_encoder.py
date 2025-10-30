@@ -7,7 +7,11 @@ import pytest
 import torch
 
 from sentence_transformers.models import Pooling, Transformer
-from sentence_transformers.sparse_encoder.models import MLMTransformer, SparseAutoEncoder, SpladePooling
+from sentence_transformers.sparse_encoder.models import (
+    MLMTransformer,
+    SparseAutoEncoder,
+    SpladePooling,
+)
 from sentence_transformers.sparse_encoder.SparseEncoder import SparseEncoder
 from tests.sparse_encoder.utils import sparse_allclose
 
@@ -28,7 +32,10 @@ from tests.sparse_encoder.utils import sparse_allclose
     ],
 )
 def test_decode_shapes(
-    splade_bert_tiny_model: SparseEncoder, texts: list[str] | str, top_k: int, expected_shape: int
+    splade_bert_tiny_model: SparseEncoder,
+    texts: list[str] | str,
+    top_k: int,
+    expected_shape: int,
 ) -> None:
     model = splade_bert_tiny_model
     embeddings = model.encode(texts)
@@ -56,7 +63,9 @@ def test_decode_shapes(
         ("It's sunny outside", str),
     ],
 )
-def test_decode_token_types(splade_bert_tiny_model: SparseEncoder, text: str, expected_token_types: type) -> None:
+def test_decode_token_types(
+    splade_bert_tiny_model: SparseEncoder, text: str, expected_token_types: type
+) -> None:
     model = splade_bert_tiny_model
     embeddings = model.encode(text)
     decoded = model.decode(embeddings)
@@ -75,7 +84,9 @@ def test_decode_token_types(splade_bert_tiny_model: SparseEncoder, text: str, ex
         ("Hello world", 5),
     ],
 )
-def test_decode_top_k_respects_limit(splade_bert_tiny_model: SparseEncoder, text: str, top_k: int) -> None:
+def test_decode_top_k_respects_limit(
+    splade_bert_tiny_model: SparseEncoder, text: str, top_k: int
+) -> None:
     model = splade_bert_tiny_model
     embeddings = model.encode([text])
     decoded = model.decode(embeddings, top_k=top_k)
@@ -121,8 +132,12 @@ def test_decode_handles_sparse_dense_inputs(
         assert len(decoded_sparse) == len(decoded_dense)
         for i in range(len(decoded_sparse)):
             # Sort both results to ensure consistent comparison
-            sorted_sparse = sorted(decoded_sparse[i], key=lambda x: (x[1], x[0]), reverse=True)
-            sorted_dense = sorted(decoded_dense[i], key=lambda x: (x[1], x[0]), reverse=True)
+            sorted_sparse = sorted(
+                decoded_sparse[i], key=lambda x: (x[1], x[0]), reverse=True
+            )
+            sorted_dense = sorted(
+                decoded_dense[i], key=lambda x: (x[1], x[0]), reverse=True
+            )
             assert len(sorted_sparse) == len(sorted_dense)
 
 
@@ -136,7 +151,9 @@ def test_decode_empty_tensor(splade_bert_tiny_model: SparseEncoder) -> None:
     )
 
     decoded = model.decode(empty_sparse)
-    assert len(decoded) == 0 or (isinstance(decoded, list) and all(not item for item in decoded))
+    assert len(decoded) == 0 or (
+        isinstance(decoded, list) and all(not item for item in decoded)
+    )
 
 
 @pytest.mark.parametrize(
@@ -182,7 +199,9 @@ def test_inference_free_splade(inference_free_splade_bert_tiny_model: SparseEnco
 
     decoded_query = model.decode(query_embeddings)
     decoded_document = model.decode(document_embeddings)
-    assert len(decoded_query) == len(model.tokenize(query, task="query")["input_ids"][0])
+    assert len(decoded_query) == len(
+        model.tokenize(query, task="query")["input_ids"][0]
+    )
     assert len(decoded_document) >= 50
 
     assert model.max_seq_length == 512
@@ -195,7 +214,9 @@ def test_inference_free_splade(inference_free_splade_bert_tiny_model: SparseEnco
     assert model[0].sub_modules["document"][0].max_seq_length == 256
 
 
-@pytest.mark.parametrize("sentences", ["Hello world", ["Hello world", "This is a test"], [], [""]])
+@pytest.mark.parametrize(
+    "sentences", ["Hello world", ["Hello world", "This is a test"], [], [""]]
+)
 @pytest.mark.parametrize("prompt_name", [None, "query", "custom"])
 @pytest.mark.parametrize("prompt", [None, "Custom prompt: "])
 @pytest.mark.parametrize("convert_to_tensor", [True, False])
@@ -248,8 +269,12 @@ def test_encode_query(
         assert kwargs["task"] == "query"
 
 
-@pytest.mark.parametrize("sentences", ["Hello world", ["Hello world", "This is a test"], [], [""]])
-@pytest.mark.parametrize("prompt_name", [None, "document", "passage", "corpus", "custom"])
+@pytest.mark.parametrize(
+    "sentences", ["Hello world", ["Hello world", "This is a test"], [], [""]]
+)
+@pytest.mark.parametrize(
+    "prompt_name", [None, "document", "passage", "corpus", "custom"]
+)
 @pytest.mark.parametrize("prompt", [None, "Custom prompt: "])
 @pytest.mark.parametrize("convert_to_tensor", [True, False])
 @pytest.mark.parametrize("convert_to_sparse_tensor", [True, False])
@@ -263,7 +288,12 @@ def test_encode_document(
 ):
     # Create a mock model with required prompts
     model = splade_bert_tiny_model
-    model.prompts = {"document": "document: ", "passage": "passage: ", "corpus": "corpus: ", "custom": "custom: "}
+    model.prompts = {
+        "document": "document: ",
+        "passage": "passage: ",
+        "corpus": "corpus: ",
+        "custom": "custom: ",
+    }
 
     # Create a mock for the encode method
     with patch.object(model, "encode", autospec=True) as mock_encode:
@@ -376,7 +406,9 @@ def test_encode_advanced_parameters(splade_bert_tiny_model: SparseEncoder):
 
 
 @pytest.mark.parametrize("inputs", ["test sentence", ["test sentence"]])
-def test_encode_query_document_vs_encode(splade_bert_tiny_model: SparseEncoder, inputs: str | list[str]):
+def test_encode_query_document_vs_encode(
+    splade_bert_tiny_model: SparseEncoder, inputs: str | list[str]
+):
     """Test the actual integration with encode vs encode_query/encode_document"""
     # This test requires a real model, but we'll use a small one
     model = splade_bert_tiny_model
@@ -445,7 +477,9 @@ def test_wrong_prompt(splade_bert_tiny_model: SparseEncoder):
             encode_method("test", prompt_name="invalid_prompt")
 
 
-def test_max_active_dims_set_init(splade_bert_tiny_model: SparseEncoder, csr_bert_tiny_model: SparseEncoder, tmp_path):
+def test_max_active_dims_set_init(
+    splade_bert_tiny_model: SparseEncoder, csr_bert_tiny_model: SparseEncoder, tmp_path
+):
     splade_bert_tiny_model.save_pretrained(str(tmp_path / "splade_bert_tiny"))
     csr_bert_tiny_model.save_pretrained(str(tmp_path / "csr_bert_tiny"))
 
@@ -456,7 +490,9 @@ def test_max_active_dims_set_init(splade_bert_tiny_model: SparseEncoder, csr_ber
     assert loaded_model.max_active_dims == 13
 
     loaded_model = SparseEncoder(str(tmp_path / "csr_bert_tiny"))
-    assert loaded_model.max_active_dims == 16  # Based on the SparseAutoEncoder's k value
+    assert (
+        loaded_model.max_active_dims == 16
+    )  # Based on the SparseAutoEncoder's k value
     loaded_model = SparseEncoder(str(tmp_path / "csr_bert_tiny"), max_active_dims=13)
     assert loaded_model.max_active_dims == 13
 
@@ -481,7 +517,9 @@ def test_sparsity(splade_bert_tiny_model: SparseEncoder):
     model = splade_bert_tiny_model
 
     # Check that the sparsity is applied correctly
-    embeddings = model.encode_query(["What is the capital of France?", "Who has won the World Cup in 2016?"])
+    embeddings = model.encode_query(
+        ["What is the capital of France?", "Who has won the World Cup in 2016?"]
+    )
     sparsity = model.sparsity(embeddings)
     assert isinstance(sparsity, dict)
     assert "active_dims" in sparsity
@@ -491,12 +529,16 @@ def test_sparsity(splade_bert_tiny_model: SparseEncoder):
 
     # Also check with dense tensors
     dense_sparsity = model.sparsity(embeddings.to_dense())
-    assert dense_sparsity == sparsity, "Sparsity should be the same for dense and sparse tensors"
+    assert (
+        dense_sparsity == sparsity
+    ), "Sparsity should be the same for dense and sparse tensors"
 
     # Check that 1-dimensional embeddings work correctly
     sparsity_one = model.sparsity(embeddings[0])
     sparsity_two = model.sparsity(embeddings[1])
-    assert (sparsity_one["active_dims"] + sparsity_two["active_dims"]) / 2 == sparsity["active_dims"]
+    assert (sparsity_one["active_dims"] + sparsity_two["active_dims"]) / 2 == sparsity[
+        "active_dims"
+    ]
 
 
 def test_splade_pooling_chunk_size(splade_bert_tiny_model: SparseEncoder):
@@ -536,13 +578,19 @@ def test_intersection(splade_bert_tiny_model: SparseEncoder):
 
     # Test with multiple texts
     query = "Who has won the World Cup in 2016?"
-    documents = ["The capital of France is Paris.", "Germany won the World Cup in 2014."]
+    documents = [
+        "The capital of France is Paris.",
+        "Germany won the World Cup in 2014.",
+    ]
     query_embeddings = model.encode_query(query)
     document_embeddings = model.encode_document(documents)
 
     intersection_batch = model.intersection(query_embeddings, document_embeddings)
     assert isinstance(intersection_batch, torch.Tensor)
-    assert intersection_batch.shape == (len(documents), model.get_sentence_embedding_dimension())
+    assert intersection_batch.shape == (
+        len(documents),
+        model.get_sentence_embedding_dimension(),
+    )
 
     decoded_intersection_batch = model.decode(intersection_batch)
     assert len(decoded_intersection_batch) == len(documents)

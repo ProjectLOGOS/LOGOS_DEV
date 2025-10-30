@@ -4,7 +4,12 @@ import logging
 from collections.abc import Iterable
 
 from torch import Tensor, nn
-from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer, PreTrainedModel
+from transformers import (
+    AutoConfig,
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    PreTrainedModel,
+)
 
 from sentence_transformers import SentenceTransformer
 from sentence_transformers.models import StaticEmbedding
@@ -14,7 +19,10 @@ logger = logging.getLogger(__name__)
 
 class DenoisingAutoEncoderLoss(nn.Module):
     def __init__(
-        self, model: SentenceTransformer, decoder_name_or_path: str | None = None, tie_encoder_decoder: bool = True
+        self,
+        model: SentenceTransformer,
+        decoder_name_or_path: str | None = None,
+        tie_encoder_decoder: bool = True,
     ) -> None:
         r"""
         This loss expects as input a pairs of damaged sentences and the corresponding original ones.
@@ -80,7 +88,9 @@ class DenoisingAutoEncoderLoss(nn.Module):
                 "DenoisingAutoEncoderLoss is not compatible with a SentenceTransformer model based on a StaticEmbedding."
             )
 
-        self.encoder = model  # This will be the final model used during the inference time.
+        self.encoder = (
+            model  # This will be the final model used during the inference time.
+        )
         self.tokenizer_encoder = model.tokenizer
 
         encoder_name_or_path = model.transformers_model.config._name_or_path
@@ -90,37 +100,51 @@ class DenoisingAutoEncoderLoss(nn.Module):
             ), "Must indicate the decoder_name_or_path argument when tie_encoder_decoder=False!"
         if tie_encoder_decoder:
             if decoder_name_or_path:
-                logger.warning("When tie_encoder_decoder=True, the decoder_name_or_path will be invalid.")
+                logger.warning(
+                    "When tie_encoder_decoder=True, the decoder_name_or_path will be invalid."
+                )
             decoder_name_or_path = encoder_name_or_path
 
         self.tokenizer_decoder = AutoTokenizer.from_pretrained(decoder_name_or_path)
-        self.need_retokenization = not isinstance(self.tokenizer_encoder, type(self.tokenizer_decoder))
+        self.need_retokenization = not isinstance(
+            self.tokenizer_encoder, type(self.tokenizer_decoder)
+        )
 
         decoder_config = AutoConfig.from_pretrained(decoder_name_or_path)
         decoder_config.is_decoder = True
         decoder_config.add_cross_attention = True
         kwargs_decoder = {"config": decoder_config}
         try:
-            self.decoder = AutoModelForCausalLM.from_pretrained(decoder_name_or_path, **kwargs_decoder)
+            self.decoder = AutoModelForCausalLM.from_pretrained(
+                decoder_name_or_path, **kwargs_decoder
+            )
         except ValueError as e:
             logger.error(
                 f'Model name or path "{decoder_name_or_path}" does not support being as a decoder. Please make sure the decoder model has an "XXXLMHead" class.'
             )
             raise e
-        assert model.transformers_model.config.hidden_size == decoder_config.hidden_size, "Hidden sizes do not match!"
+        assert (
+            model.transformers_model.config.hidden_size == decoder_config.hidden_size
+        ), "Hidden sizes do not match!"
         if self.tokenizer_decoder.pad_token is None:
             # Needed by GPT-2, etc.
             self.tokenizer_decoder.pad_token = self.tokenizer_decoder.eos_token
             self.decoder.config.pad_token_id = self.decoder.config.eos_token_id
 
-        if len(AutoTokenizer.from_pretrained(encoder_name_or_path)) != len(self.tokenizer_encoder):
+        if len(AutoTokenizer.from_pretrained(encoder_name_or_path)) != len(
+            self.tokenizer_encoder
+        ):
             logger.warning(
                 "WARNING: The vocabulary of the encoder has been changed. One might need to change the decoder vocabulary, too."
             )
 
         if tie_encoder_decoder:
-            assert not self.need_retokenization, "The tokenizers should be the same when tie_encoder_decoder=True."
-            if len(self.tokenizer_encoder) != len(self.tokenizer_decoder):  # The vocabulary has been changed.
+            assert (
+                not self.need_retokenization
+            ), "The tokenizers should be the same when tie_encoder_decoder=True."
+            if len(self.tokenizer_encoder) != len(
+                self.tokenizer_decoder
+            ):  # The vocabulary has been changed.
                 self.tokenizer_decoder = self.tokenizer_encoder
                 self.decoder.resize_token_embeddings(len(self.tokenizer_decoder))
                 logger.warning(
@@ -150,11 +174,17 @@ class DenoisingAutoEncoderLoss(nn.Module):
             input_ids, skip_special_tokens=True, clean_up_tokenization_spaces=True
         )
         retokenized = self.tokenizer_decoder(
-            sentences_decoded, padding=True, truncation="longest_first", return_tensors="pt", max_length=None
+            sentences_decoded,
+            padding=True,
+            truncation="longest_first",
+            return_tensors="pt",
+            max_length=None,
         ).to(device)
         return retokenized
 
-    def forward(self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor) -> Tensor:
+    def forward(
+        self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor
+    ) -> Tensor:
         source_features, target_features = tuple(sentence_features)
         if self.need_retokenization:
             # since the sentence_features here are all tokenized by encoder's tokenizer,
@@ -181,8 +211,12 @@ class DenoisingAutoEncoderLoss(nn.Module):
 
         # Calculate loss
         lm_logits = decoder_outputs[0]
-        ce_loss_fct = nn.CrossEntropyLoss(ignore_index=self.tokenizer_decoder.pad_token_id)
-        loss = ce_loss_fct(lm_logits.view(-1, lm_logits.shape[-1]), label_ids.reshape(-1))
+        ce_loss_fct = nn.CrossEntropyLoss(
+            ignore_index=self.tokenizer_decoder.pad_token_id
+        )
+        loss = ce_loss_fct(
+            lm_logits.view(-1, lm_logits.shape[-1]), label_ids.reshape(-1)
+        )
         return loss
 
     @property

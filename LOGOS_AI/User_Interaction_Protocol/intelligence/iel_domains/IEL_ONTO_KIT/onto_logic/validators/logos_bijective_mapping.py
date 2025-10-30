@@ -7,10 +7,11 @@ and logical domains with invariant preservation properties.
 Dependencies: sympy, numpy
 """
 
+from typing import Dict, List, Optional, Set, Tuple, Union
+
 import numpy as np
 import sympy as sp
-from sympy import Symbol, symbols, Function, Matrix, Rational, S
-from typing import Dict, List, Tuple, Set, Optional, Union
+from sympy import Function, Matrix, Rational, S, Symbol, symbols
 
 
 class TranscendentalDomain:

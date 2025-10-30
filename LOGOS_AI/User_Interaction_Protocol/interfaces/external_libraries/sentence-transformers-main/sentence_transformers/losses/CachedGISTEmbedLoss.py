@@ -48,7 +48,9 @@ def _backward_hook(
     assert loss_obj.cache is not None
     assert loss_obj.random_states is not None
     with torch.enable_grad():
-        for sentence_feature, grad, random_states in zip(sentence_features, loss_obj.cache, loss_obj.random_states):
+        for sentence_feature, grad, random_states in zip(
+            sentence_features, loss_obj.cache, loss_obj.random_states
+        ):
             for (reps_mb, _, _), grad_mb in zip(
                 loss_obj.embed_minibatch_iter(
                     sentence_feature=sentence_feature,
@@ -58,7 +60,9 @@ def _backward_hook(
                 ),
                 grad,
             ):
-                surrogate = torch.dot(reps_mb.flatten(), grad_mb.flatten()) * grad_output
+                surrogate = (
+                    torch.dot(reps_mb.flatten(), grad_mb.flatten()) * grad_output
+                )
                 surrogate.backward()
 
 
@@ -180,7 +184,9 @@ class CachedGISTEmbedLoss(nn.Module):
         self.temperature = temperature
         self.similarity_fct = nn.CosineSimilarity(dim=-1)
         if not hasattr(model, "tokenizer") or not hasattr(guide, "tokenizer"):
-            raise ValueError("Both the training model and the guiding model must have a tokenizer attribute.")
+            raise ValueError(
+                "Both the training model and the guiding model must have a tokenizer attribute."
+            )
         if not isinstance(model.tokenizer, PreTrainedTokenizerBase) or not isinstance(
             guide.tokenizer, PreTrainedTokenizerBase
         ):
@@ -192,7 +198,8 @@ class CachedGISTEmbedLoss(nn.Module):
         self.random_states: list[list[RandContext]] | None = None
         self.show_progress_bar = show_progress_bar
         self.must_retokenize = (
-            model.tokenizer.vocab != guide.tokenizer.vocab or guide.max_seq_length < model.max_seq_length
+            model.tokenizer.vocab != guide.tokenizer.vocab
+            or guide.max_seq_length < model.max_seq_length
         )
         if self.must_retokenize:
             self.tokenizer = model.tokenizer
@@ -220,21 +227,33 @@ class CachedGISTEmbedLoss(nn.Module):
         """Do forward pass on a minibatch of the input features and return corresponding embeddings."""
         grad_context = nullcontext if with_grad else torch.no_grad
         random_state_context = nullcontext() if random_state is None else random_state
-        sentence_feature_minibatch = {k: v[begin:end] for k, v in sentence_feature.items()}
+        sentence_feature_minibatch = {
+            k: v[begin:end] for k, v in sentence_feature.items()
+        }
         with random_state_context:
             with grad_context():
-                random_state = RandContext(*sentence_feature_minibatch.values()) if copy_random_state else None
-                reps = self.model(sentence_feature_minibatch)["sentence_embedding"]  # (mbsz, hdim)
+                random_state = (
+                    RandContext(*sentence_feature_minibatch.values())
+                    if copy_random_state
+                    else None
+                )
+                reps = self.model(sentence_feature_minibatch)[
+                    "sentence_embedding"
+                ]  # (mbsz, hdim)
             with torch.no_grad():
                 if self.must_retokenize:
                     decoded = self.tokenizer.batch_decode(
-                        sentence_feature_minibatch["input_ids"], skip_special_tokens=True
+                        sentence_feature_minibatch["input_ids"],
+                        skip_special_tokens=True,
                     )
                     sentence_feature_minibatch = self.guide.tokenize(decoded)
                     sentence_feature_minibatch = {
-                        key: value.to(self.guide.device) for key, value in sentence_feature_minibatch.items()
+                        key: value.to(self.guide.device)
+                        for key, value in sentence_feature_minibatch.items()
                     }
-                guide_reps = self.guide(sentence_feature_minibatch)["sentence_embedding"]
+                guide_reps = self.guide(sentence_feature_minibatch)[
+                    "sentence_embedding"
+                ]
 
         return reps, guide_reps, random_state
 
@@ -268,7 +287,9 @@ class CachedGISTEmbedLoss(nn.Module):
             )
             yield reps, guide_reps, random_state  # reps: (mbsz, hdim)
 
-    def calculate_loss_and_cache_gradients(self, reps: list[list[Tensor]], reps_guided: list[list[Tensor]]) -> Tensor:
+    def calculate_loss_and_cache_gradients(
+        self, reps: list[list[Tensor]], reps_guided: list[list[Tensor]]
+    ) -> Tensor:
         """Generalized function to calculate the cross-entropy loss and cache the gradients wrt. the embeddings."""
         loss = self.calculate_loss(reps, reps_guided, with_backward=True)
         loss = loss.detach().requires_grad_()
@@ -278,7 +299,10 @@ class CachedGISTEmbedLoss(nn.Module):
         return loss
 
     def calculate_loss(
-        self, reps: list[list[Tensor]], reps_guided: list[list[Tensor]], with_backward: bool = False
+        self,
+        reps: list[list[Tensor]],
+        reps_guided: list[list[Tensor]],
+        with_backward: bool = False,
     ) -> Tensor:
         """Generalized function to calculate the cross-entropy loss without caching gradients."""
         if len(reps) != len(reps_guided):
@@ -288,7 +312,9 @@ class CachedGISTEmbedLoss(nn.Module):
         anchors = torch.cat(reps[0])  # (batch_size, embedding_dim)
         anchors_guide = torch.cat(reps_guided[0])  # (batch_size, embedding_dim)
         candidates = [torch.cat(r) for r in reps[1:]]  # 1 + nneg items of (bsz, hdim)
-        candidates_guide = [torch.cat(r) for r in reps_guided[1:]]  # 1 + nneg items of (bsz, hdim)
+        candidates_guide = [
+            torch.cat(r) for r in reps_guided[1:]
+        ]  # 1 + nneg items of (bsz, hdim)
 
         batch_size = anchors.size(0)
         offset = 0
@@ -298,7 +324,9 @@ class CachedGISTEmbedLoss(nn.Module):
             # device's anchors with all candidates from all devices, such that the backward pass on the document
             # embeddings can flow back to the original devices.
             candidates = [all_gather_with_grad(candidate) for candidate in candidates]
-            candidates_guide = [all_gather_with_grad(candidate) for candidate in candidates_guide]
+            candidates_guide = [
+                all_gather_with_grad(candidate) for candidate in candidates_guide
+            ]
             # All have this shape: 1 + nneg items of (batch_size * world_size, embedding_dim)
 
             if torch.distributed.is_initialized():
@@ -320,14 +348,20 @@ class CachedGISTEmbedLoss(nn.Module):
             end = begin + self.mini_batch_size
 
             # Compute the similarities given the training and guide embeddings.
-            ap_sim = self.sim_matrix(anchors[begin:end], candidates[0])  # anchor-positive similarity
-            guided_ap_sim = self.sim_matrix(anchors_guide[begin:end], candidates_guide[0])
+            ap_sim = self.sim_matrix(
+                anchors[begin:end], candidates[0]
+            )  # anchor-positive similarity
+            guided_ap_sim = self.sim_matrix(
+                anchors_guide[begin:end], candidates_guide[0]
+            )
 
             # Define the anchor threshold
             guided_sim = guided_ap_sim.diagonal(offset=offset + begin).view(-1, 1)
 
             # This uses guided (teacher) similarity as a dynamic threshold to identify and suppress false negatives
-            def mask_false_negatives(guided_sim_mat, sim_mat, positive_mask: Tensor | None = None):
+            def mask_false_negatives(
+                guided_sim_mat, sim_mat, positive_mask: Tensor | None = None
+            ):
                 if self.margin_strategy == "absolute":
                     # Remove samples whose guided similarity is higher than (positive_sim - margin)
                     mask = guided_sim_mat > (guided_sim - self.margin)
@@ -342,11 +376,15 @@ class CachedGISTEmbedLoss(nn.Module):
                 return sim_mat
 
             # Create a mask to protect true positive pairs in the anchor-positive matrix (i.e., diagonal elements)
-            positive_mask = torch.eye(*guided_ap_sim.shape, dtype=torch.bool, device=guided_ap_sim.device)
+            positive_mask = torch.eye(
+                *guided_ap_sim.shape, dtype=torch.bool, device=guided_ap_sim.device
+            )
             positive_mask = positive_mask.roll(begin)
 
             # Apply false negative suppression to each similarity matrix using guided similarity as anchor
-            ap_sim = mask_false_negatives(guided_ap_sim, ap_sim, positive_mask=positive_mask)  # anchor-positive
+            ap_sim = mask_false_negatives(
+                guided_ap_sim, ap_sim, positive_mask=positive_mask
+            )  # anchor-positive
             scores = [ap_sim]
 
             if self.contrast_anchors:
@@ -357,19 +395,31 @@ class CachedGISTEmbedLoss(nn.Module):
 
             if self.contrast_positives:
                 pp_sim = self.sim_matrix(
-                    candidates[0][offset + begin : min(offset + end, offset + batch_size)], candidates[0]
+                    candidates[0][
+                        offset + begin : min(offset + end, offset + batch_size)
+                    ],
+                    candidates[0],
                 )
                 guided_pp_sim = self.sim_matrix(
-                    candidates_guide[0][offset + begin : min(offset + end, offset + batch_size)], candidates_guide[0]
+                    candidates_guide[0][
+                        offset + begin : min(offset + end, offset + batch_size)
+                    ],
+                    candidates_guide[0],
                 )
-                pp_sim = mask_false_negatives(guided_pp_sim, pp_sim)  # positive-positive
+                pp_sim = mask_false_negatives(
+                    guided_pp_sim, pp_sim
+                )  # positive-positive
                 scores.append(pp_sim)
 
             # If there are negatives (len(candidates) > 1), process them
             if len(candidates) > 1:
-                for i in range(1, len(candidates)):  # Start from 1 since the first is the positive
+                for i in range(
+                    1, len(candidates)
+                ):  # Start from 1 since the first is the positive
                     neg_sim = self.sim_matrix(anchors[begin:end], candidates[i])
-                    guided_neg_sim = self.sim_matrix(anchors_guide[begin:end], candidates_guide[i])
+                    guided_neg_sim = self.sim_matrix(
+                        anchors_guide[begin:end], candidates_guide[i]
+                    )
                     neg_sim = mask_false_negatives(guided_neg_sim, neg_sim)
                     scores.append(neg_sim)  # anchor-negative
 
@@ -379,7 +429,9 @@ class CachedGISTEmbedLoss(nn.Module):
             # Normalize the scores and calculate the cross-entropy loss
             scores = scores / self.temperature
             loss_mbatch: torch.Tensor = (
-                self.cross_entropy_loss(scores, range_labels[begin:end]) * len(scores) / batch_size
+                self.cross_entropy_loss(scores, range_labels[begin:end])
+                * len(scores)
+                / batch_size
             )
             if with_backward:
                 loss_mbatch.backward()
@@ -389,11 +441,15 @@ class CachedGISTEmbedLoss(nn.Module):
         loss = sum(losses)
         return loss
 
-    def forward(self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor) -> Tensor:
+    def forward(
+        self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor
+    ) -> Tensor:
         # Step (1): A quick embedding step without gradients/computation graphs to get all the embeddings
         reps = []
         reps_guided = []
-        self.random_states = []  # Copy random states to guarantee exact reproduction of the embeddings during the second forward pass, i.e. step (3)
+        self.random_states = (
+            []
+        )  # Copy random states to guarantee exact reproduction of the embeddings during the second forward pass, i.e. step (3)
         for sentence_feature in sentence_features:
             reps_mbs = []
             reps_guided_mbs = []
@@ -404,7 +460,9 @@ class CachedGISTEmbedLoss(nn.Module):
                 copy_random_state=True,
             ):
                 reps_mbs.append(reps_mb.detach().requires_grad_())
-                reps_guided_mbs.append(reps_guided_mb.detach())  # does not requires gradient
+                reps_guided_mbs.append(
+                    reps_guided_mb.detach()
+                )  # does not requires gradient
                 random_state_mbs.append(random_state)
             reps.append(reps_mbs)
             reps_guided.append(reps_guided_mbs)
@@ -415,7 +473,11 @@ class CachedGISTEmbedLoss(nn.Module):
             loss = self.calculate_loss_and_cache_gradients(reps, reps_guided)
 
             # Step (3): A 2nd embedding step with gradients/computation graphs and connect the cached gradients into the backward chain
-            loss.register_hook(partial(_backward_hook, sentence_features=sentence_features, loss_obj=self))
+            loss.register_hook(
+                partial(
+                    _backward_hook, sentence_features=sentence_features, loss_obj=self
+                )
+            )
         else:
             # If grad is not enabled (e.g. in evaluation), then we don't have to worry about the gradients or backward hook
             loss = self.calculate_loss(reps, reps_guided)

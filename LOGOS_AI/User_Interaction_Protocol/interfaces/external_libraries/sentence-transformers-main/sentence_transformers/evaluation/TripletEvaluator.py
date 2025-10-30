@@ -93,7 +93,9 @@ class TripletEvaluator(SentenceEvaluator):
         show_progress_bar: bool = False,
         write_csv: bool = True,
         truncate_dim: int | None = None,
-        similarity_fn_names: list[Literal["cosine", "dot", "euclidean", "manhattan"]] | None = None,
+        similarity_fn_names: (
+            list[Literal["cosine", "dot", "euclidean", "manhattan"]] | None
+        ) = None,
         main_distance_function: str | SimilarityFunction | None = "deprecated",
     ):
         super().__init__()
@@ -114,14 +116,21 @@ class TripletEvaluator(SentenceEvaluator):
             )
 
         self.main_similarity_function = (
-            SimilarityFunction(main_similarity_function) if main_similarity_function else None
+            SimilarityFunction(main_similarity_function)
+            if main_similarity_function
+            else None
         )
         self.similarity_fn_names = similarity_fn_names or []
 
         if margin is None:
             self.margin = {"cosine": 0, "dot": 0, "manhattan": 0, "euclidean": 0}
         elif isinstance(margin, (float, int)):
-            self.margin = {"cosine": margin, "dot": margin, "manhattan": margin, "euclidean": margin}
+            self.margin = {
+                "cosine": margin,
+                "dot": margin,
+                "manhattan": margin,
+                "euclidean": margin,
+            }
         elif isinstance(margin, dict):
             self.margin = {
                 **{"cosine": 0, "dot": 0, "manhattan": 0, "euclidean": 0},
@@ -135,11 +144,14 @@ class TripletEvaluator(SentenceEvaluator):
         self.batch_size = batch_size
         if show_progress_bar is None:
             show_progress_bar = (
-                logger.getEffectiveLevel() == logging.INFO or logger.getEffectiveLevel() == logging.DEBUG
+                logger.getEffectiveLevel() == logging.INFO
+                or logger.getEffectiveLevel() == logging.DEBUG
             )
         self.show_progress_bar = show_progress_bar
 
-        self.csv_file: str = "triplet_evaluation" + ("_" + name if name else "") + "_results.csv"
+        self.csv_file: str = (
+            "triplet_evaluation" + ("_" + name if name else "") + "_results.csv"
+        )
         self.csv_headers = ["epoch", "steps"]
         self.write_csv = write_csv
 
@@ -162,7 +174,11 @@ class TripletEvaluator(SentenceEvaluator):
         return cls(anchors, positives, negatives, **kwargs)
 
     def __call__(
-        self, model: SentenceTransformer, output_path: str | None = None, epoch: int = -1, steps: int = -1
+        self,
+        model: SentenceTransformer,
+        output_path: str | None = None,
+        epoch: int = -1,
+        steps: int = -1,
     ) -> dict[str, float]:
         if epoch != -1:
             if steps == -1:
@@ -174,7 +190,9 @@ class TripletEvaluator(SentenceEvaluator):
         if self.truncate_dim is not None:
             out_txt += f" (truncated to {self.truncate_dim})"
 
-        logger.info(f"TripletEvaluator: Evaluating the model on the {self.name} dataset{out_txt}:")
+        logger.info(
+            f"TripletEvaluator: Evaluating the model on the {self.name} dataset{out_txt}:"
+        )
 
         embeddings_anchors = self.embed_inputs(model, self.anchors)
         embeddings_positives = self.embed_inputs(model, self.positives)
@@ -209,9 +227,16 @@ class TripletEvaluator(SentenceEvaluator):
                 positive_scores, negative_scores = similarity_functions[fn_name](
                     embeddings_anchors, embeddings_positives, embeddings_negatives
                 )
-                accuracy = (positive_scores > negative_scores + self.margin[fn_name]).float().mean().item()
+                accuracy = (
+                    (positive_scores > negative_scores + self.margin[fn_name])
+                    .float()
+                    .mean()
+                    .item()
+                )
                 metrics[f"{fn_name}_accuracy"] = accuracy
-                logger.info(f"Accuracy {fn_name.capitalize()} Similarity:\t{accuracy:.2%}")
+                logger.info(
+                    f"Accuracy {fn_name.capitalize()} Similarity:\t{accuracy:.2%}"
+                )
 
         if output_path is not None and self.write_csv:
             csv_path = os.path.join(output_path, self.csv_file)

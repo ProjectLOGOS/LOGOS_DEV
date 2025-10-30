@@ -25,7 +25,10 @@ class Router(InputModule):
     config_file_name = "router_config.json"
 
     def __init__(
-        self, sub_modules: dict[str, list[Module]], default_route: str | None = None, allow_empty_key: bool = True
+        self,
+        sub_modules: dict[str, list[Module]],
+        default_route: str | None = None,
+        allow_empty_key: bool = True,
     ) -> None:
         r"""
         This model allows to create asymmetric SentenceTransformer models that apply different modules depending on the specified route,
@@ -172,10 +175,15 @@ class Router(InputModule):
         if sub_modules is None or len(sub_modules) == 0:
             raise ValueError("The routes dictionary cannot be empty.")
         if default_route is not None and default_route not in sub_modules:
-            raise ValueError(f"Default route '{default_route}' not found in route keys: {list(sub_modules.keys())}")
+            raise ValueError(
+                f"Default route '{default_route}' not found in route keys: {list(sub_modules.keys())}"
+            )
 
         self.sub_modules = nn.ModuleDict(
-            {route_name: nn.Sequential(*modules) for route_name, modules in sub_modules.items()}
+            {
+                route_name: nn.Sequential(*modules)
+                for route_name, modules in sub_modules.items()
+            }
         )
 
         # If allow_empty_key is True, we can set a default route to the first key in sub_modules.
@@ -214,7 +222,9 @@ class Router(InputModule):
             allow_empty_key=allow_empty_key,
         )
 
-    def forward(self, features: dict[str, Tensor], task: str | None = None, **kwargs) -> dict[str, Tensor]:
+    def forward(
+        self, features: dict[str, Tensor], task: str | None = None, **kwargs
+    ) -> dict[str, Tensor]:
         if task is None:
             task = features.get("task", self.default_route)
         if task is None:
@@ -261,7 +271,9 @@ class Router(InputModule):
             for module_idx, model in enumerate(models):
                 model_id = f"{name}_{module_idx}_{type(model).__name__}"
                 model_lookup[model_id] = model
-                model_types[model_id] = f"{type(model).__module__}.{type(model).__name__}"
+                model_types[model_id] = (
+                    f"{type(model).__module__}.{type(model).__name__}"
+                )
                 model_structure[name].append(model_id)
 
         for model_id, model in model_lookup.items():
@@ -273,7 +285,9 @@ class Router(InputModule):
                 # Fallback for legacy models that do not support kwargs
                 model.save(model_path)
 
-        with open(os.path.join(output_path, self.config_file_name), "w", encoding="utf8") as fOut:
+        with open(
+            os.path.join(output_path, self.config_file_name), "w", encoding="utf8"
+        ) as fOut:
             json.dump(
                 {
                     "types": model_types,
@@ -284,7 +298,12 @@ class Router(InputModule):
                 indent=4,
             )
 
-    def tokenize(self, texts: list[str] | list[tuple[str, str]], task: str | None = None, **kwargs):
+    def tokenize(
+        self,
+        texts: list[str] | list[tuple[str, str]],
+        task: str | None = None,
+        **kwargs,
+    ):
         """Tokenizes a text and maps tokens to token-ids"""
         if isinstance(texts[0], dict):
             # Extract the task type key from the dictionaries
@@ -341,21 +360,31 @@ class Router(InputModule):
             "local_files_only": local_files_only,
         }
         # Try the official config file first, then fall back to the legacy config file
-        config = cls.load_config(model_name_or_path=model_name_or_path, subfolder=subfolder, **hub_kwargs)
+        config = cls.load_config(
+            model_name_or_path=model_name_or_path, subfolder=subfolder, **hub_kwargs
+        )
         if not config:
             config = cls.load_config(
-                model_name_or_path=model_name_or_path, config_filename="config.json", subfolder=subfolder, **hub_kwargs
+                model_name_or_path=model_name_or_path,
+                config_filename="config.json",
+                subfolder=subfolder,
+                **hub_kwargs,
             )
         modules = {}
         for model_id, model_type in config["types"].items():
             module_class: Module = import_from_string(model_type)
             try:
                 module = module_class.load(
-                    model_name_or_path, subfolder=Path(subfolder, model_id).as_posix(), **hub_kwargs, **kwargs
+                    model_name_or_path,
+                    subfolder=Path(subfolder, model_id).as_posix(),
+                    **hub_kwargs,
+                    **kwargs,
                 )
             except TypeError:
                 local_path = load_dir_path(
-                    model_name_or_path=model_name_or_path, subfolder=Path(subfolder, model_id).as_posix(), **hub_kwargs
+                    model_name_or_path=model_name_or_path,
+                    subfolder=Path(subfolder, model_id).as_posix(),
+                    **hub_kwargs,
                 )
                 module = module_class.load(local_path)
             modules[model_id] = module
@@ -374,7 +403,10 @@ class Router(InputModule):
         # We might have multiple tokenizers, one for each route, but we can only return one here.
         for sub_modules in self.sub_modules.values():
             input_module: InputModule = sub_modules[0]
-            if hasattr(input_module, "tokenizer") and input_module.tokenizer is not None:
+            if (
+                hasattr(input_module, "tokenizer")
+                and input_module.tokenizer is not None
+            ):
                 return input_module.tokenizer
         return None
 
@@ -393,7 +425,9 @@ class Router(InputModule):
             # Only one unique max_seq_length
             return max_seq_lengths.pop()
         else:
-            logger.warning_once(f"Different max_seq_lengths detected: {max_seq_lengths}. Using the maximum value.")
+            logger.warning_once(
+                f"Different max_seq_lengths detected: {max_seq_lengths}. Using the maximum value."
+            )
             return max(max_seq_lengths)
 
     @max_seq_length.setter

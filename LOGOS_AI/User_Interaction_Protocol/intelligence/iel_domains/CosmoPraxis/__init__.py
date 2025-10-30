@@ -9,7 +9,7 @@ This domain focuses on the praxis of cosmic systems, including:
 """
 
 from .cosmic_systems import CosmicSystem
-from .universal_logic import UniversalLogic
 from .space_time_framework import SpaceTimeFramework
+from .universal_logic import UniversalLogic
 
-__all__ = ['CosmicSystem', 'UniversalLogic', 'SpaceTimeFramework']
+__all__ = ["CosmicSystem", "UniversalLogic", "SpaceTimeFramework"]

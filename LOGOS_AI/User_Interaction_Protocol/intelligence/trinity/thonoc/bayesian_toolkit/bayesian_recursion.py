@@ -3,11 +3,13 @@ bayesian_recursion.py
 
 Recursive Bayesian belief updater.
 """
+
 import pickle
-from pathlib import Path
 from dataclasses import dataclass
-from typing import Dict, List
 from datetime import datetime
+from pathlib import Path
+from typing import Dict, List
+
 import numpy as np
 from scipy import stats
 
@@ -47,26 +49,40 @@ class BayesianMLModel:
 
     def _init_state(self):
         self.state = ModelState(
-            {"default": 0.5}, {}, [], {"global_variance": 0.0}, {"accuracy": 0.0, "confidence": 0.0}
+            {"default": 0.5},
+            {},
+            [],
+            {"global_variance": 0.0},
+            {"accuracy": 0.0, "confidence": 0.0},
         )
         with open(self.path, "wb") as f:
             pickle.dump(self.state, f)
 
-    def update_belief(self, hypothesis: str, evidence: Dict[str, float]) -> BayesianPrediction:
+    def update_belief(
+        self, hypothesis: str, evidence: Dict[str, float]
+    ) -> BayesianPrediction:
         prior = self.state.priors.get(hypothesis, 0.5)
         lik = self._likelihood(hypothesis, evidence)
         marg = self._marginal(evidence)
         post = (prior * lik) / marg if marg else prior
         conf = (
-            post * np.mean(list(evidence.values())) * np.mean(list(self.state.priors.values()))
+            post
+            * np.mean(list(evidence.values()))
+            * np.mean(list(self.state.priors.values()))
         ) ** (1 / 3)
         vars_ = (
-            np.var([p["prediction"] for p in self.state.posterior_history[-10:]] + [post])
+            np.var(
+                [p["prediction"] for p in self.state.posterior_history[-10:]] + [post]
+            )
             if self.state.posterior_history
             else 0.0
         )
         pred = BayesianPrediction(
-            post, conf, vars_, datetime.now().isoformat(), {"evidence": evidence, "prior": prior}
+            post,
+            conf,
+            vars_,
+            datetime.now().isoformat(),
+            {"evidence": evidence, "prior": prior},
         )
         self.state.posterior_history.append(
             {
@@ -85,7 +101,9 @@ class BayesianMLModel:
             np.prod(
                 [
                     stats.norm.pdf(
-                        val, loc=self.state.likelihoods.get(f"{hypothesis}|{k}", 0), scale=0.1
+                        val,
+                        loc=self.state.likelihoods.get(f"{hypothesis}|{k}", 0),
+                        scale=0.1,
                     )
                     for k, val in evidence.items()
                 ]

@@ -1,6 +1,7 @@
-""" Module to give helpful messages to the user that did not
+"""Module to give helpful messages to the user that did not
 compile the pmdarima lib properly.
 """
+
 import os
 
 INPLACE_MSG = """
@@ -27,8 +28,9 @@ def raise_build_error(e):
         if (i + 1) % 3:
             dir_content.append(filename.ljust(26))
         else:
-            dir_content.append(filename + '\n')
-    raise ImportError("""%s
+            dir_content.append(filename + "\n")
+    raise ImportError(
+        """%s
 ___________________________________________________________________________
 Contents of %s:
 %s
@@ -37,7 +39,9 @@ It seems that pmdarima has not been built correctly.
 If you have installed pmdarima from source, please do not forget
 to build the package before using it: run `python setup.py install` or
 `make` from the top-level directory.
-%s""" % (e, local_dir, ''.join(dir_content).strip(), msg))
+%s"""
+        % (e, local_dir, "".join(dir_content).strip(), msg)
+    )
 
 
 try:

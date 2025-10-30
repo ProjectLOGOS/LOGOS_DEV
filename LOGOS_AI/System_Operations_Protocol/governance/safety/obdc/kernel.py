@@ -19,12 +19,16 @@ class OBDCKernel:
         if config_path is None:
             # Default to config in parent directory
             current_dir = os.path.dirname(os.path.abspath(__file__))
-            config_path = os.path.join(os.path.dirname(current_dir), "configs", "config.json")
+            config_path = os.path.join(
+                os.path.dirname(current_dir), "configs", "config.json"
+            )
         self.reference_monitor = ReferenceMonitor(config_path)
         self.registered_bijections = {}
         self.registered_commutations = {}
 
-    def apply_bijection(self, name: str, f: Callable, x: Any, provenance: dict[str, Any]) -> Any:
+    def apply_bijection(
+        self, name: str, f: Callable, x: Any, provenance: dict[str, Any]
+    ) -> Any:
         """
         Apply a bijection with explicit preservation obligations
 
@@ -64,10 +68,18 @@ class OBDCKernel:
             return result
 
         except Exception as e:
-            raise ProofGateError(f"Bijection {name} failed during application: {str(e)}")
+            raise ProofGateError(
+                f"Bijection {name} failed during application: {str(e)}"
+            )
 
     def commute(
-        self, g_name: str, h_name: str, g: Callable, h: Callable, s: Any, provenance: dict[str, Any]
+        self,
+        g_name: str,
+        h_name: str,
+        g: Callable,
+        h: Callable,
+        s: Any,
+        provenance: dict[str, Any],
     ) -> Any:
         """
         Apply commuting operations g∘h with proof of commutativity and coherence preservation
@@ -127,7 +139,9 @@ class OBDCKernel:
         try:
             # Require proof that this is indeed a bijection that preserves properties
             obligation = f"BOX(is_bijection({name}) and preserves_good({name}) and preserves_coherence({name}))"
-            proof_token = self.reference_monitor.require_proof_token(obligation, provenance)
+            proof_token = self.reference_monitor.require_proof_token(
+                obligation, provenance
+            )
 
             self.registered_bijections[name] = {
                 "function": f.__name__ if hasattr(f, "__name__") else str(f),
@@ -142,17 +156,21 @@ class OBDCKernel:
             return {"registered": False, "name": name, "error": str(e)}
 
     def verify_structure_preservation(
-        self, operation_name: str, before_state: Any, after_state: Any, provenance: dict[str, Any]
+        self,
+        operation_name: str,
+        before_state: Any,
+        after_state: Any,
+        provenance: dict[str, Any],
     ) -> dict[str, Any]:
         """
         Verify that an operation preserved required structures
         """
         try:
             # Require proof that structure was preserved
-            obligation = (
-                f"BOX(structure_preserved({operation_name}) and equivalent_structure(before,after))"
+            obligation = f"BOX(structure_preserved({operation_name}) and equivalent_structure(before,after))"
+            proof_token = self.reference_monitor.require_proof_token(
+                obligation, provenance
             )
-            proof_token = self.reference_monitor.require_proof_token(obligation, provenance)
 
             return {
                 "structure_preserved": True,
@@ -161,7 +179,11 @@ class OBDCKernel:
             }
 
         except ProofGateError as e:
-            return {"structure_preserved": False, "operation": operation_name, "error": str(e)}
+            return {
+                "structure_preserved": False,
+                "operation": operation_name,
+                "error": str(e),
+            }
 
     def get_kernel_status(self) -> dict[str, Any]:
         """Get current status of OBDC kernel"""

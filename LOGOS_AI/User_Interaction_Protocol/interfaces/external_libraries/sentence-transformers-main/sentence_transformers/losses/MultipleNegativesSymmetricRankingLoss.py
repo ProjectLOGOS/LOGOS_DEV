@@ -90,14 +90,23 @@ class MultipleNegativesSymmetricRankingLoss(nn.Module):
         self.gather_across_devices = gather_across_devices
         self.cross_entropy_loss = nn.CrossEntropyLoss()
 
-    def forward(self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor) -> Tensor:
-        embeddings = [self.model(sentence_feature)["sentence_embedding"] for sentence_feature in sentence_features]
+    def forward(
+        self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor
+    ) -> Tensor:
+        embeddings = [
+            self.model(sentence_feature)["sentence_embedding"]
+            for sentence_feature in sentence_features
+        ]
 
         return self.compute_loss_from_embeddings(embeddings, labels)
 
-    def compute_loss_from_embeddings(self, embeddings: list[Tensor], labels: Tensor) -> Tensor:
+    def compute_loss_from_embeddings(
+        self, embeddings: list[Tensor], labels: Tensor
+    ) -> Tensor:
         anchors = embeddings[0]  # (batch_size, embedding_dim)
-        candidates = embeddings[1:]  # (1 + num_negatives) tensors of shape (batch_size, embedding_dim)
+        candidates = embeddings[
+            1:
+        ]  # (1 + num_negatives) tensors of shape (batch_size, embedding_dim)
         batch_size = anchors.size(0)
         offset = 0
 
@@ -105,8 +114,13 @@ class MultipleNegativesSymmetricRankingLoss(nn.Module):
             # Gather the anchors and candidates across all devices, with gradients. We compute only this device's anchors
             # with all candidates from all devices, and only this device's candidates with all anchors from all devices.
             # We do this in such a way that the backward pass on the embeddings can flow back to the original devices.
-            anchors = all_gather_with_grad(anchors)  # (batch_size * world_size, embedding_dim)
-            candidates = [all_gather_with_grad(embedding_column) for embedding_column in candidates]
+            anchors = all_gather_with_grad(
+                anchors
+            )  # (batch_size * world_size, embedding_dim)
+            candidates = [
+                all_gather_with_grad(embedding_column)
+                for embedding_column in candidates
+            ]
             # (1 + num_negatives) tensors of shape (batch_size * world_size, embedding_dim)
 
             # Adjust the range_labels to account for the gathered candidates
@@ -124,8 +138,12 @@ class MultipleNegativesSymmetricRankingLoss(nn.Module):
         # Compute the scores for "given anchor, find the most similar candidate" and vice versa
         # If gathered across devices, take anchors/candidates from the same device against all candidates/anchors
         if self.gather_across_devices:
-            forward_scores = self.similarity_fct(anchors[range_labels], candidates) * self.scale
-            backward_scores = self.similarity_fct(candidates[range_labels], anchors) * self.scale
+            forward_scores = (
+                self.similarity_fct(anchors[range_labels], candidates) * self.scale
+            )
+            backward_scores = (
+                self.similarity_fct(candidates[range_labels], anchors) * self.scale
+            )
         else:
             # If we're not gathering across devices, we can just transpose the forward scores
             forward_scores = self.similarity_fct(anchors, candidates) * self.scale

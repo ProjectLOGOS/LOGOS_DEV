@@ -100,7 +100,11 @@ class TranslationEvaluator(SentenceEvaluator):
         self.primary_metric = "mean_accuracy"
 
     def __call__(
-        self, model: SentenceTransformer, output_path: str | None = None, epoch: int = -1, steps: int = -1
+        self,
+        model: SentenceTransformer,
+        output_path: str | None = None,
+        epoch: int = -1,
+        steps: int = -1,
     ) -> dict[str, float]:
         if epoch != -1:
             if steps == -1:
@@ -112,7 +116,9 @@ class TranslationEvaluator(SentenceEvaluator):
         if self.truncate_dim is not None:
             out_txt += f" (truncated to {self.truncate_dim})"
 
-        logger.info(f"Evaluating translation matching Accuracy of the model on the {self.name} dataset{out_txt}:")
+        logger.info(
+            f"Evaluating translation matching Accuracy of the model on the {self.name} dataset{out_txt}:"
+        )
 
         embeddings1 = torch.stack(self.embed_inputs(model, self.source_sentences))
         embeddings2 = torch.stack(self.embed_inputs(model, self.target_sentences))
@@ -128,15 +134,32 @@ class TranslationEvaluator(SentenceEvaluator):
             if i == max_idx:
                 correct_src2trg += 1
             elif self.print_wrong_matches:
-                print("\nIncorrect  : Source", i, "is most similar to target", max_idx, "instead of target", i)
+                print(
+                    "\nIncorrect  : Source",
+                    i,
+                    "is most similar to target",
+                    max_idx,
+                    "instead of target",
+                    i,
+                )
                 print("Source     :", self.source_sentences[i])
-                print("Pred Target:", self.target_sentences[max_idx], f"(Score: {cos_sims[i][max_idx]:.4f})")
-                print("True Target:", self.target_sentences[i], f"(Score: {cos_sims[i][i]:.4f})")
+                print(
+                    "Pred Target:",
+                    self.target_sentences[max_idx],
+                    f"(Score: {cos_sims[i][max_idx]:.4f})",
+                )
+                print(
+                    "True Target:",
+                    self.target_sentences[i],
+                    f"(Score: {cos_sims[i][i]:.4f})",
+                )
 
                 results = enumerate(cos_sims[i])
                 results = sorted(results, key=lambda x: x[1], reverse=True)
                 for idx, score in results[:5]:
-                    print("\t", idx, f"(Score: {score:.4f})", self.target_sentences[idx])
+                    print(
+                        "\t", idx, f"(Score: {score:.4f})", self.target_sentences[idx]
+                    )
 
         cos_sims = cos_sims.T
         for i in range(len(cos_sims)):
@@ -153,7 +176,12 @@ class TranslationEvaluator(SentenceEvaluator):
         if output_path is not None and self.write_csv:
             csv_path = os.path.join(output_path, self.csv_file)
             output_file_exists = os.path.isfile(csv_path)
-            with open(csv_path, newline="", mode="a" if output_file_exists else "w", encoding="utf-8") as f:
+            with open(
+                csv_path,
+                newline="",
+                mode="a" if output_file_exists else "w",
+                encoding="utf-8",
+            ) as f:
                 writer = csv.writer(f)
                 if not output_file_exists:
                     writer.writerow(self.csv_headers)

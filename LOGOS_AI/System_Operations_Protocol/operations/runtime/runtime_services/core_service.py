@@ -13,17 +13,17 @@ Combines:
 - IEL epistemic verification
 """
 
-import logging
 import asyncio
 import json
-import uuid
+import logging
+import threading
 import time
-from typing import Dict, List, Optional, Any, Tuple, Union, Callable
+import uuid
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-import threading
-from concurrent.futures import ThreadPoolExecutor
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 # Safe imports with fallback handling
 try:
@@ -40,7 +40,9 @@ try:
         TrinityVector,
         UnifiedBayesianInferencer,
     )
-    from LOGOS_AGI.v7.adaptive_reasoning.semantic_transformers import UnifiedSemanticTransformer
+    from LOGOS_AGI.v7.adaptive_reasoning.semantic_transformers import (
+        UnifiedSemanticTransformer,
+    )
     from LOGOS_AGI.v7.adaptive_reasoning.torch_adapters import UnifiedTorchAdapter
 except ImportError:
     # Mock for development
@@ -124,7 +126,9 @@ class ProofGateValidator:
         self.validation_counter = 0
         self.logger = logging.getLogger(f"LOGOS.{self.__class__.__name__}")
 
-    def validate_request(self, request: RuntimeRequest) -> Tuple[bool, str, Dict[str, Any]]:
+    def validate_request(
+        self, request: RuntimeRequest
+    ) -> Tuple[bool, str, Dict[str, Any]]:
         """
         Validate runtime request with proof requirements.
 
@@ -148,13 +152,19 @@ class ProofGateValidator:
             RequestType.TRANSFORMATION,
             RequestType.VERIFICATION,
         ]:
-            return False, "", {"error": "unsupported_request_type", "validation_id": validation_id}
+            return (
+                False,
+                "",
+                {"error": "unsupported_request_type", "validation_id": validation_id},
+            )
 
         # Trinity vector validation
         trinity_valid = self._validate_trinity_vector(request.trinity_vector)
 
         # Payload structure validation
-        payload_valid = self._validate_payload_structure(request.payload, request.request_type)
+        payload_valid = self._validate_payload_structure(
+            request.payload, request.request_type
+        )
 
         # Combined validation score
         validation_score = (trinity_valid + payload_valid) / 2
@@ -179,7 +189,9 @@ class ProofGateValidator:
             }
             return False, "", validation_metadata
 
-    def _validate_trinity_vector(self, trinity_vector: Optional[TrinityVector]) -> float:
+    def _validate_trinity_vector(
+        self, trinity_vector: Optional[TrinityVector]
+    ) -> float:
         """Validate trinity vector structure"""
         if not trinity_vector:
             return 0.5  # Neutral for missing vector
@@ -252,7 +264,9 @@ class UnifiedRuntimeService:
     semantic transformations, and neural processing capabilities.
     """
 
-    def __init__(self, service_name: str = "LOGOS_RUNTIME_V7", enable_messaging: bool = True):
+    def __init__(
+        self, service_name: str = "LOGOS_RUNTIME_V7", enable_messaging: bool = True
+    ):
         """
         Initialize unified runtime service.
 
@@ -295,7 +309,9 @@ class UnifiedRuntimeService:
 
         self.logger.info(f"UnifiedRuntimeService '{self.service_name}' initialized")
         self.logger.info(f"Service ID: {self.service_id}")
-        self.logger.info(f"Messaging enabled: {self.enable_messaging and RABBITMQ_AVAILABLE}")
+        self.logger.info(
+            f"Messaging enabled: {self.enable_messaging and RABBITMQ_AVAILABLE}"
+        )
 
     def start_service(self):
         """Start the runtime service with all components"""
@@ -317,7 +333,9 @@ class UnifiedRuntimeService:
                 self.logger.warning("RabbitMQ not available, messaging disabled")
                 return
 
-            self.connection = pika.BlockingConnection(pika.ConnectionParameters(host="localhost"))
+            self.connection = pika.BlockingConnection(
+                pika.ConnectionParameters(host="localhost")
+            )
             self.channel = self.connection.channel()
 
             # Declare queues
@@ -340,12 +358,16 @@ class UnifiedRuntimeService:
     def _start_processing_loops(self):
         """Start asynchronous processing loops"""
         # Start request timeout monitor
-        timeout_thread = threading.Thread(target=self._monitor_request_timeouts, daemon=True)
+        timeout_thread = threading.Thread(
+            target=self._monitor_request_timeouts, daemon=True
+        )
         timeout_thread.start()
 
         # Start message consumer if messaging enabled
         if self.enable_messaging and self.channel:
-            consumer_thread = threading.Thread(target=self._consume_messages, daemon=True)
+            consumer_thread = threading.Thread(
+                target=self._consume_messages, daemon=True
+            )
             consumer_thread.start()
 
         self.logger.info("Processing loops started")
@@ -377,7 +399,9 @@ class UnifiedRuntimeService:
             self.logger.error(f"Message handling error: {e}")
             ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
 
-    def _create_request_from_message(self, message_data: Dict[str, Any]) -> RuntimeRequest:
+    def _create_request_from_message(
+        self, message_data: Dict[str, Any]
+    ) -> RuntimeRequest:
         """Create runtime request from message data"""
         request_id = message_data.get("request_id", f"msg_{uuid.uuid4().hex[:8]}")
         request_type = RequestType(message_data.get("request_type", "query"))
@@ -453,13 +477,15 @@ class UnifiedRuntimeService:
 
             # Phase 1: Validation
             request.state = ProcessingState.VALIDATING
-            is_valid, validation_token, validation_metadata = self.proof_gate.validate_request(
-                request
+            is_valid, validation_token, validation_metadata = (
+                self.proof_gate.validate_request(request)
             )
 
             if not is_valid:
                 request.state = ProcessingState.REJECTED
-                self._complete_request_with_error(request, "validation_failed", validation_metadata)
+                self._complete_request_with_error(
+                    request, "validation_failed", validation_metadata
+                )
                 return
 
             request.verification_token = validation_token
@@ -470,12 +496,16 @@ class UnifiedRuntimeService:
 
             if not processing_result["success"]:
                 request.state = ProcessingState.FAILED
-                self._complete_request_with_error(request, "processing_failed", processing_result)
+                self._complete_request_with_error(
+                    request, "processing_failed", processing_result
+                )
                 return
 
             # Phase 3: Verification
             request.state = ProcessingState.VERIFYING
-            verification_result = self._verify_processing_result(request, processing_result)
+            verification_result = self._verify_processing_result(
+                request, processing_result
+            )
 
             # Phase 4: Completion
             request.state = ProcessingState.COMPLETED
@@ -502,7 +532,9 @@ class UnifiedRuntimeService:
             if request.request_id in self.active_requests:
                 del self.active_requests[request.request_id]
 
-            self.logger.info(f"Request completed: {request.request_id} in {processing_time:.2f}s")
+            self.logger.info(
+                f"Request completed: {request.request_id} in {processing_time:.2f}s"
+            )
 
             # Send response if messaging enabled
             if self.enable_messaging and self.channel:
@@ -511,7 +543,9 @@ class UnifiedRuntimeService:
         except Exception as e:
             self.logger.error(f"Request processing error for {request.request_id}: {e}")
             request.state = ProcessingState.FAILED
-            self._complete_request_with_error(request, "processing_exception", {"error": str(e)})
+            self._complete_request_with_error(
+                request, "processing_exception", {"error": str(e)}
+            )
 
     def _process_request_by_type(self, request: RuntimeRequest) -> Dict[str, Any]:
         """Process request based on type"""
@@ -589,7 +623,9 @@ class UnifiedRuntimeService:
 
         return {"success": True, "data": inference_result}
 
-    def _process_transformation_request(self, request: RuntimeRequest) -> Dict[str, Any]:
+    def _process_transformation_request(
+        self, request: RuntimeRequest
+    ) -> Dict[str, Any]:
         """Process transformation request with semantic transformation"""
         source_data = request.payload.get("source_data", "")
         target_format = request.payload.get("target_format", {})
@@ -629,7 +665,9 @@ class UnifiedRuntimeService:
                     t_logos=tv_data.get("t_logos", 0.5),
                     confidence=tv_data.get("confidence", 0.5),
                 )
-                coherence_score = self.proof_gate._validate_trinity_vector(trinity_vector)
+                coherence_score = self.proof_gate._validate_trinity_vector(
+                    trinity_vector
+                )
             else:
                 coherence_score = 0.0
 
@@ -671,7 +709,9 @@ class UnifiedRuntimeService:
         verification_score = (trinity_coherence + (1.0 if result_valid else 0.0)) / 2
 
         verification_status = (
-            "verified" if verification_score >= self.verification_threshold else "failed"
+            "verified"
+            if verification_score >= self.verification_threshold
+            else "failed"
         )
 
         return {
@@ -750,7 +790,9 @@ class UnifiedRuntimeService:
                         request = self.active_requests[request_id]
                         request.state = ProcessingState.FAILED
                         self._complete_request_with_error(
-                            request, "timeout", {"timeout_seconds": self.request_timeout}
+                            request,
+                            "timeout",
+                            {"timeout_seconds": self.request_timeout},
                         )
 
                 time.sleep(30)  # Check every 30 seconds
@@ -767,7 +809,9 @@ class UnifiedRuntimeService:
                 "request_id": request_id,
                 "state": request.state.value,
                 "created_at": request.created_at.isoformat(),
-                "processed_at": request.processed_at.isoformat() if request.processed_at else None,
+                "processed_at": (
+                    request.processed_at.isoformat() if request.processed_at else None
+                ),
                 "verification_token": request.verification_token,
             }
         elif request_id in self.completed_requests:
@@ -889,7 +933,8 @@ def example_runtime_service():
 if __name__ == "__main__":
     # Configure logging
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     # Run example

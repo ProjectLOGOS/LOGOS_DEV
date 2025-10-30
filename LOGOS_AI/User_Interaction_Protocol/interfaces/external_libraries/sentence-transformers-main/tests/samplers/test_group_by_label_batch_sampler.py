@@ -27,7 +27,11 @@ def dummy_dataset():
         "label_b": [0, 1, 2, 3, 4, 0, ..., 4]
     }
     """
-    data = {"data": list(range(100)), "label_a": [i % 2 for i in range(100)], "label_b": [i % 5 for i in range(100)]}
+    data = {
+        "data": list(range(100)),
+        "label_a": [i % 2 for i in range(100)],
+        "label_b": [i % 5 for i in range(100)],
+    }
     return Dataset.from_dict(data)
 
 
@@ -48,7 +52,10 @@ def test_group_by_label_batch_sampler_label_a(dummy_dataset: Dataset) -> None:
     batch_size = 10
 
     sampler = GroupByLabelBatchSampler(
-        dataset=dummy_dataset, batch_size=batch_size, drop_last=False, valid_label_columns=["label_a", "label_b"]
+        dataset=dummy_dataset,
+        batch_size=batch_size,
+        drop_last=False,
+        valid_label_columns=["label_a", "label_b"],
     )
 
     batches = list(iter(sampler))
@@ -59,14 +66,19 @@ def test_group_by_label_batch_sampler_label_a(dummy_dataset: Dataset) -> None:
     # have only 0's or only 1's.
     for batch in batches:
         labels = [dummy_dataset[int(idx)]["label_a"] for idx in batch]
-        assert len(set(labels)) == 1, f"Batch {batch} does not have identical labels: {labels}"
+        assert (
+            len(set(labels)) == 1
+        ), f"Batch {batch} does not have identical labels: {labels}"
 
 
 def test_group_by_label_batch_sampler_label_b(dummy_dataset: Dataset) -> None:
     batch_size = 8
 
     sampler = GroupByLabelBatchSampler(
-        dataset=dummy_dataset, batch_size=batch_size, drop_last=True, valid_label_columns=["label_b"]
+        dataset=dummy_dataset,
+        batch_size=batch_size,
+        drop_last=True,
+        valid_label_columns=["label_b"],
     )
 
     # drop_last=True, so each batch should be the same length and the last batch is dropped.
@@ -87,11 +99,16 @@ def test_group_by_label_batch_sampler_label_b(dummy_dataset: Dataset) -> None:
         assert counts == [8] or counts == [4, 4]
 
 
-def test_group_by_label_batch_sampler_uneven_dataset(dummy_uneven_dataset: Dataset) -> None:
+def test_group_by_label_batch_sampler_uneven_dataset(
+    dummy_uneven_dataset: Dataset,
+) -> None:
     batch_size = 8
 
     sampler = GroupByLabelBatchSampler(
-        dataset=dummy_uneven_dataset, batch_size=batch_size, drop_last=False, valid_label_columns=["label"]
+        dataset=dummy_uneven_dataset,
+        batch_size=batch_size,
+        drop_last=False,
+        valid_label_columns=["label"],
     )
 
     # With a batch_size of 8 and 17 samples per label; verify that every label in a batch occurs at least twice.

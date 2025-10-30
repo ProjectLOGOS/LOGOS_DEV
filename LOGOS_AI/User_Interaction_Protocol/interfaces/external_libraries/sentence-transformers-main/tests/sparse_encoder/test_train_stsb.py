@@ -7,10 +7,17 @@ from collections.abc import Generator
 
 import pytest
 
-from sentence_transformers import SparseEncoder, SparseEncoderTrainer, SparseEncoderTrainingArguments, util
+from sentence_transformers import (
+    SparseEncoder,
+    SparseEncoderTrainer,
+    SparseEncoderTrainingArguments,
+    util,
+)
 from sentence_transformers.readers import InputExample
 from sentence_transformers.sparse_encoder import losses
-from sentence_transformers.sparse_encoder.evaluation import SparseEmbeddingSimilarityEvaluator
+from sentence_transformers.sparse_encoder.evaluation import (
+    SparseEmbeddingSimilarityEvaluator,
+)
 from sentence_transformers.util import is_datasets_available, is_training_available
 
 if is_datasets_available():
@@ -24,10 +31,14 @@ if not is_training_available():
 
 
 @pytest.fixture()
-def sts_resource() -> Generator[tuple[list[InputExample], list[InputExample]], None, None]:
+def sts_resource() -> (
+    Generator[tuple[list[InputExample], list[InputExample]], None, None]
+):
     sts_dataset_path = "datasets/stsbenchmark.tsv.gz"
     if not os.path.exists(sts_dataset_path):
-        util.http_get("https://sbert.net/datasets/stsbenchmark.tsv.gz", sts_dataset_path)
+        util.http_get(
+            "https://sbert.net/datasets/stsbenchmark.tsv.gz", sts_dataset_path
+        )
 
     stsb_train_samples = []
     stsb_test_samples = []
@@ -35,7 +46,9 @@ def sts_resource() -> Generator[tuple[list[InputExample], list[InputExample]], N
         reader = csv.DictReader(fIn, delimiter="\t", quoting=csv.QUOTE_NONE)
         for row in reader:
             score = float(row["score"]) / 5.0
-            inp_example = InputExample(texts=[row["sentence1"], row["sentence2"]], label=score)
+            inp_example = InputExample(
+                texts=[row["sentence1"], row["sentence2"]], label=score
+            )
 
             if row["split"] == "test":
                 stsb_test_samples.append(inp_example)
@@ -67,16 +80,22 @@ def evaluate_stsb_test(
     )
     scores_dict = evaluator(model)
 
-    assert evaluator.primary_metric, "Could not find spearman cosine correlation metric in evaluator output"
+    assert (
+        evaluator.primary_metric
+    ), "Could not find spearman cosine correlation metric in evaluator output"
 
     score = scores_dict[evaluator.primary_metric] * 100
     print(f"STS-Test Performance: {score:.2f} vs. exp: {expected_score:.2f}")
-    assert score > expected_score or abs(score - expected_score) < 0.5  # Looser tolerance for sparse models initially
+    assert (
+        score > expected_score or abs(score - expected_score) < 0.5
+    )  # Looser tolerance for sparse models initially
 
 
 @pytest.mark.slow
 def test_train_stsb_slow(
-    dummy_sparse_encoder_model: SparseEncoder, sts_resource: tuple[list[InputExample], list[InputExample]], tmp_path
+    dummy_sparse_encoder_model: SparseEncoder,
+    sts_resource: tuple[list[InputExample], list[InputExample]],
+    tmp_path,
 ) -> None:
     model = dummy_sparse_encoder_model
     sts_train_samples, sts_test_samples = sts_resource
@@ -120,11 +139,14 @@ def test_train_stsb_slow(
         loss=loss,
     )
     trainer.train()
-    evaluate_stsb_test(model, 10, sts_test_samples)  # Lower expected score for a short training
+    evaluate_stsb_test(
+        model, 10, sts_test_samples
+    )  # Lower expected score for a short training
 
 
 def test_train_stsb(
-    dummy_sparse_encoder_model: SparseEncoder, sts_resource: tuple[list[InputExample], list[InputExample]]
+    dummy_sparse_encoder_model: SparseEncoder,
+    sts_resource: tuple[list[InputExample], list[InputExample]],
 ) -> None:
     model = dummy_sparse_encoder_model
     sts_train_samples, sts_test_samples = sts_resource
@@ -167,4 +189,6 @@ def test_train_stsb(
         loss=loss,
     )
     trainer.train()
-    evaluate_stsb_test(model, 5, sts_test_samples, num_test_samples=50)  # Very low expectation
+    evaluate_stsb_test(
+        model, 5, sts_test_samples, num_test_samples=50
+    )  # Very low expectation

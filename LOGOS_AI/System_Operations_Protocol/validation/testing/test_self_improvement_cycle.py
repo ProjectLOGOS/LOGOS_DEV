@@ -18,25 +18,33 @@ Test Categories:
 Part of the LOGOS AGI v1.0 autonomous reasoning framework.
 """
 
-import pytest
 import json
+import logging
 import sqlite3
 import tempfile
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Any, Optional
-from unittest.mock import patch, MagicMock
-import logging
+from typing import Any, Dict, List, Optional
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 # Import system components
 try:
-    from core.logos_core.daemon.logos_daemon import LogosDaemon, DaemonConfig
-    from core.logos_core.meta_reasoning.iel_evaluator import IELEvaluator, IELQualityMetrics
-    from core.logos_core.meta_reasoning.iel_registry import IELRegistry, IELCandidate, RegistryConfig
-    from core.logos_core.meta_reasoning.iel_generator import IELGenerator
+    from core.logos_core.daemon.logos_daemon import DaemonConfig, LogosDaemon
     from core.logos_core.governance.iel_signer import IELSigner
-    from scripts.update_telemetry import TelemetryAggregator, AggregatedMetrics
+    from core.logos_core.meta_reasoning.iel_evaluator import (
+        IELEvaluator,
+        IELQualityMetrics,
+    )
+    from core.logos_core.meta_reasoning.iel_generator import IELGenerator
+    from core.logos_core.meta_reasoning.iel_registry import (
+        IELCandidate,
+        IELRegistry,
+        RegistryConfig,
+    )
+    from scripts.update_telemetry import AggregatedMetrics, TelemetryAggregator
 except ImportError as e:
     pytest.skip(f"Required modules not available: {e}", allow_module_level=True)
 
@@ -78,7 +86,7 @@ Proof.
   exact HP.
 Qed.
 """,
-                "expected_score": 0.95
+                "expected_score": 0.95,
             },
             {
                 "filename": "medium_quality.v",
@@ -93,7 +101,7 @@ Proof.
   exact HP.
 Qed.
 """,
-                "expected_score": 0.75
+                "expected_score": 0.75,
             },
             {
                 "filename": "low_quality.v",
@@ -103,13 +111,13 @@ Theorem basic_theorem : low_quality_iel.
 Proof.
   Admitted.
 """,
-                "expected_score": 0.4
-            }
+                "expected_score": 0.4,
+            },
         ]
 
         for template in iel_templates:
             iel_path = workspace / "build" / template["filename"]
-            with open(iel_path, 'w') as f:
+            with open(iel_path, "w") as f:
                 f.write(template["content"])
 
     @pytest.fixture
@@ -128,11 +136,13 @@ Proof.
             interval_sec=1,  # Fast cycles for testing
             telemetry_output=str(temp_workspace / "metrics" / "test_telemetry.jsonl"),
             enable_gap_detection=True,
-            enable_autonomous_reasoning=True
+            enable_autonomous_reasoning=True,
         )
         return config
 
-    def test_multi_cycle_stability(self, temp_workspace, daemon_config, registry_config):
+    def test_multi_cycle_stability(
+        self, temp_workspace, daemon_config, registry_config
+    ):
         """Test system stability over multiple evaluation cycles"""
         # Initialize components
         registry = IELRegistry(registry_config)
@@ -155,8 +165,17 @@ Proof.
                 "cycle": cycle + 1,
                 "timestamp": datetime.now().isoformat(),
                 "total_iels": len(evaluation_results),
-                "avg_score": sum(e['overall_score'] for e in evaluation_results.values()) / len(evaluation_results),
-                "high_quality_count": len([e for e in evaluation_results.values() if e['overall_score'] >= 0.8])
+                "avg_score": sum(
+                    e["overall_score"] for e in evaluation_results.values()
+                )
+                / len(evaluation_results),
+                "high_quality_count": len(
+                    [
+                        e
+                        for e in evaluation_results.values()
+                        if e["overall_score"] >= 0.8
+                    ]
+                ),
             }
             cycle_results.append(cycle_metrics)
 
@@ -164,11 +183,13 @@ Proof.
             time.sleep(0.1)
 
         # Validate stability
-        avg_scores = [c['avg_score'] for c in cycle_results]
+        avg_scores = [c["avg_score"] for c in cycle_results]
         score_variance = max(avg_scores) - min(avg_scores)
 
         assert score_variance < 0.1, f"Score variance too high: {score_variance}"
-        assert all(c['total_iels'] >= 3 for c in cycle_results), "IEL count should remain stable"
+        assert all(
+            c["total_iels"] >= 3 for c in cycle_results
+        ), "IEL count should remain stable"
 
         logging.info("Multi-cycle stability test passed")
 
@@ -184,13 +205,13 @@ Proof.
 
         # Evaluate initial quality
         initial_evaluation = evaluator.evaluate_all_iels()
-        initial_score = initial_evaluation[low_quality_iel.iel_id]['overall_score']
+        initial_score = initial_evaluation[low_quality_iel.iel_id]["overall_score"]
 
         # Generate refinement
         refined_candidate = generator._generate_refined_candidate(
             low_quality_iel.iel_id,
             "mock content",
-            initial_evaluation[low_quality_iel.iel_id]
+            initial_evaluation[low_quality_iel.iel_id],
         )
 
         # Register refined candidate
@@ -198,13 +219,19 @@ Proof.
 
         # Re-evaluate
         refined_evaluation = evaluator.evaluate_all_iels()
-        refined_score = refined_evaluation[refined_candidate.iel_id]['overall_score']
+        refined_score = refined_evaluation[refined_candidate.iel_id]["overall_score"]
 
         # Validate improvement
-        assert refined_score > initial_score, f"Refinement should improve score: {initial_score} -> {refined_score}"
-        assert refined_score >= 0.6, f"Refined score should be reasonable: {refined_score}"
+        assert (
+            refined_score > initial_score
+        ), f"Refinement should improve score: {initial_score} -> {refined_score}"
+        assert (
+            refined_score >= 0.6
+        ), f"Refined score should be reasonable: {refined_score}"
 
-        logging.info(f"Quality improvement validated: {initial_score:.3f} -> {refined_score:.3f}")
+        logging.info(
+            f"Quality improvement validated: {initial_score:.3f} -> {refined_score:.3f}"
+        )
 
     def test_pruning_mechanism(self, temp_workspace, registry_config):
         """Test automatic pruning of underperforming IELs"""
@@ -226,21 +253,29 @@ Proof.
         # Simulate pruning with threshold 0.5
         pruned_count = 0
         for iel_id, evaluation in evaluation_results.items():
-            if evaluation['overall_score'] < 0.5:
-                registry.revoke_iel(iel_id, f"Score {evaluation['overall_score']} below threshold")
+            if evaluation["overall_score"] < 0.5:
+                registry.revoke_iel(
+                    iel_id, f"Score {evaluation['overall_score']} below threshold"
+                )
                 pruned_count += 1
 
         # Verify pruning results
         remaining_iels = registry.list_candidates()
         active_iels = [iel for iel in remaining_iels if iel.status != "revoked"]
 
-        assert len(active_iels) == 2, f"Should have 2 active IELs after pruning, got {len(active_iels)}"
+        assert (
+            len(active_iels) == 2
+        ), f"Should have 2 active IELs after pruning, got {len(active_iels)}"
         assert pruned_count == 1, f"Should have pruned 1 IEL, got {pruned_count}"
 
         # Verify high-quality IELs remain
         active_ids = [iel.iel_id for iel in active_iels]
-        assert high_quality.iel_id in active_ids, "High quality IEL should remain active"
-        assert medium_quality.iel_id in active_ids, "Medium quality IEL should remain active"
+        assert (
+            high_quality.iel_id in active_ids
+        ), "High quality IEL should remain active"
+        assert (
+            medium_quality.iel_id in active_ids
+        ), "Medium quality IEL should remain active"
 
         logging.info("Pruning mechanism test passed")
 
@@ -258,8 +293,8 @@ Proof.
                     "evaluation_summary": {"mean_score": 0.82},
                     "memory_usage_mb": 150.0,
                     "cpu_usage_percent": 25.0,
-                    "cycle_duration_sec": 45.2
-                }
+                    "cycle_duration_sec": 45.2,
+                },
             },
             {
                 "timestamp": (datetime.now() - timedelta(hours=3)).isoformat(),
@@ -270,19 +305,19 @@ Proof.
                     "evaluation_summary": {"mean_score": 0.85},
                     "memory_usage_mb": 165.0,
                     "cpu_usage_percent": 30.0,
-                    "cycle_duration_sec": 42.8
-                }
+                    "cycle_duration_sec": 42.8,
+                },
             },
             {
                 "timestamp": datetime.now().isoformat(),
                 "event_type": "gaps_detected",
-                "data": {"count": 3}
-            }
+                "data": {"count": 3},
+            },
         ]
 
-        with open(telemetry_file, 'w') as f:
+        with open(telemetry_file, "w") as f:
             for record in mock_data:
-                f.write(json.dumps(record) + '\n')
+                f.write(json.dumps(record) + "\n")
 
         # Aggregate telemetry
         aggregator = TelemetryAggregator()
@@ -294,8 +329,12 @@ Proof.
         aggregated = aggregator.aggregate_metrics()
 
         assert aggregated.total_cycles >= 2, "Should have at least 2 cycles"
-        assert aggregated.avg_quality_score > 0.8, f"Average quality should be high: {aggregated.avg_quality_score}"
-        assert aggregated.uptime_percentage >= 99.0, f"Uptime should be high: {aggregated.uptime_percentage}"
+        assert (
+            aggregated.avg_quality_score > 0.8
+        ), f"Average quality should be high: {aggregated.avg_quality_score}"
+        assert (
+            aggregated.uptime_percentage >= 99.0
+        ), f"Uptime should be high: {aggregated.uptime_percentage}"
 
         # Generate report
         report_file = temp_workspace / "reports" / "test_telemetry_report.json"
@@ -304,11 +343,13 @@ Proof.
         assert report_file.exists(), "Report file should be generated"
 
         # Validate report content
-        with open(report_file, 'r') as f:
+        with open(report_file, "r") as f:
             report_data = json.load(f)
 
         assert "report_metadata" in report_data, "Report should contain metadata"
-        assert "performance_metrics" in report_data, "Report should contain performance metrics"
+        assert (
+            "performance_metrics" in report_data
+        ), "Report should contain performance metrics"
         assert "recommendations" in report_data, "Report should contain recommendations"
 
         logging.info("Telemetry aggregation test passed")
@@ -324,7 +365,7 @@ Proof.
 
         # Create corrupted IEL file to trigger error
         corrupted_file = temp_workspace / "build" / "corrupted.v"
-        with open(corrupted_file, 'w') as f:
+        with open(corrupted_file, "w") as f:
             f.write("invalid coq syntax $$$ !!!")
 
         corrupted_iel = self._create_candidate("corrupted_iel", 0.5)
@@ -360,12 +401,18 @@ Proof.
         status = daemon.get_status()
         daemon.stop()
 
-        assert status.memory_usage_mb <= daemon_config.max_memory_mb * 1.1, f"Memory usage within bounds: {status.memory_usage_mb}MB"
-        assert status.cpu_usage_percent <= daemon_config.max_cpu_percent * 1.2, f"CPU usage within bounds: {status.cpu_usage_percent}%"
+        assert (
+            status.memory_usage_mb <= daemon_config.max_memory_mb * 1.1
+        ), f"Memory usage within bounds: {status.memory_usage_mb}MB"
+        assert (
+            status.cpu_usage_percent <= daemon_config.max_cpu_percent * 1.2
+        ), f"CPU usage within bounds: {status.cpu_usage_percent}%"
 
         logging.info("Resource bounds test passed")
 
-    def _register_test_iels(self, registry: IELRegistry, workspace: Path) -> List[IELCandidate]:
+    def _register_test_iels(
+        self, registry: IELRegistry, workspace: Path
+    ) -> List[IELCandidate]:
         """Register test IELs in the registry"""
         candidates = []
 
@@ -382,7 +429,7 @@ Proof.
                 verification_status="candidate",
                 proof_obligations=["Test obligation"],
                 consistency_score=0.9,
-                safety_score=0.95
+                safety_score=0.95,
             )
 
             success = registry.register_candidate(candidate)
@@ -404,7 +451,7 @@ Proof.
             verification_status="candidate",
             proof_obligations=["Mock obligation"],
             consistency_score=confidence + 0.1,
-            safety_score=confidence + 0.05
+            safety_score=confidence + 0.05,
         )
 
 
@@ -439,7 +486,7 @@ def test_multi_cycle_stability():
     scores = []
     for _ in range(5):
         coherence = metrics.evaluate_coherence(test_content)
-        scores.append(coherence['overall_coherence'])
+        scores.append(coherence["overall_coherence"])
 
     # Scores should be consistent
     score_variance = max(scores) - min(scores)

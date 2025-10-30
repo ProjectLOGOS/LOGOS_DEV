@@ -4,13 +4,14 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-import os
-import pika
 import json
 import logging
-import time
+import os
 import signal
 import sys
+import time
+
+import pika
 from persistence_manager import PersistenceManager
 
 # --- Configuration ---
@@ -88,7 +89,9 @@ class DatabaseService:
                     logging.info(f"Retrying in {retry_delay} seconds...")
                     time.sleep(retry_delay)
                 else:
-                    logging.error("Could not connect to RabbitMQ after all attempts. Exiting.")
+                    logging.error(
+                        "Could not connect to RabbitMQ after all attempts. Exiting."
+                    )
                     sys.exit(1)
             except Exception as e:
                 logging.error(f"Unexpected error connecting to RabbitMQ: {e}")
@@ -251,7 +254,8 @@ class DatabaseService:
                 routing_key=reply_to,
                 body=json.dumps(response),
                 properties=pika.BasicProperties(
-                    delivery_mode=2, correlation_id=request_id  # Make message persistent
+                    delivery_mode=2,
+                    correlation_id=request_id,  # Make message persistent
                 ),
             )
 

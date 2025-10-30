@@ -55,8 +55,9 @@ fast_unstable_sampling_mode = (
     # Remove slow rewrite phases
     .excluding("canonicalize", "specialize")
     # Include necessary rewrites for proper logp handling
-    .including("remove_TransformedVariables")
-    .register((in2out(local_check_parameter_to_ninf_switch), -1))
+    .including("remove_TransformedVariables").register(
+        (in2out(local_check_parameter_to_ninf_switch), -1)
+    )
 )
 
 
@@ -86,7 +87,10 @@ def product(domains, n_samples=-1):
 class Domain:
     def __init__(self, vals, dtype=pytensor.config.floatX, edges=None, shape=None):
         # Infinity values must be kept as floats
-        vals = [np.array(v, dtype=dtype) if np.all(np.isfinite(v)) else floatX(v) for v in vals]
+        vals = [
+            np.array(v, dtype=dtype) if np.all(np.isfinite(v)) else floatX(v)
+            for v in vals
+        ]
 
         if edges is None:
             edges = np.array(vals[0]), np.array(vals[-1])
@@ -142,7 +146,9 @@ class Domain:
 
     def __neg__(self):
         """Negate one domain."""
-        return Domain([-v for v in self.vals], self.dtype, (-self.lower, -self.upper), self.shape)
+        return Domain(
+            [-v for v in self.vals], self.dtype, (-self.lower, -self.upper), self.shape
+        )
 
 
 class ProductDomain:
@@ -374,7 +380,9 @@ def check_logp(
         )
 
     valid_value = domain.vals[0]
-    valid_params = {param: paramdomain.vals[0] for param, paramdomain in paramdomains.items()}
+    valid_params = {
+        param: paramdomain.vals[0] for param, paramdomain in paramdomains.items()
+    }
     valid_params["value"] = valid_value
 
     # Test pymc distribution raises ParameterValueError for scalar parameters outside
@@ -489,7 +497,9 @@ def check_logcdf(
             )
 
     valid_value = domain.vals[0]
-    valid_params = {param: paramdomain.vals[0] for param, paramdomain in paramdomains.items()}
+    valid_params = {
+        param: paramdomain.vals[0] for param, paramdomain in paramdomains.items()
+    }
     valid_params["value"] = valid_value
 
     # Test pymc distribution raises ParameterValueError for parameters outside the
@@ -510,7 +520,9 @@ def check_logcdf(
                     pytest.fail(f"test_params={point}")
 
     # Test that values below domain edge evaluate to -np.inf, and above evaluates to 0
-    invalid_lower, invalid_upper = find_invalid_scalar_params({"value": domain})["value"]
+    invalid_lower, invalid_upper = find_invalid_scalar_params({"value": domain})[
+        "value"
+    ]
     if invalid_lower is not None:
         point = valid_params.copy()
         point["value"] = invalid_lower
@@ -596,7 +608,9 @@ def check_icdf(
         )
 
     valid_value = domain.vals[0]
-    valid_params = {param: paramdomain.vals[0] for param, paramdomain in paramdomains.items()}
+    valid_params = {
+        param: paramdomain.vals[0] for param, paramdomain in paramdomains.items()
+    }
     valid_params["q"] = valid_value
 
     if not skip_paramdomain_outside_edge_test:
@@ -865,7 +879,9 @@ class BaseTestDistributionRandom:
 
         self.validate_tests_list()
         if self.pymc_dist == pm.Wishart:
-            with pytest.warns(UserWarning, match="can currently not be used for MCMC sampling"):
+            with pytest.warns(
+                UserWarning, match="can currently not be used for MCMC sampling"
+            ):
                 self._instantiate_pymc_rv()
         else:
             self._instantiate_pymc_rv()
@@ -879,7 +895,9 @@ class BaseTestDistributionRandom:
                     "Custom check cannot start with `test_` or else it will be executed twice."
                 )
             if self.pymc_dist == pm.Wishart and check_name.startswith("check_rv_size"):
-                with pytest.warns(UserWarning, match="can currently not be used for MCMC sampling"):
+                with pytest.warns(
+                    UserWarning, match="can currently not be used for MCMC sampling"
+                ):
                     getattr(self, check_name)()
             else:
                 getattr(self, check_name)()
@@ -892,7 +910,9 @@ class BaseTestDistributionRandom:
     def _instantiate_pymc_rv(self, dist_params=None):
         params = dist_params if dist_params else self.pymc_dist_params
         self.pymc_rv = self.pymc_dist.dist(
-            **params, size=self.size, rng=pytensor.shared(self.get_random_state(reset=True))
+            **params,
+            size=self.size,
+            rng=pytensor.shared(self.get_random_state(reset=True)),
         )
 
     def check_pymc_draws_match_reference(self):
@@ -910,7 +930,9 @@ class BaseTestDistributionRandom:
             extended_signature = op.extended_signature
             if extended_signature is None:
                 raise NotImplementedError("Op requires extended signature to be tested")
-            [_, _, dist_params_idxs], _ = op.get_input_output_type_idxs(extended_signature)
+            [_, _, dist_params_idxs], _ = op.get_input_output_type_idxs(
+                extended_signature
+            )
             dist_inputs = self.pymc_rv.owner.inputs
             pytensor_dist_inputs = [dist_inputs[i] for i in dist_params_idxs]
 
@@ -924,13 +946,33 @@ class BaseTestDistributionRandom:
 
             # RVs introduce expand_dims on the parameters, but the tests do not expect this
             implicit_expand_dims = actual_variable.type.ndim - np.ndim(expected_value)
-            actual_variable = actual_variable.squeeze(tuple(range(implicit_expand_dims)))
-            npt.assert_almost_equal(expected_value, actual_variable.eval(), decimal=self.decimal)
+            actual_variable = actual_variable.squeeze(
+                tuple(range(implicit_expand_dims))
+            )
+            npt.assert_almost_equal(
+                expected_value, actual_variable.eval(), decimal=self.decimal
+            )
 
     def check_rv_size(self):
         # test sizes
-        sizes_to_check = self.sizes_to_check or [None, (), 1, (1,), 5, (4, 5), (2, 4, 2)]
-        sizes_expected = self.sizes_expected or [(), (), (1,), (1,), (5,), (4, 5), (2, 4, 2)]
+        sizes_to_check = self.sizes_to_check or [
+            None,
+            (),
+            1,
+            (1,),
+            5,
+            (4, 5),
+            (2, 4, 2),
+        ]
+        sizes_expected = self.sizes_expected or [
+            (),
+            (),
+            (1,),
+            (1,),
+            (5,),
+            (4, 5),
+            (2, 4, 2),
+        ]
         for size, expected in zip(sizes_to_check, sizes_expected):
             rv = self.pymc_dist.dist(**self.pymc_dist_params, size=size)
             expected_symbolic = tuple(rv.shape.eval())
@@ -942,9 +984,14 @@ class BaseTestDistributionRandom:
         rv_op = rv.owner.op
         if rv_op.ndim_supp == 0 and rv_op.ndims_params == 0:
             params = {
-                k: p * np.ones(self.repeated_params_shape) for k, p in self.pymc_dist_params.items()
+                k: p * np.ones(self.repeated_params_shape)
+                for k, p in self.pymc_dist_params.items()
             }
-            sizes_to_check = [None, self.repeated_params_shape, (5, self.repeated_params_shape)]
+            sizes_to_check = [
+                None,
+                self.repeated_params_shape,
+                (5, self.repeated_params_shape),
+            ]
             sizes_expected = [
                 (self.repeated_params_shape,),
                 (self.repeated_params_shape,),
@@ -957,13 +1004,15 @@ class BaseTestDistributionRandom:
                 assert actual == expected_symbolic == expected
 
     def validate_tests_list(self):
-        assert len(self.checks_to_run) == len(set(self.checks_to_run)), (
-            "There are duplicates in the list of checks_to_run"
-        )
+        assert len(self.checks_to_run) == len(
+            set(self.checks_to_run)
+        ), "There are duplicates in the list of checks_to_run"
 
 
 def seeded_scipy_distribution_builder(dist_name: str) -> Callable:
-    return lambda self: ft.partial(getattr(st, dist_name).rvs, random_state=self.get_random_state())
+    return lambda self: ft.partial(
+        getattr(st, dist_name).rvs, random_state=self.get_random_state()
+    )
 
 
 def seeded_numpy_distribution_builder(dist_name: str) -> Callable:

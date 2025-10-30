@@ -14,24 +14,25 @@ Enhanced with V2_Possible_Gap_Fillers integration:
 - Translation Engine for semantic mathematical processing
 """
 
-from .arithmetic_engine import TrinityArithmeticEngine, ArithmeticEngine
-from .symbolic_math import FractalSymbolicMath, SymbolicMath
+from .arithmetic_engine import ArithmeticEngine, TrinityArithmeticEngine
 from .proof_engine import OntologicalProofEngine, ProofEngine, ProofResult, ProofStatus
+from .symbolic_math import FractalSymbolicMath, SymbolicMath
 
 __all__ = [
-    'TrinityArithmeticEngine', 
-    'ArithmeticEngine',
-    'FractalSymbolicMath',
-    'SymbolicMath',
-    'OntologicalProofEngine',
-    'ProofEngine',
-    'ProofResult',
-    'ProofStatus'
+    "TrinityArithmeticEngine",
+    "ArithmeticEngine",
+    "FractalSymbolicMath",
+    "SymbolicMath",
+    "OntologicalProofEngine",
+    "ProofEngine",
+    "ProofResult",
+    "ProofStatus",
 ]
 
 # Version and capabilities information
 __version__ = "2.0.0"
 __enhanced__ = True
+
 
 def get_arithmopraxis_info():
     """Get information about Arithmopraxis capabilities."""
@@ -40,13 +41,13 @@ def get_arithmopraxis_info():
         "enhanced": __enhanced__,
         "components": {
             "arithmetic_engine": "Trinity-grounded high-precision computation",
-            "symbolic_math": "Fractal-enhanced symbolic mathematics", 
-            "proof_engine": "Ontologically-validated theorem proving"
+            "symbolic_math": "Fractal-enhanced symbolic mathematics",
+            "proof_engine": "Ontologically-validated theorem proving",
         },
         "integrations": {
             "lambda_engine": "Ontological computation via Lambda calculus",
             "fractal_orbital": "Mathematical optimization via fractal analysis",
             "ontological_validator": "Trinity-grounded proof validation",
-            "translation_engine": "Semantic mathematical processing"
-        }
+            "translation_engine": "Semantic mathematical processing",
+        },
     }

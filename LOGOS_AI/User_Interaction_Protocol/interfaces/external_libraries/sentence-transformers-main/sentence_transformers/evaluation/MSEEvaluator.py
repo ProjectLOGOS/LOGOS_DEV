@@ -95,7 +95,11 @@ class MSEEvaluator(SentenceEvaluator):
         self.source_embeddings = self.embed_inputs(teacher_model, source_sentences)
 
     def __call__(
-        self, model: SentenceTransformer, output_path: str | None = None, epoch=-1, steps=-1
+        self,
+        model: SentenceTransformer,
+        output_path: str | None = None,
+        epoch=-1,
+        steps=-1,
     ) -> dict[str, float]:
         if epoch != -1:
             if steps == -1:
@@ -112,13 +116,20 @@ class MSEEvaluator(SentenceEvaluator):
         mse = ((self.source_embeddings - target_embeddings) ** 2).mean()
         mse = mse * 100
 
-        logger.info(f"MSE evaluation (lower = better) on the {self.name} dataset{out_txt}:")
+        logger.info(
+            f"MSE evaluation (lower = better) on the {self.name} dataset{out_txt}:"
+        )
         logger.info(f"MSE (*100):\t{mse:4f}")
 
         if output_path is not None and self.write_csv:
             csv_path = os.path.join(output_path, self.csv_file)
             output_file_exists = os.path.isfile(csv_path)
-            with open(csv_path, newline="", mode="a" if output_file_exists else "w", encoding="utf-8") as f:
+            with open(
+                csv_path,
+                newline="",
+                mode="a" if output_file_exists else "w",
+                encoding="utf-8",
+            ) as f:
                 writer = csv.writer(f)
                 if not output_file_exists:
                     writer.writerow(self.csv_headers)

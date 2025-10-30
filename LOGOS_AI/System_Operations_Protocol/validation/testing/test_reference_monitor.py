@@ -5,28 +5,29 @@ This module tests the enhanced reference monitor's ability to detect anomalies,
 enforce safety constraints, and maintain system integrity under various conditions.
 """
 
-import unittest
 import json
-import time
+import os
+import sys
 import tempfile
 import threading
+import time
+import unittest
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
-import sys
-import os
+from unittest.mock import MagicMock, Mock, patch
 
 # Add parent directory to path for imports
 current_dir = Path(__file__).parent
 sys.path.insert(0, str(current_dir))
 
 from logos_core.enhanced_reference_monitor import (
+    AnomalyDetector,
+    ConsistencyValidator,
     EnhancedReferenceMonitor,
     EvaluationRecord,
-    ConsistencyValidator,
-    AnomalyDetector,
-    ProofBridgeError
+    ProofBridgeError,
 )
-from logos_core.entry import initialize_logos_core, get_logos_core
+from logos_core.entry import get_logos_core, initialize_logos_core
+
 
 class TestConsistencyValidator(unittest.TestCase):
     """Test logical consistency validation"""
@@ -79,6 +80,7 @@ class TestConsistencyValidator(unittest.TestCase):
         )
         self.assertFalse(is_consistent)
 
+
 class TestAnomalyDetector(unittest.TestCase):
     """Test anomaly detection capabilities"""
 
@@ -102,7 +104,7 @@ class TestAnomalyDetector(unittest.TestCase):
                 execution_time_ms=100.0,  # Normal time
                 metadata={},
                 anomaly_flags=[],
-                consistency_check=True
+                consistency_check=True,
             )
             history.append(record)
 
@@ -119,7 +121,7 @@ class TestAnomalyDetector(unittest.TestCase):
             execution_time_ms=1000.0,  # 10x normal time
             metadata={},
             anomaly_flags=[],
-            consistency_check=True
+            consistency_check=True,
         )
 
         anomalies = self.detector.analyze_evaluation(anomalous_record, history)
@@ -142,7 +144,7 @@ class TestAnomalyDetector(unittest.TestCase):
                 execution_time_ms=100.0,
                 metadata={},
                 anomaly_flags=[],
-                consistency_check=True
+                consistency_check=True,
             )
             history.append(record)
 
@@ -159,7 +161,7 @@ class TestAnomalyDetector(unittest.TestCase):
             execution_time_ms=100.0,
             metadata={},
             anomaly_flags=[],
-            consistency_check=True
+            consistency_check=True,
         )
 
         is_anomaly = self.detector._is_error_rate_anomaly(history)
@@ -182,11 +184,12 @@ class TestAnomalyDetector(unittest.TestCase):
             execution_time_ms=100.0,
             metadata={},
             anomaly_flags=[],
-            consistency_check=True
+            consistency_check=True,
         )
 
         is_anomaly = self.detector._is_complexity_anomaly(complex_record)
         self.assertTrue(is_anomaly)
+
 
 class TestEnhancedReferenceMonitor(unittest.TestCase):
     """Test the enhanced reference monitor system"""
@@ -195,12 +198,12 @@ class TestEnhancedReferenceMonitor(unittest.TestCase):
         """Set up test fixtures"""
         # Create temporary config
         self.test_config = {
-            'log_level': 'DEBUG',
-            'telemetry_file': 'test_logs/test_telemetry.jsonl',
-            'max_errors_per_minute': 5,
-            'enable_circuit_breaker': True,
-            'enable_anomaly_detection': True,
-            'enable_consistency_validation': True
+            "log_level": "DEBUG",
+            "telemetry_file": "test_logs/test_telemetry.jsonl",
+            "max_errors_per_minute": 5,
+            "enable_circuit_breaker": True,
+            "enable_anomaly_detection": True,
+            "enable_consistency_validation": True,
         }
 
         # Create test directories
@@ -208,24 +211,27 @@ class TestEnhancedReferenceMonitor(unittest.TestCase):
         Path("audit").mkdir(exist_ok=True)
 
         # Mock the underlying evaluators to avoid dependency issues
-        with patch('logos_core.enhanced_reference_monitor.ModalLogicEvaluator') as mock_modal, \
-             patch('logos_core.enhanced_reference_monitor.IELEvaluator') as mock_iel:
+        with patch(
+            "logos_core.enhanced_reference_monitor.ModalLogicEvaluator"
+        ) as mock_modal, patch(
+            "logos_core.enhanced_reference_monitor.IELEvaluator"
+        ) as mock_iel:
 
             # Configure modal evaluator mock
             mock_modal_instance = Mock()
             mock_modal_instance.evaluate_modal_proposition.return_value = {
-                'success': True,
-                'result': True,
-                'evaluation_time': 50
+                "success": True,
+                "result": True,
+                "evaluation_time": 50,
             }
             mock_modal.return_value = mock_modal_instance
 
             # Configure IEL evaluator mock
             mock_iel_instance = Mock()
             mock_iel_instance.evaluate_iel_proposition.return_value = {
-                'success': True,
-                'result': True,
-                'evaluation_time': 75
+                "success": True,
+                "result": True,
+                "evaluation_time": 75,
             }
             mock_iel.return_value = mock_iel_instance
 
@@ -235,15 +241,14 @@ class TestEnhancedReferenceMonitor(unittest.TestCase):
         """Test pre-evaluation syntax validation"""
         # Valid proposition should pass
         is_valid, issues = self.monitor._pre_evaluation_validation(
-            "evaluate_modal_proposition",
-            proposition="p && q"
+            "evaluate_modal_proposition", proposition="p && q"
         )
         self.assertTrue(is_valid)
 
         # Invalid syntax should fail
         is_valid, issues = self.monitor._pre_evaluation_validation(
             "evaluate_modal_proposition",
-            proposition="p && q))"  # Unbalanced parentheses
+            proposition="p && q))",  # Unbalanced parentheses
         )
         self.assertFalse(is_valid)
         self.assertTrue(any("parentheses" in issue.lower() for issue in issues))
@@ -253,16 +258,17 @@ class TestEnhancedReferenceMonitor(unittest.TestCase):
         dangerous_propositions = [
             "__import__('os').system('rm -rf /')",
             "eval('malicious_code')",
-            "exec('dangerous_command')"
+            "exec('dangerous_command')",
         ]
 
         for prop in dangerous_propositions:
             is_valid, issues = self.monitor._pre_evaluation_validation(
-                "evaluate_modal_proposition",
-                proposition=prop
+                "evaluate_modal_proposition", proposition=prop
             )
             self.assertFalse(is_valid)
-            self.assertTrue(any("dangerous pattern" in issue.lower() for issue in issues))
+            self.assertTrue(
+                any("dangerous pattern" in issue.lower() for issue in issues)
+            )
 
     def test_operator_nesting_limits(self):
         """Test limits on operator nesting depth"""
@@ -270,8 +276,7 @@ class TestEnhancedReferenceMonitor(unittest.TestCase):
         deep_nested = "[]" * 15 + "p" + "]" * 15  # Too deep nesting
 
         is_valid, issues = self.monitor._pre_evaluation_validation(
-            "evaluate_modal_proposition",
-            proposition=deep_nested
+            "evaluate_modal_proposition", proposition=deep_nested
         )
         self.assertFalse(is_valid)
         self.assertTrue(any("nesting too deep" in issue for issue in issues))
@@ -283,8 +288,7 @@ class TestEnhancedReferenceMonitor(unittest.TestCase):
 
         # Should block evaluation
         is_valid, issues = self.monitor._pre_evaluation_validation(
-            "evaluate_modal_proposition",
-            proposition="p"
+            "evaluate_modal_proposition", proposition="p"
         )
         self.assertFalse(is_valid)
         self.assertTrue(any("emergency halt" in issue.lower() for issue in issues))
@@ -300,8 +304,7 @@ class TestEnhancedReferenceMonitor(unittest.TestCase):
 
         # Should block evaluation
         is_valid, issues = self.monitor._pre_evaluation_validation(
-            "evaluate_modal_proposition",
-            proposition="p"
+            "evaluate_modal_proposition", proposition="p"
         )
         self.assertFalse(is_valid)
         self.assertTrue(any("blocked" in issue.lower() for issue in issues))
@@ -310,8 +313,7 @@ class TestEnhancedReferenceMonitor(unittest.TestCase):
         self.monitor.remove_blocked_operation("evaluate_modal_proposition")
 
         is_valid, issues = self.monitor._pre_evaluation_validation(
-            "evaluate_modal_proposition",
-            proposition="p"
+            "evaluate_modal_proposition", proposition="p"
         )
         self.assertTrue(is_valid)
 
@@ -321,31 +323,31 @@ class TestEnhancedReferenceMonitor(unittest.TestCase):
         result = self.monitor.evaluate_modal_proposition("p && q")
 
         # Check that telemetry file was created
-        telemetry_file = Path(self.test_config['telemetry_file'])
+        telemetry_file = Path(self.test_config["telemetry_file"])
         self.assertTrue(telemetry_file.exists())
 
         # Read and verify log entry
-        with open(telemetry_file, 'r') as f:
+        with open(telemetry_file, "r") as f:
             log_entries = [json.loads(line) for line in f]
 
         self.assertGreater(len(log_entries), 0)
 
         latest_entry = log_entries[-1]
-        self.assertIn('evaluation_record', latest_entry)
+        self.assertIn("evaluation_record", latest_entry)
 
-        record = latest_entry['evaluation_record']
-        self.assertEqual(record['operation'], 'evaluate_modal_proposition')
-        self.assertEqual(record['input_data']['proposition'], 'p && q')
+        record = latest_entry["evaluation_record"]
+        self.assertEqual(record["operation"], "evaluate_modal_proposition")
+        self.assertEqual(record["input_data"]["proposition"], "p && q")
 
     def test_monitor_status_reporting(self):
         """Test monitor status reporting"""
         # Get initial status
         status = self.monitor.get_monitor_status()
 
-        self.assertIn('monitor_status', status)
-        self.assertIn('total_evaluations', status)
-        self.assertIn('total_errors', status)
-        self.assertIn('config', status)
+        self.assertIn("monitor_status", status)
+        self.assertIn("total_evaluations", status)
+        self.assertIn("total_errors", status)
+        self.assertIn("config", status)
 
         # Perform some evaluations
         self.monitor.evaluate_modal_proposition("p")
@@ -353,7 +355,7 @@ class TestEnhancedReferenceMonitor(unittest.TestCase):
 
         # Check updated status
         updated_status = self.monitor.get_monitor_status()
-        self.assertGreaterEqual(updated_status['total_evaluations'], 2)
+        self.assertGreaterEqual(updated_status["total_evaluations"], 2)
 
     def test_batch_evaluation_monitoring(self):
         """Test monitoring of batch evaluations"""
@@ -361,9 +363,10 @@ class TestEnhancedReferenceMonitor(unittest.TestCase):
 
         result = self.monitor.evaluate_batch(propositions)
 
-        self.assertIn('batch_results', result)
-        self.assertEqual(result['total_count'], len(propositions))
-        self.assertGreaterEqual(result['success_count'], 0)
+        self.assertIn("batch_results", result)
+        self.assertEqual(result["total_count"], len(propositions))
+        self.assertGreaterEqual(result["success_count"], 0)
+
 
 class TestAnomalyInjection(unittest.TestCase):
     """Test anomaly injection and recovery scenarios"""
@@ -371,16 +374,18 @@ class TestAnomalyInjection(unittest.TestCase):
     def setUp(self):
         """Set up test environment for anomaly injection"""
         self.test_config = {
-            'log_level': 'DEBUG',
-            'telemetry_file': 'test_logs/anomaly_telemetry.jsonl',
-            'max_errors_per_minute': 3,  # Low threshold for testing
-            'enable_circuit_breaker': True
+            "log_level": "DEBUG",
+            "telemetry_file": "test_logs/anomaly_telemetry.jsonl",
+            "max_errors_per_minute": 3,  # Low threshold for testing
+            "enable_circuit_breaker": True,
         }
 
         Path("test_logs").mkdir(exist_ok=True)
 
         # Create monitor with mocked evaluators
-        with patch('logos_core.enhanced_reference_monitor.ModalLogicEvaluator') as mock_modal:
+        with patch(
+            "logos_core.enhanced_reference_monitor.ModalLogicEvaluator"
+        ) as mock_modal:
             mock_modal_instance = Mock()
             self.mock_evaluate = mock_modal_instance.evaluate_modal_proposition
             mock_modal.return_value = mock_modal_instance
@@ -411,7 +416,7 @@ class TestAnomalyInjection(unittest.TestCase):
                 execution_time_ms=100,
                 metadata={},
                 anomaly_flags=[],
-                consistency_check=False
+                consistency_check=False,
             )
             self.monitor.state.recent_evaluations.append(error_record)
 
@@ -425,9 +430,9 @@ class TestAnomalyInjection(unittest.TestCase):
         """Test detection of consistency violations"""
         # Configure mock to return contradiction as true
         self.mock_evaluate.return_value = {
-            'success': True,
-            'result': True,  # Contradiction evaluated as true!
-            'evaluation_time': 50
+            "success": True,
+            "result": True,  # Contradiction evaluated as true!
+            "evaluation_time": 50,
         }
 
         # Evaluate a contradiction
@@ -435,15 +440,15 @@ class TestAnomalyInjection(unittest.TestCase):
 
         # Should detect consistency violation
         status = self.monitor.get_monitor_status()
-        self.assertGreater(status['total_anomalies'], 0)
+        self.assertGreater(status["total_anomalies"], 0)
 
     def test_performance_anomaly_detection(self):
         """Test detection of performance anomalies"""
         # Configure normal responses first
         self.mock_evaluate.return_value = {
-            'success': True,
-            'result': True,
-            'evaluation_time': 50
+            "success": True,
+            "result": True,
+            "evaluation_time": 50,
         }
 
         # Perform normal evaluations to establish baseline
@@ -452,7 +457,7 @@ class TestAnomalyInjection(unittest.TestCase):
             time.sleep(0.01)  # Small delay to simulate normal execution
 
         # Inject slow evaluation by mocking time
-        with patch('time.time') as mock_time:
+        with patch("time.time") as mock_time:
             mock_time.side_effect = [1000, 1000, 1005]  # 5 second evaluation
 
             result = self.monitor.evaluate_modal_proposition("slow_prop")
@@ -477,9 +482,10 @@ class TestAnomalyInjection(unittest.TestCase):
         self.assertFalse(self.monitor.emergency_halt)
 
         # Should be able to evaluate again
-        self.mock_evaluate.return_value = {'success': True, 'result': True}
+        self.mock_evaluate.return_value = {"success": True, "result": True}
         result = self.monitor.evaluate_modal_proposition("recovery_test")
-        self.assertTrue(result['success'])
+        self.assertTrue(result["success"])
+
 
 class TestIntegrationWithEntry(unittest.TestCase):
     """Test integration with LOGOS Core entry point"""
@@ -491,49 +497,56 @@ class TestIntegrationWithEntry(unittest.TestCase):
 
     def test_logos_core_initialization(self):
         """Test LOGOS Core initialization with reference monitor"""
-        with patch('logos_core.entry.ModalLogicEvaluator'), \
-             patch('logos_core.entry.IELEvaluator'):
+        with patch("logos_core.entry.ModalLogicEvaluator"), patch(
+            "logos_core.entry.IELEvaluator"
+        ):
 
-            core = initialize_logos_core({
-                'telemetry_file': 'test_logs/integration_telemetry.jsonl'
-            })
+            core = initialize_logos_core(
+                {"telemetry_file": "test_logs/integration_telemetry.jsonl"}
+            )
 
             self.assertTrue(core._initialized)
             self.assertIsNotNone(core.monitor)
 
     def test_convenience_functions(self):
         """Test convenience functions in entry module"""
-        with patch('logos_core.enhanced_reference_monitor.ModalLogicEvaluator') as mock_modal, \
-             patch('logos_core.enhanced_reference_monitor.IELEvaluator') as mock_iel:
+        with patch(
+            "logos_core.enhanced_reference_monitor.ModalLogicEvaluator"
+        ) as mock_modal, patch(
+            "logos_core.enhanced_reference_monitor.IELEvaluator"
+        ) as mock_iel:
 
             # Configure mocks
             mock_modal_instance = Mock()
             mock_modal_instance.evaluate_modal_proposition.return_value = {
-                'success': True, 'result': True
+                "success": True,
+                "result": True,
             }
             mock_modal.return_value = mock_modal_instance
 
             mock_iel_instance = Mock()
             mock_iel_instance.evaluate_iel_proposition.return_value = {
-                'success': True, 'result': True
+                "success": True,
+                "result": True,
             }
             mock_iel.return_value = mock_iel_instance
 
             # Import and test convenience functions
-            from logos_core.entry import evaluate_modal, evaluate_iel, get_status
+            from logos_core.entry import evaluate_iel, evaluate_modal, get_status
 
             # Test modal evaluation
             result = evaluate_modal("p && q")
-            self.assertTrue(result['success'])
+            self.assertTrue(result["success"])
 
             # Test IEL evaluation
             result = evaluate_iel("I(self) -> action")
-            self.assertTrue(result['success'])
+            self.assertTrue(result["success"])
 
             # Test status retrieval
             status = get_status()
-            self.assertIn('logos_core', status)
-            self.assertIn('reference_monitor', status)
+            self.assertIn("logos_core", status)
+            self.assertIn("reference_monitor", status)
+
 
 class TestThreadSafety(unittest.TestCase):
     """Test thread safety of the reference monitor"""
@@ -541,16 +554,19 @@ class TestThreadSafety(unittest.TestCase):
     def setUp(self):
         """Set up thread safety test environment"""
         self.test_config = {
-            'log_level': 'DEBUG',  # Add missing log_level
-            'telemetry_file': 'test_logs/thread_safety_telemetry.jsonl'
+            "log_level": "DEBUG",  # Add missing log_level
+            "telemetry_file": "test_logs/thread_safety_telemetry.jsonl",
         }
 
         Path("test_logs").mkdir(exist_ok=True)
 
-        with patch('logos_core.enhanced_reference_monitor.ModalLogicEvaluator') as mock_modal:
+        with patch(
+            "logos_core.enhanced_reference_monitor.ModalLogicEvaluator"
+        ) as mock_modal:
             mock_modal_instance = Mock()
             mock_modal_instance.evaluate_modal_proposition.return_value = {
-                'success': True, 'result': True
+                "success": True,
+                "result": True,
             }
             mock_modal.return_value = mock_modal_instance
 
@@ -585,7 +601,8 @@ class TestThreadSafety(unittest.TestCase):
 
         # Verify state consistency
         status = self.monitor.get_monitor_status()
-        self.assertGreaterEqual(status['total_evaluations'], 10)
+        self.assertGreaterEqual(status["total_evaluations"], 10)
+
 
 def run_safety_tests():
     """Run all safety and anomaly tests"""
@@ -599,7 +616,7 @@ def run_safety_tests():
         TestEnhancedReferenceMonitor,
         TestAnomalyInjection,
         TestIntegrationWithEntry,
-        TestThreadSafety
+        TestThreadSafety,
     ]
 
     for test_class in test_classes:
@@ -616,8 +633,9 @@ def run_safety_tests():
         "failures": len(result.failures),
         "errors": len(result.errors),
         "success": result.wasSuccessful(),
-        "failure_details": result.failures + result.errors
+        "failure_details": result.failures + result.errors,
     }
+
 
 if __name__ == "__main__":
     print("LOGOS AGI Enhanced Reference Monitor - Safety Tests")
@@ -636,18 +654,19 @@ if __name__ == "__main__":
     print(f"Errors: {summary['errors']}")
     print(f"Overall Success: {summary['success']}")
 
-    if not summary['success']:
+    if not summary["success"]:
         print(f"\nFailure Details:")
-        for failure in summary['failure_details']:
+        for failure in summary["failure_details"]:
             print(f"- {failure[0]}: {failure[1]}")
 
     # Cleanup test files (skip if permission errors)
     try:
         import shutil
+
         if Path("test_logs").exists():
             shutil.rmtree("test_logs")
     except (PermissionError, OSError):
         print("Note: Could not cleanup test_logs directory (files in use)")
 
     # Exit with appropriate code
-    sys.exit(0 if summary['success'] else 1)
+    sys.exit(0 if summary["success"] else 1)

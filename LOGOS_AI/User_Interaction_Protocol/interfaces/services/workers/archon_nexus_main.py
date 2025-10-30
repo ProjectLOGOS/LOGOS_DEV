@@ -14,23 +14,23 @@ Key Responsibilities:
 Dependencies: pika, json, networkx, core validation systems
 """
 
-import os
-import sys
 import json
-import time
 import logging
+import os
 import signal
-import uuid
-from typing import Dict, Any, Tuple
-from datetime import datetime
+import sys
 import threading
+import time
+import uuid
+from datetime import datetime
+from typing import Any, Dict, Tuple
 
 import pika
 
 # Core validation systems
 try:
-    from core.unified_formalisms import UnifiedFormalismValidator
     from core.principles import PrincipleEngine
+    from core.unified_formalisms import UnifiedFormalismValidator
     from shared.worker_config import RABBITMQ_CONFIG
 except ImportError:
 
@@ -44,9 +44,10 @@ except ImportError:
 
     RABBITMQ_CONFIG = {"host": "rabbitmq", "port": 5672, "heartbeat": 600}
 
+from .agent_orchestrator import AgentOrchestrator
+
 # Service modules
 from .workflow_architect import WorkflowArchitect, WorkflowExecution
-from .agent_orchestrator import AgentOrchestrator
 
 # Configuration
 SERVICE_NAME = "ARCHON_NEXUS"
@@ -140,7 +141,9 @@ class ArchonNexus:
                 return connection, channel
 
             except Exception as e:
-                self.logger.warning(f"Connection attempt {attempt + 1}/{max_retries} failed: {e}")
+                self.logger.warning(
+                    f"Connection attempt {attempt + 1}/{max_retries} failed: {e}"
+                )
                 if attempt < max_retries - 1:
                     time.sleep(retry_delay)
                 else:
@@ -166,12 +169,16 @@ class ArchonNexus:
         # Goal request consumer
         self.channel.basic_qos(prefetch_count=1)
         self.channel.basic_consume(
-            queue=ARCHON_GOALS_QUEUE, on_message_callback=self._handle_goal_message, auto_ack=False
+            queue=ARCHON_GOALS_QUEUE,
+            on_message_callback=self._handle_goal_message,
+            auto_ack=False,
         )
 
         # Task result consumer
         self.channel.basic_consume(
-            queue=TASK_RESULT_QUEUE, on_message_callback=self._handle_result_message, auto_ack=False
+            queue=TASK_RESULT_QUEUE,
+            on_message_callback=self._handle_result_message,
+            auto_ack=False,
         )
 
         self.logger.info("Message consumers configured")
@@ -186,11 +193,15 @@ class ArchonNexus:
             self.logger.info(f"Processing goal: {goal_description}")
 
             # Design workflow for goal
-            workflow = self.workflow_architect.design_workflow(goal_description, context)
+            workflow = self.workflow_architect.design_workflow(
+                goal_description, context
+            )
 
             # Validate workflow structure
             if not self.workflow_architect.validate_workflow_structure(workflow):
-                self.logger.error(f"Invalid workflow structure for goal: {goal_description}")
+                self.logger.error(
+                    f"Invalid workflow structure for goal: {goal_description}"
+                )
                 ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                 return
 
@@ -231,7 +242,9 @@ class ArchonNexus:
     def get_system_status(self) -> Dict[str, Any]:
         """Generate comprehensive system status report."""
         orchestrator_status = (
-            self.agent_orchestrator.get_orchestrator_status() if self.agent_orchestrator else {}
+            self.agent_orchestrator.get_orchestrator_status()
+            if self.agent_orchestrator
+            else {}
         )
 
         status = dict(self.system_status)

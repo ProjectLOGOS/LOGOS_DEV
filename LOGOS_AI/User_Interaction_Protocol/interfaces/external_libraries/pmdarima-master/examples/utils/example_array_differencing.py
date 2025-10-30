@@ -11,6 +11,7 @@ in conjunction with the ``d`` term to lag a time series.
 
    <br/>
 """
+
 print(__doc__)
 
 # Author: Taylor Smith <taylor.smith@alkaline-ml.com>

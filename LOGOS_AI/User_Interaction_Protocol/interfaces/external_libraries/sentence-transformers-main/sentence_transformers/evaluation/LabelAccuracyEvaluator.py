@@ -26,7 +26,13 @@ class LabelAccuracyEvaluator(SentenceEvaluator):
     The results are written in a CSV. If a CSV already exists, then values are appended.
     """
 
-    def __init__(self, dataloader: DataLoader, name: str = "", softmax_model=None, write_csv: bool = True):
+    def __init__(
+        self,
+        dataloader: DataLoader,
+        name: str = "",
+        softmax_model=None,
+        write_csv: bool = True,
+    ):
         """
         Constructs an evaluator for the given dataset
 
@@ -47,7 +53,11 @@ class LabelAccuracyEvaluator(SentenceEvaluator):
         self.primary_metric = "accuracy"
 
     def __call__(
-        self, model: SentenceTransformer, output_path: str | None = None, epoch: int = -1, steps: int = -1
+        self,
+        model: SentenceTransformer,
+        output_path: str | None = None,
+        epoch: int = -1,
+        steps: int = -1,
     ) -> dict[str, float]:
         model.eval()
         total = 0

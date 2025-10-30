@@ -15,26 +15,26 @@ Responsibilities:
 - Logical consistency checking
 """
 
-import os
-import sys
 import json
-import time
 import logging
+import os
 import signal
+import sys
+import time
 import uuid
-from typing import Dict, List, Any, Optional, Tuple, Union
 from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 # RabbitMQ and messaging
 import pika
 
 # Core LOGOS imports
 try:
+    from core.data_structures import OperationResult, TaskDescriptor
     from core.logic.axiomatic_proof_engine import AxiomaticProofEngine
     from core.logic.lambda_engine import LambdaEngine
     from core.logic.modal_inference_engine import ModalInferenceEngine
-    from core.data_structures import TaskDescriptor, OperationResult
 except ImportError:
     # Fallback implementations if core modules aren't available
     pass
@@ -127,7 +127,11 @@ class LambdaEngineImplementation:
                 if len(parts) == 2:
                     variable = parts[0].strip()
                     body = parts[1].strip()
-                    return {"type": "abstraction", "variable": variable, "body": self.parse(body)}
+                    return {
+                        "type": "abstraction",
+                        "variable": variable,
+                        "body": self.parse(body),
+                    }
 
             elif "(" in expression and ")" in expression:
                 # Application or compound expression
@@ -166,7 +170,10 @@ class LambdaEngineImplementation:
 
             elif expression.startswith("¬"):
                 # Negation
-                return {"type": "negation", "operand": self.parse(expression[1:].strip())}
+                return {
+                    "type": "negation",
+                    "operand": self.parse(expression[1:].strip()),
+                }
 
             # Atomic proposition or variable
             return {"type": "atom", "value": expression}
@@ -218,7 +225,11 @@ class LambdaEngineImplementation:
                     new_context = {**func_context, param: argument}
                     return self.evaluate(body, new_context)
 
-                return {"type": "application_result", "function": function, "argument": argument}
+                return {
+                    "type": "application_result",
+                    "function": function,
+                    "argument": argument,
+                }
 
             elif expr_type == "binary_operation":
                 left = self.evaluate(parsed_expr.get("left"), context)
@@ -230,7 +241,9 @@ class LambdaEngineImplementation:
                     "operator": operator,
                     "left": left,
                     "right": right,
-                    "truth_value": self._evaluate_binary_operation(left, right, operator),
+                    "truth_value": self._evaluate_binary_operation(
+                        left, right, operator
+                    ),
                 }
 
             elif expr_type == "modal_operation":
@@ -241,14 +254,20 @@ class LambdaEngineImplementation:
                     "type": "modal_result",
                     "operator": operator,
                     "operand": operand,
-                    "truth_value": self._evaluate_modal_operation(operand, operator, context),
+                    "truth_value": self._evaluate_modal_operation(
+                        operand, operator, context
+                    ),
                 }
 
             elif expr_type == "negation":
                 operand = self.evaluate(parsed_expr.get("operand"), context)
                 truth_value = not self._extract_truth_value(operand)
 
-                return {"type": "negation_result", "operand": operand, "truth_value": truth_value}
+                return {
+                    "type": "negation_result",
+                    "operand": operand,
+                    "truth_value": truth_value,
+                }
 
             else:
                 return parsed_expr
@@ -367,7 +386,9 @@ class AxiomaticProofEngineImplementation:
             },
         }
 
-    def construct_proof(self, claim: str, counter_claims: List[str] = None) -> Dict[str, Any]:
+    def construct_proof(
+        self, claim: str, counter_claims: List[str] = None
+    ) -> Dict[str, Any]:
         """
         Construct a formal proof for the given claim.
         Attempts to prove the claim and disprove counter-claims.
@@ -513,7 +534,9 @@ class AxiomaticProofEngineImplementation:
                 return axiom_name
         return None
 
-    def _expressions_equivalent(self, expr1: Dict[str, Any], expr2: Dict[str, Any]) -> bool:
+    def _expressions_equivalent(
+        self, expr1: Dict[str, Any], expr2: Dict[str, Any]
+    ) -> bool:
         """Check if two parsed expressions are logically equivalent (simplified)."""
         # Simplified equivalence check
         return str(expr1) == str(expr2)
@@ -525,7 +548,10 @@ class AxiomaticProofEngineImplementation:
         # Simplified derivation attempt
 
         # Check if claim follows from modus ponens
-        if parsed_claim.get("type") == "binary_operation" and parsed_claim.get("operator") == "→":
+        if (
+            parsed_claim.get("type") == "binary_operation"
+            and parsed_claim.get("operator") == "→"
+        ):
             # For implications, check if we can derive the consequent from the antecedent
             antecedent = parsed_claim.get("left")
             consequent = parsed_claim.get("right")
@@ -536,9 +562,11 @@ class AxiomaticProofEngineImplementation:
                     {
                         "step": 1,
                         "statement": str(antecedent),
-                        "justification": "Axiom"
-                        if self._is_axiom(antecedent)
-                        else "Previously proven theorem",
+                        "justification": (
+                            "Axiom"
+                            if self._is_axiom(antecedent)
+                            else "Previously proven theorem"
+                        ),
                         "rule": "axiom",
                     },
                     {
@@ -587,7 +615,10 @@ class AxiomaticProofEngineImplementation:
     def _is_tautology(self, parsed_expr: Dict[str, Any]) -> bool:
         """Check if expression is a tautology (simplified)."""
         # Check for patterns like (p ∨ ¬p)
-        if parsed_expr.get("type") == "binary_operation" and parsed_expr.get("operator") == "∨":
+        if (
+            parsed_expr.get("type") == "binary_operation"
+            and parsed_expr.get("operator") == "∨"
+        ):
             left = parsed_expr.get("left")
             right = parsed_expr.get("right")
 
@@ -604,7 +635,10 @@ class AxiomaticProofEngineImplementation:
         # Simplified consistency check
         # Look for patterns that would contradict basic axioms
 
-        if parsed_expr.get("type") == "binary_operation" and parsed_expr.get("operator") == "∧":
+        if (
+            parsed_expr.get("type") == "binary_operation"
+            and parsed_expr.get("operator") == "∧"
+        ):
             left = parsed_expr.get("left")
             right = parsed_expr.get("right")
 
@@ -618,9 +652,15 @@ class AxiomaticProofEngineImplementation:
                     "reason": "Violates law of non-contradiction",
                 }
 
-        return {"consistent": True, "conflicting_axioms": [], "reason": "No contradictions found"}
+        return {
+            "consistent": True,
+            "conflicting_axioms": [],
+            "reason": "No contradictions found",
+        }
 
-    def _evaluate_counter_claim(self, counter_claim: str, original_claim: str) -> Dict[str, Any]:
+    def _evaluate_counter_claim(
+        self, counter_claim: str, original_claim: str
+    ) -> Dict[str, Any]:
         """Evaluate a counter-claim against the original claim."""
         try:
             parsed_counter = self.lambda_engine.parse(counter_claim)
@@ -730,7 +770,9 @@ class ModalInferenceEngineImplementation:
             moral_alignment = outcome.get("alignment", "neutral")
 
             # Modal analysis
-            modal_analysis = self._analyze_modal_properties(outcome_probability, outcome_type)
+            modal_analysis = self._analyze_modal_properties(
+                outcome_probability, outcome_type
+            )
 
             # Moral consequence assignment
             moral_consequences = self._assign_moral_consequences(
@@ -738,7 +780,9 @@ class ModalInferenceEngineImplementation:
             )
 
             # Logical consequence derivation
-            logical_consequences = self._derive_logical_consequences(outcome, context or {})
+            logical_consequences = self._derive_logical_consequences(
+                outcome, context or {}
+            )
 
             # Overall consequence assessment
             consequence_severity = self._assess_consequence_severity(
@@ -761,10 +805,14 @@ class ModalInferenceEngineImplementation:
             self.logger.error(f"Consequence assignment failed: {e}")
             return {"status": "error", "error": str(e), "outcome": outcome}
 
-    def _analyze_modal_properties(self, probability: float, outcome_type: str) -> Dict[str, Any]:
+    def _analyze_modal_properties(
+        self, probability: float, outcome_type: str
+    ) -> Dict[str, Any]:
         """Analyze modal properties (necessity, possibility) of an outcome."""
         # Necessity analysis
-        is_necessary = probability >= 0.95  # Very high probability outcomes are necessary
+        is_necessary = (
+            probability >= 0.95
+        )  # Very high probability outcomes are necessary
         is_possible = probability > 0.0  # Any non-zero probability is possible
         is_contingent = 0.05 < probability < 0.95  # Outcomes that could go either way
         is_impossible = probability == 0.0  # Zero probability outcomes are impossible
@@ -775,7 +823,9 @@ class ModalInferenceEngineImplementation:
             modal_operator = ModalOperator.NECESSARY.value
         elif is_impossible:
             modal_strength = "impossible"
-            modal_operator = f"{LogicalConnective.NOT.value}{ModalOperator.POSSIBLE.value}"
+            modal_operator = (
+                f"{LogicalConnective.NOT.value}{ModalOperator.POSSIBLE.value}"
+            )
         elif is_contingent:
             modal_strength = "contingent"
             modal_operator = f"{ModalOperator.POSSIBLE.value}{LogicalConnective.AND.value}{ModalOperator.POSSIBLE.value}{LogicalConnective.NOT.value}"
@@ -791,14 +841,16 @@ class ModalInferenceEngineImplementation:
             "modal_strength": modal_strength,
             "modal_operator": modal_operator,
             "probability": probability,
-            "certainty_level": "high"
-            if probability > 0.8 or probability < 0.2
-            else "medium"
-            if probability > 0.6 or probability < 0.4
-            else "low",
+            "certainty_level": (
+                "high"
+                if probability > 0.8 or probability < 0.2
+                else "medium" if probability > 0.6 or probability < 0.4 else "low"
+            ),
         }
 
-    def _assign_moral_consequences(self, alignment: str, description: str) -> Dict[str, Any]:
+    def _assign_moral_consequences(
+        self, alignment: str, description: str
+    ) -> Dict[str, Any]:
         """Assign moral consequences based on outcome alignment."""
         moral_weight = 0.0
         moral_category = "neutral"
@@ -815,7 +867,10 @@ class ModalInferenceEngineImplementation:
         elif alignment == "mixed":
             moral_weight = 0.0
             moral_category = "complex"
-            ethical_implications = ["Mixed moral implications", "Requires careful consideration"]
+            ethical_implications = [
+                "Mixed moral implications",
+                "Requires careful consideration",
+            ]
         else:
             moral_weight = 0.0
             moral_category = "neutral"
@@ -967,7 +1022,9 @@ class ThonocCoreEngine:
         self.proof_cache = {}
         self.theorem_database = set()
 
-        self.logger.info(f"THONOC Core Engine initialized with worker ID: {self.worker_id}")
+        self.logger.info(
+            f"THONOC Core Engine initialized with worker ID: {self.worker_id}"
+        )
 
     def execute(self, task_type: str, payload: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -1015,7 +1072,10 @@ class ThonocCoreEngine:
             proof_method = payload.get("method", "axiomatic")
 
             if not claim:
-                return {"status": "error", "error": "No claim provided for proof construction"}
+                return {
+                    "status": "error",
+                    "error": "No claim provided for proof construction",
+                }
 
             # Check cache first
             cache_key = f"{claim}_{hash(tuple(counter_claims))}"
@@ -1069,7 +1129,10 @@ class ThonocCoreEngine:
             return {"status": "success", "consequence_assignment": consequence_result}
 
         except Exception as e:
-            return {"status": "error", "error": f"Consequence assignment failed: {str(e)}"}
+            return {
+                "status": "error",
+                "error": f"Consequence assignment failed: {str(e)}",
+            }
 
     def _evaluate_lambda_expression(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """Evaluate lambda calculus expressions."""
@@ -1078,7 +1141,10 @@ class ThonocCoreEngine:
             context = payload.get("context", {})
 
             if not expression:
-                return {"status": "error", "error": "No expression provided for evaluation"}
+                return {
+                    "status": "error",
+                    "error": "No expression provided for evaluation",
+                }
 
             # Parse the expression
             parsed_expr = self.lambda_engine.parse(expression)
@@ -1112,13 +1178,18 @@ class ThonocCoreEngine:
             reasoning_type = payload.get("reasoning_type", "necessity")
 
             if not propositions:
-                return {"status": "error", "error": "No propositions provided for modal reasoning"}
+                return {
+                    "status": "error",
+                    "error": "No propositions provided for modal reasoning",
+                }
 
             modal_results = []
 
             for i, proposition in enumerate(propositions):
                 modal_op = (
-                    modal_operators[i] if i < len(modal_operators) else ModalOperator.POSSIBLE.value
+                    modal_operators[i]
+                    if i < len(modal_operators)
+                    else ModalOperator.POSSIBLE.value
                 )
 
                 # Create modal expression
@@ -1190,11 +1261,16 @@ class ThonocCoreEngine:
                 "overall_consistent": overall_consistent,
                 "pairwise_results": consistency_results,
                 "total_statements": len(statements),
-                "inconsistent_pairs": len([r for r in consistency_results if not r["consistent"]]),
+                "inconsistent_pairs": len(
+                    [r for r in consistency_results if not r["consistent"]]
+                ),
             }
 
         except Exception as e:
-            return {"status": "error", "error": f"Consistency checking failed: {str(e)}"}
+            return {
+                "status": "error",
+                "error": f"Consistency checking failed: {str(e)}",
+            }
 
     def _statements_contradict(self, stmt1: str, stmt2: str) -> bool:
         """Check if two statements contradict each other."""
@@ -1316,7 +1392,9 @@ class ThonocWorker:
                     self.logger.info(f"Retrying in {retry_delay} seconds...")
                     time.sleep(retry_delay)
                 else:
-                    self.logger.error("Could not connect to RabbitMQ after all attempts. Exiting.")
+                    self.logger.error(
+                        "Could not connect to RabbitMQ after all attempts. Exiting."
+                    )
                     sys.exit(1)
             except Exception as e:
                 self.logger.error(f"Unexpected error connecting to RabbitMQ: {e}")
@@ -1354,7 +1432,9 @@ class ThonocWorker:
 
             # Execute task using core engine
             result_payload = self.core_engine.execute(task_type, payload)
-            status = "success" if result_payload.get("status") == "success" else "failure"
+            status = (
+                "success" if result_payload.get("status") == "success" else "failure"
+            )
 
             processing_time = time.time() - start_time
 
@@ -1419,7 +1499,9 @@ class ThonocWorker:
     def start_consuming(self):
         """Start consuming messages from the task queue."""
         try:
-            self.channel.basic_consume(queue=TASK_QUEUE, on_message_callback=self.process_task)
+            self.channel.basic_consume(
+                queue=TASK_QUEUE, on_message_callback=self.process_task
+            )
 
             self.is_running = True
             self.logger.info(

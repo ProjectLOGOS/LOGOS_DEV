@@ -8,7 +8,10 @@ from transformers import TrainingArguments as TransformersTrainingArguments
 from transformers.training_args import ParallelMode
 from transformers.utils import ExplicitEnum
 
-from sentence_transformers.sampler import DefaultBatchSampler, MultiDatasetDefaultBatchSampler
+from sentence_transformers.sampler import (
+    DefaultBatchSampler,
+    MultiDatasetDefaultBatchSampler,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -149,7 +152,9 @@ class MultiDatasetBatchSamplers(ExplicitEnum):
     """
 
     ROUND_ROBIN = "round_robin"  # Round-robin sampling from each dataset
-    PROPORTIONAL = "proportional"  # Sample from each dataset in proportion to its size [default]
+    PROPORTIONAL = (
+        "proportional"  # Sample from each dataset in proportion to its size [default]
+    )
 
 
 @dataclass
@@ -210,29 +215,40 @@ class SentenceTransformerTrainingArguments(TransformersTrainingArguments):
         "learning_rate_mapping",
     ]
 
-    prompts: Union[str, None, dict[str, str], dict[str, dict[str, str]]] = field(  # noqa: UP007
-        default=None,
-        metadata={
-            "help": "The prompts to use for each column in the datasets. "
-            "Either 1) a single string prompt, 2) a mapping of column names to prompts, 3) a mapping of dataset names "
-            "to prompts, or 4) a mapping of dataset names to a mapping of column names to prompts."
-        },
+    prompts: Union[str, None, dict[str, str], dict[str, dict[str, str]]] = (
+        field(  # noqa: UP007
+            default=None,
+            metadata={
+                "help": "The prompts to use for each column in the datasets. "
+                "Either 1) a single string prompt, 2) a mapping of column names to prompts, 3) a mapping of dataset names "
+                "to prompts, or 4) a mapping of dataset names to a mapping of column names to prompts."
+            },
+        )
     )
-    batch_sampler: Union[BatchSamplers, str, DefaultBatchSampler, Callable[..., DefaultBatchSampler]] = field(  # noqa: UP007
-        default=BatchSamplers.BATCH_SAMPLER, metadata={"help": "The batch sampler to use."}
+    batch_sampler: Union[
+        BatchSamplers, str, DefaultBatchSampler, Callable[..., DefaultBatchSampler]
+    ] = field(  # noqa: UP007
+        default=BatchSamplers.BATCH_SAMPLER,
+        metadata={"help": "The batch sampler to use."},
     )
     multi_dataset_batch_sampler: Union[  # noqa: UP007
-        MultiDatasetBatchSamplers, str, MultiDatasetDefaultBatchSampler, Callable[..., MultiDatasetDefaultBatchSampler]
+        MultiDatasetBatchSamplers,
+        str,
+        MultiDatasetDefaultBatchSampler,
+        Callable[..., MultiDatasetDefaultBatchSampler],
     ] = field(
-        default=MultiDatasetBatchSamplers.PROPORTIONAL, metadata={"help": "The multi-dataset batch sampler to use."}
+        default=MultiDatasetBatchSamplers.PROPORTIONAL,
+        metadata={"help": "The multi-dataset batch sampler to use."},
     )
-    router_mapping: Union[str, None, dict[str, str], dict[str, dict[str, str]]] = field(  # noqa: UP007
-        default_factory=dict,
-        metadata={
-            "help": 'A mapping of dataset column names to Router routes, like "query" or "document". '
-            "Either 1) a mapping of column names to routes or 2) a mapping of dataset names to a mapping "
-            "of column names to routes for multi-dataset training/evaluation. "
-        },
+    router_mapping: Union[str, None, dict[str, str], dict[str, dict[str, str]]] = (
+        field(  # noqa: UP007
+            default_factory=dict,
+            metadata={
+                "help": 'A mapping of dataset column names to Router routes, like "query" or "document". '
+                "Either 1) a mapping of column names to routes or 2) a mapping of dataset names to a mapping "
+                "of column names to routes for multi-dataset training/evaluation. "
+            },
+        )
     )
     learning_rate_mapping: Union[str, None, dict[str, float]] = field(  # noqa: UP007
         default_factory=dict,
@@ -247,7 +263,9 @@ class SentenceTransformerTrainingArguments(TransformersTrainingArguments):
         super().__post_init__()
 
         self.batch_sampler = (
-            BatchSamplers(self.batch_sampler) if isinstance(self.batch_sampler, str) else self.batch_sampler
+            BatchSamplers(self.batch_sampler)
+            if isinstance(self.batch_sampler, str)
+            else self.batch_sampler
         )
         self.multi_dataset_batch_sampler = (
             MultiDatasetBatchSamplers(self.multi_dataset_batch_sampler)
@@ -255,7 +273,9 @@ class SentenceTransformerTrainingArguments(TransformersTrainingArguments):
             else self.multi_dataset_batch_sampler
         )
 
-        self.router_mapping = self.router_mapping if self.router_mapping is not None else {}
+        self.router_mapping = (
+            self.router_mapping if self.router_mapping is not None else {}
+        )
         if isinstance(self.router_mapping, str):
             # Note that we allow a stringified dictionary for router_mapping, but then it should have been
             # parsed by the superclass's `__post_init__` method already
@@ -264,7 +284,9 @@ class SentenceTransformerTrainingArguments(TransformersTrainingArguments):
                 "like 'query' or 'document'. A stringified dictionary also works."
             )
 
-        self.learning_rate_mapping = self.learning_rate_mapping if self.learning_rate_mapping is not None else {}
+        self.learning_rate_mapping = (
+            self.learning_rate_mapping if self.learning_rate_mapping is not None else {}
+        )
         if isinstance(self.learning_rate_mapping, str):
             # Note that we allow a stringified dictionary for learning_rate_mapping, but then it should have been
             # parsed by the superclass's `__post_init__` method already
@@ -290,7 +312,10 @@ class SentenceTransformerTrainingArguments(TransformersTrainingArguments):
                     "See https://sbert.net/docs/sentence_transformer/training/distributed.html for more information."
                 )
 
-        elif self.parallel_mode == ParallelMode.DISTRIBUTED and not self.dataloader_drop_last:
+        elif (
+            self.parallel_mode == ParallelMode.DISTRIBUTED
+            and not self.dataloader_drop_last
+        ):
             # If output_dir is "unused", then this instance is created to compare training arguments vs the defaults,
             # so we don't have to warn.
             if self.output_dir != "unused":

@@ -75,7 +75,11 @@ class CachedLossDecorator:
     """
 
     def __init__(
-        self, fn, matryoshka_dims: list[int], matryoshka_weights: list[float | int], n_dims_per_step: int = -1
+        self,
+        fn,
+        matryoshka_dims: list[int],
+        matryoshka_weights: list[float | int],
+        n_dims_per_step: int = -1,
     ) -> None:
         self.fn = fn
         self.matryoshka_dims = matryoshka_dims
@@ -97,7 +101,10 @@ class CachedLossDecorator:
             # we need to detach the truncated embeddings,
             # otherwise the first backward pass of the underlying function will clear the computation graph of the embedding truncation
             if compute_gradients:
-                matryoshka_reps = [[r.detach().requires_grad_() for r in minibatch] for minibatch in truncated]
+                matryoshka_reps = [
+                    [r.detach().requires_grad_() for r in minibatch]
+                    for minibatch in truncated
+                ]
             else:
                 matryoshka_reps = truncated
             loss += weight * self.fn(matryoshka_reps, *args, **kwargs)
@@ -186,7 +193,9 @@ class MatryoshkaLoss(nn.Module):
             matryoshka_weights = [1] * len(matryoshka_dims)
         # Sort the dimensions and weights in descending order
         dims_weights = zip(matryoshka_dims, matryoshka_weights)
-        self.matryoshka_dims, self.matryoshka_weights = zip(*sorted(dims_weights, key=lambda x: x[0], reverse=True))
+        self.matryoshka_dims, self.matryoshka_weights = zip(
+            *sorted(dims_weights, key=lambda x: x[0], reverse=True)
+        )
         self.n_dims_per_step = n_dims_per_step
 
         # The Cached... losses require a special treatment as their backward pass is incompatible with the
@@ -202,7 +211,9 @@ class MatryoshkaLoss(nn.Module):
                 loss.calculate_loss, self.matryoshka_dims, self.matryoshka_weights
             )
 
-    def forward(self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor) -> Tensor:
+    def forward(
+        self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor
+    ) -> Tensor:
         # For the Cached... losses, the CachedLossDecorator has been applied to the `calculate_loss` method,
         # so we can directly call the loss function.
         if isinstance(self.loss, self.cached_losses):

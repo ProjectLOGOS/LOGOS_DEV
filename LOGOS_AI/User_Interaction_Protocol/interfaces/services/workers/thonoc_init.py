@@ -23,7 +23,7 @@ __version__ = "1.0.0"
 __author__ = "LOGOS AGI Development Team"
 __subsystem__ = "THONOC"
 
-from .thonoc_worker import ThonocWorker, ThonocCoreEngine
+from .thonoc_worker import ThonocCoreEngine, ThonocWorker
 
 __all__ = ["ThonocWorker", "ThonocCoreEngine"]
 

@@ -169,7 +169,9 @@ def visit_download_reference(self, node):
         self.context.append("</a>")
     elif "reftarget" in node and "refdoc" in node:
         atts["class"] += " external"
-        atts["href"] = posixpath.join(root, os.path.dirname(node["refdoc"]), node["reftarget"])
+        atts["href"] = posixpath.join(
+            root, os.path.dirname(node["refdoc"]), node["reftarget"]
+        )
         self.body.append(self.starttag(node, "a", "", **atts))
         self.context.append("</a>")
     else:

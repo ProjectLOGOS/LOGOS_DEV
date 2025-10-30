@@ -1,25 +1,28 @@
 # ml_components.py
 
-import numpy as np
-from typing import List, Dict, Any
-from translation_engine import translate
+from typing import Any, Dict, List
 
-# Text embedding imports
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.decomposition import TruncatedSVD
+import numpy as np
 
 # Clustering imports
 from sklearn.cluster import DBSCAN
-from sklearn.manifold import UMAP
+from sklearn.decomposition import TruncatedSVD
 
 # Prediction imports
 from sklearn.ensemble import RandomForestRegressor
+
+# Text embedding imports
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.manifold import UMAP
+from translation_engine import translate
+
 
 class FeatureExtractor:
     """
     Combines ontological axis values (existence, goodness, truth)
     with lightweight text embeddings (TF-IDF + SVD).
     """
+
     def __init__(self, n_components: int = 50):
         self.vectorizer = TfidfVectorizer(max_features=1000)
         self.svd = TruncatedSVD(n_components=n_components)
@@ -44,9 +47,7 @@ class FeatureExtractor:
           - [existence, goodness, truth]
           - text embedding vector
         """
-        texts = [
-            p if isinstance(p, str) else p.get('text', '') for p in payloads
-        ]
+        texts = [p if isinstance(p, str) else p.get("text", "") for p in payloads]
         if not self._fitted:
             text_embs = self.fit_transform(texts)
         else:
@@ -54,17 +55,19 @@ class FeatureExtractor:
 
         axes = []
         for p in payloads:
-            text = p if isinstance(p, str) else p.get('text', '')
+            text = p if isinstance(p, str) else p.get("text", "")
             vec = translate(text)
             axes.append([vec.existence, vec.goodness, vec.truth])
         axes_arr = np.array(axes)
 
         return np.hstack([axes_arr, text_embs])
 
+
 class ClusterAnalyzer:
     """
     Performs dimensionality reduction + clustering on feature arrays.
     """
+
     def __init__(self, eps: float = 0.5, min_samples: int = 5, n_neighbors: int = 15):
         self.reducer = UMAP(n_neighbors=n_neighbors, min_dist=0.1)
         self.clusterer = DBSCAN(eps=eps, min_samples=min_samples)
@@ -78,7 +81,7 @@ class ClusterAnalyzer:
         """
         emb2d = self.reducer.fit_transform(features)
         labels = self.clusterer.fit_predict(emb2d)
-        return {'embedding_2d': emb2d, 'labels': labels}
+        return {"embedding_2d": emb2d, "labels": labels}
 
     def find_gaps(self, labels: np.ndarray) -> np.ndarray:
         """
@@ -86,11 +89,13 @@ class ClusterAnalyzer:
         """
         return np.where(labels == -1)[0]
 
+
 class NextNodePredictor:
     """
     A simple regressor to predict next node coordinates (x, y, z)
     from feature vectors.
     """
+
     def __init__(self):
         self.model = RandomForestRegressor(n_estimators=50)
 

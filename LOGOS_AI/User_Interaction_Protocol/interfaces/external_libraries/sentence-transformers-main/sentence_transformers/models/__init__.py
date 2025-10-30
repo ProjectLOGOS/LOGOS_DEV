@@ -20,7 +20,9 @@ from .WeightedLayerPooling import WeightedLayerPooling
 from .WordEmbeddings import WordEmbeddings
 from .WordWeights import WordWeights
 
-sys.modules["sentence_transformers.models.Asym"] = sys.modules["sentence_transformers.models.Router"]
+sys.modules["sentence_transformers.models.Asym"] = sys.modules[
+    "sentence_transformers.models.Router"
+]
 
 __all__ = [
     "Transformer",

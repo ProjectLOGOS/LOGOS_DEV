@@ -13,7 +13,12 @@ import torch
 from packaging.version import parse as parse_version
 from torch import nn
 from torch.utils.data import BatchSampler, ConcatDataset, DataLoader, RandomSampler
-from transformers import EvalPrediction, PreTrainedTokenizerBase, Trainer, TrainerCallback
+from transformers import (
+    EvalPrediction,
+    PreTrainedTokenizerBase,
+    Trainer,
+    TrainerCallback,
+)
 from transformers import __version__ as transformers_version
 from transformers.data.data_collator import DataCollator
 from transformers.integrations import WandbCallback
@@ -38,10 +43,20 @@ from sentence_transformers.training_args import (
     MultiDatasetBatchSamplers,
     SentenceTransformerTrainingArguments,
 )
-from sentence_transformers.util import disable_logging, is_datasets_available, is_training_available
+from sentence_transformers.util import (
+    disable_logging,
+    is_datasets_available,
+    is_training_available,
+)
 
 if is_datasets_available():
-    from datasets import Dataset, DatasetDict, IterableDataset, IterableDatasetDict, Value
+    from datasets import (
+        Dataset,
+        DatasetDict,
+        IterableDataset,
+        IterableDatasetDict,
+        Value,
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -130,21 +145,32 @@ class SentenceTransformerTrainer(Trainer):
         self,
         model: SentenceTransformer | None = None,
         args: SentenceTransformerTrainingArguments | None = None,
-        train_dataset: Dataset | DatasetDict | IterableDataset | dict[str, Dataset] | None = None,
-        eval_dataset: Dataset | DatasetDict | IterableDataset | dict[str, Dataset] | None = None,
-        loss: nn.Module
-        | dict[str, nn.Module]
-        | Callable[[SentenceTransformer], torch.nn.Module]
-        | dict[str, Callable[[SentenceTransformer], torch.nn.Module]]
-        | None = None,
+        train_dataset: (
+            Dataset | DatasetDict | IterableDataset | dict[str, Dataset] | None
+        ) = None,
+        eval_dataset: (
+            Dataset | DatasetDict | IterableDataset | dict[str, Dataset] | None
+        ) = None,
+        loss: (
+            nn.Module
+            | dict[str, nn.Module]
+            | Callable[[SentenceTransformer], torch.nn.Module]
+            | dict[str, Callable[[SentenceTransformer], torch.nn.Module]]
+            | None
+        ) = None,
         evaluator: SentenceEvaluator | list[SentenceEvaluator] | None = None,
         data_collator: DataCollator | None = None,
         tokenizer: PreTrainedTokenizerBase | Callable | None = None,
         model_init: Callable[[], SentenceTransformer] | None = None,
         compute_metrics: Callable[[EvalPrediction], dict] | None = None,
         callbacks: list[TrainerCallback] | None = None,
-        optimizers: tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR] = (None, None),
-        preprocess_logits_for_metrics: Callable[[torch.Tensor, torch.Tensor], torch.Tensor] | None = None,
+        optimizers: tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR] = (
+            None,
+            None,
+        ),
+        preprocess_logits_for_metrics: (
+            Callable[[torch.Tensor, torch.Tensor], torch.Tensor] | None
+        ) = None,
     ) -> None:
         if not is_training_available():
             raise RuntimeError(
@@ -155,7 +181,9 @@ class SentenceTransformerTrainer(Trainer):
 
         if args is None:
             output_dir = "tmp_trainer"
-            logger.info(f"No `SentenceTransformerTrainingArguments` passed, using `output_dir={output_dir}`.")
+            logger.info(
+                f"No `SentenceTransformerTrainingArguments` passed, using `output_dir={output_dir}`."
+            )
             args = SentenceTransformerTrainingArguments(output_dir=output_dir)
         elif not isinstance(args, SentenceTransformerTrainingArguments):
             raise ValueError(
@@ -167,7 +195,9 @@ class SentenceTransformerTrainer(Trainer):
                 self.model_init = model_init
                 model = self.call_model_init()
             else:
-                raise RuntimeError("`Trainer` requires either a `model` or `model_init` argument")
+                raise RuntimeError(
+                    "`Trainer` requires either a `model` or `model_init` argument"
+                )
         else:
             if model_init is not None:
                 logger.warning(
@@ -185,14 +215,20 @@ class SentenceTransformerTrainer(Trainer):
 
         # Get a dictionary of the default training arguments, so we can determine which arguments have been changed
         # for the model card
-        default_args_dict = SentenceTransformerTrainingArguments(output_dir="unused").to_dict()
+        default_args_dict = SentenceTransformerTrainingArguments(
+            output_dir="unused"
+        ).to_dict()
 
         # If the model ID is set via the SentenceTransformerTrainingArguments, but not via the SentenceTransformerModelCardData,
         # then we can set it here for the model card regardless
         if args.hub_model_id and not model.model_card_data.model_id:
             model.model_card_data.set_model_id(args.hub_model_id)
 
-        if tokenizer is None and hasattr(model, "tokenizer") and isinstance(model.tokenizer, PreTrainedTokenizerBase):
+        if (
+            tokenizer is None
+            and hasattr(model, "tokenizer")
+            and isinstance(model.tokenizer, PreTrainedTokenizerBase)
+        ):
             tokenizer = model.tokenizer
 
         if data_collator is None:
@@ -200,10 +236,17 @@ class SentenceTransformerTrainer(Trainer):
                 tokenize_fn=model.tokenize,
                 router_mapping=args.router_mapping,
                 prompts=args.prompts,
-                all_special_ids=set(tokenizer.all_special_ids) if hasattr(tokenizer, "all_special_ids") else set(),
+                all_special_ids=(
+                    set(tokenizer.all_special_ids)
+                    if hasattr(tokenizer, "all_special_ids")
+                    else set()
+                ),
             )
 
-            if Router in [module.__class__ for module in model.children()] and not args.router_mapping:
+            if (
+                Router in [module.__class__ for module in model.children()]
+                and not args.router_mapping
+            ):
                 raise ValueError(
                     "You are using a Router module in your model, but you did not provide a `router_mapping` in the "
                     "training arguments. This means that the Router module will not be able to route the inputs to "
@@ -211,12 +254,20 @@ class SentenceTransformerTrainer(Trainer):
                     "e.g. {'column_one': 'query', 'column_two': 'document', 'column_three': 'document'}."
                 )
 
-        for dataset_name, dataset in zip(["train", "eval"], [train_dataset, eval_dataset]):
+        for dataset_name, dataset in zip(
+            ["train", "eval"], [train_dataset, eval_dataset]
+        ):
             if isinstance(dataset, IterableDataset) and dataset.column_names is None:
                 sample = next(iter(dataset))
-                naive_type_mapping = {str: "string", int: "int64", float: "float32", bool: "bool"}
+                naive_type_mapping = {
+                    str: "string",
+                    int: "int64",
+                    float: "float32",
+                    bool: "bool",
+                }
                 example_features = {
-                    key: Value(naive_type_mapping.get(type(value), "null")) for key, value in sample.items()
+                    key: Value(naive_type_mapping.get(type(value), "null"))
+                    for key, value in sample.items()
                 }
                 raise ValueError(
                     f"The provided `{dataset_name}_dataset` must have Features. Specify them with e.g.:\n"
@@ -226,7 +277,9 @@ class SentenceTransformerTrainer(Trainer):
                     "https://huggingface.co/docs/datasets/en/about_dataset_features"
                 )
 
-        if isinstance(train_dataset, dict) and not isinstance(train_dataset, DatasetDict):
+        if isinstance(train_dataset, dict) and not isinstance(
+            train_dataset, DatasetDict
+        ):
             train_dataset = DatasetDict(train_dataset)
         if isinstance(eval_dataset, dict) and not isinstance(eval_dataset, DatasetDict):
             eval_dataset = DatasetDict(eval_dataset)
@@ -239,7 +292,11 @@ class SentenceTransformerTrainer(Trainer):
             "args": args,
             "data_collator": data_collator,
             "train_dataset": train_dataset,
-            "eval_dataset": eval_dataset if eval_dataset is not None or evaluator is None else "dummy",
+            "eval_dataset": (
+                eval_dataset
+                if eval_dataset is not None or evaluator is None
+                else "dummy"
+            ),
             "model_init": model_init,
             "compute_metrics": compute_metrics,
             "callbacks": callbacks,
@@ -281,20 +338,35 @@ class SentenceTransformerTrainer(Trainer):
         self.args: SentenceTransformerTrainingArguments
         self.data_collator: SentenceTransformerDataCollator
         # Set the W&B or Trackio project via environment variables if it's not already set
-        if any([isinstance(callback, WandbCallback) for callback in self.callback_handler.callbacks]):
+        if any(
+            [
+                isinstance(callback, WandbCallback)
+                for callback in self.callback_handler.callbacks
+            ]
+        ):
             os.environ.setdefault("WANDB_PROJECT", "sentence-transformers")
         if TrackioCallback is not None and any(
-            [isinstance(callback, TrackioCallback) for callback in self.callback_handler.callbacks]
+            [
+                isinstance(callback, TrackioCallback)
+                for callback in self.callback_handler.callbacks
+            ]
         ):
             os.environ.setdefault("TRACKIO_PROJECT", "sentence-transformers")
 
         if loss is None:
-            logger.info("No `loss` passed, using `losses.CoSENTLoss` as a default option.")
+            logger.info(
+                "No `loss` passed, using `losses.CoSENTLoss` as a default option."
+            )
             loss = CoSENTLoss(self.model)
 
         if isinstance(loss, dict):
-            self.loss = {dataset_name: self.prepare_loss(loss_fn, model) for dataset_name, loss_fn in loss.items()}
-            for dataset_name, dataset in zip(["train", "eval"], [train_dataset, eval_dataset]):
+            self.loss = {
+                dataset_name: self.prepare_loss(loss_fn, model)
+                for dataset_name, loss_fn in loss.items()
+            }
+            for dataset_name, dataset in zip(
+                ["train", "eval"], [train_dataset, eval_dataset]
+            ):
                 if dataset is None:
                     continue
                 if not isinstance(dataset, dict):
@@ -316,11 +388,17 @@ class SentenceTransformerTrainer(Trainer):
 
         if self.train_dataset is not None:
             self.train_dataset = self.preprocess_dataset(
-                train_dataset, prompts=args.prompts, router_mapping=args.router_mapping, dataset_name="train"
+                train_dataset,
+                prompts=args.prompts,
+                router_mapping=args.router_mapping,
+                dataset_name="train",
             )
         if self.eval_dataset is not None:
             self.eval_dataset = self.preprocess_dataset(
-                eval_dataset, prompts=args.prompts, router_mapping=args.router_mapping, dataset_name="eval"
+                eval_dataset,
+                prompts=args.prompts,
+                router_mapping=args.router_mapping,
+                dataset_name="eval",
             )
         self.add_model_card_callback(default_args_dict)
 
@@ -342,7 +420,9 @@ class SentenceTransformerTrainer(Trainer):
 
         model_card_callback = SentenceTransformerModelCardCallback(default_args_dict)
         self.add_callback(model_card_callback)
-        model_card_callback.on_init_end(self.args, self.state, self.control, model=self.model, trainer=self)
+        model_card_callback.on_init_end(
+            self.args, self.state, self.control, model=self.model, trainer=self
+        )
 
     def call_model_init(self, trial=None) -> SentenceTransformer:
         model = super().call_model_init(trial=trial)
@@ -369,7 +449,9 @@ class SentenceTransformerTrainer(Trainer):
             self.loss = self.override_model_in_loss(self.loss, model)
         return model
 
-    def override_model_in_loss(self, loss: torch.nn.Module, model: SentenceTransformer) -> torch.nn.Module:
+    def override_model_in_loss(
+        self, loss: torch.nn.Module, model: SentenceTransformer
+    ) -> torch.nn.Module:
         from sentence_transformers import SentenceTransformer
 
         for name, child in loss.named_children():
@@ -425,7 +507,8 @@ class SentenceTransformerTrainer(Trainer):
         if (
             model == self.model_wrapped
             and hasattr(loss_fn, "model")  # Only if the loss stores the model
-            and loss_fn.model != model  # Only if the wrapped model is not already stored
+            and loss_fn.model
+            != model  # Only if the wrapped model is not already stored
         ):
             loss_fn = self.override_model_in_loss(loss_fn, model)
         loss = loss_fn(features, labels)
@@ -444,7 +527,9 @@ class SentenceTransformerTrainer(Trainer):
         training_type = "train" if self.model.training else "eval"
         for key, value in loss.items():
             # if loss is nan or inf simply add the average of previous logged losses
-            if self.args.logging_nan_inf_filter and (torch.isnan(value) or torch.isinf(value)):
+            if self.args.logging_nan_inf_filter and (
+                torch.isnan(value) or torch.isinf(value)
+            ):
                 if key not in self.accum_loss_components[training_type]:
                     value = torch.tensor(0.0, dtype=value.dtype, device=value.device)
                 else:
@@ -455,10 +540,14 @@ class SentenceTransformerTrainer(Trainer):
             if key not in self.accum_loss_components[training_type]:
                 self.accum_loss_components[training_type][key] = value
             else:
-                self.accum_loss_components[training_type][key] = self.accum_loss_components[training_type][key] + value
+                self.accum_loss_components[training_type][key] = (
+                    self.accum_loss_components[training_type][key] + value
+                )
 
         if "steps" not in self.accum_loss_components[training_type]:
-            self.accum_loss_components[training_type]["steps"] = torch.tensor(0, dtype=int, device=value.device)
+            self.accum_loss_components[training_type]["steps"] = torch.tensor(
+                0, dtype=int, device=value.device
+            )
         self.accum_loss_components[training_type]["steps"] += 1
 
     def log(self, logs: dict[str, float], start_time: float | None = None) -> None:
@@ -472,7 +561,9 @@ class SentenceTransformerTrainer(Trainer):
             # If we don't copy the logs, we'll include the loss components in the on_evaluate as well,
             # whereas we prefer to have them only in the on_log
             logs = logs.copy()
-            accum_losses = self._nested_gather(self.accum_loss_components[training_type])
+            accum_losses = self._nested_gather(
+                self.accum_loss_components[training_type]
+            )
             if "steps" in accum_losses:
                 steps = accum_losses.get("steps").sum().item()
                 self.accum_loss_components[training_type]["steps"] *= 0
@@ -480,7 +571,9 @@ class SentenceTransformerTrainer(Trainer):
                 for key, value in accum_losses.items():
                     if key == "steps":
                         continue
-                    log_key = f"{training_type}_{key}" if training_type == "eval" else key
+                    log_key = (
+                        f"{training_type}_{key}" if training_type == "eval" else key
+                    )
                     logs[log_key] = round((value.sum() / steps).item(), 4)
                     self.accum_loss_components[training_type][key] = torch.tensor(
                         0.0, dtype=value.dtype, device=value.device
@@ -524,7 +617,13 @@ class SentenceTransformerTrainer(Trainer):
                 prefix = column[: -len("pixel_values")]
             else:
                 continue
-            features.append({key[len(prefix) :]: value for key, value in inputs.items() if key.startswith(prefix)})
+            features.append(
+                {
+                    key[len(prefix) :]: value
+                    for key, value in inputs.items()
+                    if key.startswith(prefix)
+                }
+            )
         labels = inputs.get("label", None)
         return features, labels
 
@@ -536,7 +635,10 @@ class SentenceTransformerTrainer(Trainer):
     ) -> dict[str, float]:
         if eval_dataset:
             eval_dataset = self.preprocess_dataset(
-                eval_dataset, prompts=self.args.prompts, router_mapping=self.args.router_mapping, dataset_name="eval"
+                eval_dataset,
+                prompts=self.args.prompts,
+                router_mapping=self.args.router_mapping,
+                dataset_name="eval",
             )
         else:
             eval_dataset = self.eval_dataset
@@ -565,19 +667,30 @@ class SentenceTransformerTrainer(Trainer):
         # If we are training and eval_dataset is a DatasetDict, then we should
         # 1) only run the evaluator for the first dataset
         # 2) prefix that only run as "eval", rather than e.g. "eval_multi_nli"
-        if self.is_in_train and isinstance(self.eval_dataset, dict) and metric_key_prefix.startswith("eval_"):
+        if (
+            self.is_in_train
+            and isinstance(self.eval_dataset, dict)
+            and metric_key_prefix.startswith("eval_")
+        ):
             if metric_key_prefix[5:] == list(self.eval_dataset.keys())[0]:
                 metric_key_prefix = "eval"
             else:
                 return output
 
-        with nullcontext() if self.is_local_process_zero() else disable_logging(logging.INFO):
+        with (
+            nullcontext()
+            if self.is_local_process_zero()
+            else disable_logging(logging.INFO)
+        ):
             output_path = self.args.output_dir
             if output_path is not None:
                 output_path = os.path.join(output_path, "eval")
                 os.makedirs(output_path, exist_ok=True)
             evaluator_metrics = self.evaluator(
-                self.model, output_path=output_path, epoch=self.state.epoch, steps=self.state.global_step
+                self.model,
+                output_path=output_path,
+                epoch=self.state.epoch,
+                steps=self.state.global_step,
             )
         if not isinstance(evaluator_metrics, dict):
             evaluator_metrics = {"evaluator": evaluator_metrics}
@@ -585,7 +698,9 @@ class SentenceTransformerTrainer(Trainer):
         # Prefix all keys with metric_key_prefix + '_'
         for key in list(evaluator_metrics.keys()):
             if not key.startswith(f"{metric_key_prefix}_"):
-                evaluator_metrics[f"{metric_key_prefix}_{key}"] = evaluator_metrics.pop(key)
+                evaluator_metrics[f"{metric_key_prefix}_{key}"] = evaluator_metrics.pop(
+                    key
+                )
 
         output.metrics.update(evaluator_metrics)
 
@@ -593,14 +708,18 @@ class SentenceTransformerTrainer(Trainer):
 
     def _load_best_model(self) -> None:
         # Attempt to load the model from self.state.best_model_checkpoint
-        logger.info(f"Loading best model from {self.state.best_model_checkpoint} (score: {self.state.best_metric}).")
+        logger.info(
+            f"Loading best model from {self.state.best_model_checkpoint} (score: {self.state.best_metric})."
+        )
         try:
             dummy_model = self.model.__class__(
                 self.state.best_model_checkpoint,
                 trust_remote_code=self.model.trust_remote_code,
             )
         except Exception as exc:
-            logger.error(f"Could not load the best model from {self.state.best_model_checkpoint}. Error: {str(exc)}")
+            logger.error(
+                f"Could not load the best model from {self.state.best_model_checkpoint}. Error: {str(exc)}"
+            )
             return
 
         # Store the best model checkpoint in the model card
@@ -615,7 +734,9 @@ class SentenceTransformerTrainer(Trainer):
         # so we should be able to just copy the state dict
         self.model.load_state_dict(dummy_model.state_dict())
 
-    def validate_column_names(self, dataset: Dataset, dataset_name: str | None = None) -> None:
+    def validate_column_names(
+        self, dataset: Dataset, dataset_name: str | None = None
+    ) -> None:
         if isinstance(dataset, dict):
             for dataset_name, dataset in dataset.items():
                 self.validate_column_names(dataset, dataset_name=dataset_name)
@@ -665,7 +786,9 @@ class SentenceTransformerTrainer(Trainer):
             "seed": seed,
         }
         # If the batch sampler is a DefaultBatchSampler subclass, initialize it
-        if inspect.isclass(self.args.batch_sampler) and issubclass(self.args.batch_sampler, DefaultBatchSampler):
+        if inspect.isclass(self.args.batch_sampler) and issubclass(
+            self.args.batch_sampler, DefaultBatchSampler
+        ):
             return self.args.batch_sampler(dataset, **batch_sampler_kwargs)
 
         # If it's a callable, call it
@@ -676,7 +799,9 @@ class SentenceTransformerTrainer(Trainer):
         # don't use them in that case
         if isinstance(dataset, IterableDataset):
             if self.args.batch_sampler != BatchSamplers.BATCH_SAMPLER:
-                logger.warning("When using an IterableDataset, you cannot specify a batch sampler.")
+                logger.warning(
+                    "When using an IterableDataset, you cannot specify a batch sampler."
+                )
             return None
 
         # Lastly, use the samplers that match the enum values
@@ -687,7 +812,9 @@ class SentenceTransformerTrainer(Trainer):
             return GroupByLabelBatchSampler(dataset, **batch_sampler_kwargs)
 
         if self.args.batch_sampler == BatchSamplers.BATCH_SAMPLER:
-            return DefaultBatchSampler(RandomSampler(dataset, generator=generator), **batch_sampler_kwargs)
+            return DefaultBatchSampler(
+                RandomSampler(dataset, generator=generator), **batch_sampler_kwargs
+            )
 
     def get_multi_dataset_batch_sampler(
         self,
@@ -720,18 +847,30 @@ class SentenceTransformerTrainer(Trainer):
         if inspect.isclass(self.args.multi_dataset_batch_sampler) and issubclass(
             self.args.multi_dataset_batch_sampler, MultiDatasetDefaultBatchSampler
         ):
-            return self.args.multi_dataset_batch_sampler(dataset, **multi_batch_sampler_kwargs)
+            return self.args.multi_dataset_batch_sampler(
+                dataset, **multi_batch_sampler_kwargs
+            )
 
         # If it's a callable, call it
         if callable(self.args.multi_dataset_batch_sampler):
-            return self.args.multi_dataset_batch_sampler(dataset, **multi_batch_sampler_kwargs)
+            return self.args.multi_dataset_batch_sampler(
+                dataset, **multi_batch_sampler_kwargs
+            )
 
         # Otherwise, it's an MultiDatasetBatchSamplers instance and we use the samplers that match the enum values
-        if self.args.multi_dataset_batch_sampler == MultiDatasetBatchSamplers.ROUND_ROBIN:
+        if (
+            self.args.multi_dataset_batch_sampler
+            == MultiDatasetBatchSamplers.ROUND_ROBIN
+        ):
             return RoundRobinBatchSampler(dataset=dataset, **multi_batch_sampler_kwargs)
 
-        if self.args.multi_dataset_batch_sampler == MultiDatasetBatchSamplers.PROPORTIONAL:
-            return ProportionalBatchSampler(dataset=dataset, **multi_batch_sampler_kwargs)
+        if (
+            self.args.multi_dataset_batch_sampler
+            == MultiDatasetBatchSamplers.PROPORTIONAL
+        ):
+            return ProportionalBatchSampler(
+                dataset=dataset, **multi_batch_sampler_kwargs
+            )
 
     def get_train_dataloader(self) -> DataLoader:
         """
@@ -743,7 +882,9 @@ class SentenceTransformerTrainer(Trainer):
         Subclass and override this method if you want to inject some custom behavior.
         """
         if self.train_dataset is None:
-            raise ValueError("Training requires specifying a train_dataset to the SentenceTransformerTrainer.")
+            raise ValueError(
+                "Training requires specifying a train_dataset to the SentenceTransformerTrainer."
+            )
 
         train_dataset = self.train_dataset
         data_collator = self.data_collator
@@ -768,7 +909,9 @@ class SentenceTransformerTrainer(Trainer):
                 }
             )
             if self.args.batch_sampler != BatchSamplers.BATCH_SAMPLER:
-                logger.warning("When using an IterableDataset, you cannot specify a batch sampler.")
+                logger.warning(
+                    "When using an IterableDataset, you cannot specify a batch sampler."
+                )
 
         elif isinstance(train_dataset, IterableDatasetDict):
             raise ValueError(
@@ -820,10 +963,14 @@ class SentenceTransformerTrainer(Trainer):
         # cause issues with multi-dataset training, so we want to set this to False.
         # For evaluation, setting 'even_batches' to False results in hanging, so we keep it as True there.
         self.accelerator.even_batches = False
-        self._train_dataloader = self.accelerator.prepare(DataLoader(train_dataset, **dataloader_params))
+        self._train_dataloader = self.accelerator.prepare(
+            DataLoader(train_dataset, **dataloader_params)
+        )
         return self._train_dataloader
 
-    def get_eval_dataloader(self, eval_dataset: Dataset | DatasetDict | IterableDataset | None = None) -> DataLoader:
+    def get_eval_dataloader(
+        self, eval_dataset: Dataset | DatasetDict | IterableDataset | None = None
+    ) -> DataLoader:
         """
         Returns the evaluation [`~torch.utils.data.DataLoader`].
 
@@ -838,7 +985,9 @@ class SentenceTransformerTrainer(Trainer):
             # Prevent errors if the evaluator is set but no eval_dataset is provided
             if self.evaluator is not None:
                 return DataLoader([])
-            raise ValueError("Evaluation requires specifying an eval_dataset to the SentenceTransformerTrainer.")
+            raise ValueError(
+                "Evaluation requires specifying an eval_dataset to the SentenceTransformerTrainer."
+            )
 
         eval_dataset = eval_dataset if eval_dataset is not None else self.eval_dataset
         data_collator = self.data_collator
@@ -915,7 +1064,9 @@ class SentenceTransformerTrainer(Trainer):
         self.accelerator.even_batches = True
         return self.accelerator.prepare(DataLoader(eval_dataset, **dataloader_params))
 
-    def get_test_dataloader(self, test_dataset: Dataset | DatasetDict | IterableDataset) -> DataLoader:
+    def get_test_dataloader(
+        self, test_dataset: Dataset | DatasetDict | IterableDataset
+    ) -> DataLoader:
         """
         Returns the training [`~torch.utils.data.DataLoader`].
 
@@ -1007,7 +1158,9 @@ class SentenceTransformerTrainer(Trainer):
         os.makedirs(output_dir, exist_ok=True)
         logger.info(f"Saving model checkpoint to {output_dir}")
 
-        self.model.save_pretrained(output_dir, safe_serialization=self.args.save_safetensors)
+        self.model.save_pretrained(
+            output_dir, safe_serialization=self.args.save_safetensors
+        )
 
         # Transformers v4.46.0 changed the `tokenizer` attribute to a more general `processing_class` attribute
         if parse_version(transformers_version) >= parse_version("4.46.0"):
@@ -1022,7 +1175,9 @@ class SentenceTransformerTrainer(Trainer):
 
     def _load_from_checkpoint(self, checkpoint_path: str) -> None:
         model_class = self.model.__class__
-        loaded_model = model_class(checkpoint_path, trust_remote_code=self.model.trust_remote_code)
+        loaded_model = model_class(
+            checkpoint_path, trust_remote_code=self.model.trust_remote_code
+        )
         self.model.load_state_dict(loaded_model.state_dict())
 
     def _include_prompt_length(self) -> bool:
@@ -1068,7 +1223,9 @@ class SentenceTransformerTrainer(Trainer):
 
         # Maybe add dataset names to the dataset, useful for 1) training with prompts, 2) training with multiple losses,
         # and 3) training with a router mapping.
-        dataset = self.maybe_add_dataset_name_column(dataset, prompts, router_mapping, dataset_name=dataset_name)
+        dataset = self.maybe_add_dataset_name_column(
+            dataset, prompts, router_mapping, dataset_name=dataset_name
+        )
 
         # Add a tag to the dataset to indicate that it has been preprocessed, to ensure that we don't apply the map or
         # transform multiple times.
@@ -1226,7 +1383,9 @@ class SentenceTransformerTrainer(Trainer):
         self.model._create_model_card(self.args.output_dir, model_name=model_name)
 
     def get_optimizer_cls_and_kwargs(
-        self, args: SentenceTransformerTrainingArguments, model: SentenceTransformer | None = None
+        self,
+        args: SentenceTransformerTrainingArguments,
+        model: SentenceTransformer | None = None,
     ) -> tuple[Any, Any]:
         """
         We have to override the optimizer_grouped_parameters because the Trainer superclass bases it on the `model`
@@ -1240,7 +1399,9 @@ class SentenceTransformerTrainer(Trainer):
             loss_model = nn.Sequential(OrderedDict(self.loss))
         else:
             loss_model = self.loss
-        optimizer_cls, optimizer_kwargs = super().get_optimizer_cls_and_kwargs(args, loss_model)
+        optimizer_cls, optimizer_kwargs = super().get_optimizer_cls_and_kwargs(
+            args, loss_model
+        )
 
         # If the kwargs were not overridden by the super() call, then we should override them here so that the potential
         # weights in the loss(es) can also be updated.
@@ -1249,13 +1410,17 @@ class SentenceTransformerTrainer(Trainer):
             optimizer_kwargs["optimizer_dict"] = [
                 {
                     "params": [
-                        p for n, p in loss_model.named_parameters() if (n in decay_parameters and p.requires_grad)
+                        p
+                        for n, p in loss_model.named_parameters()
+                        if (n in decay_parameters and p.requires_grad)
                     ],
                     "weight_decay": self.args.weight_decay,
                 },
                 {
                     "params": [
-                        p for n, p in loss_model.named_parameters() if (n not in decay_parameters and p.requires_grad)
+                        p
+                        for n, p in loss_model.named_parameters()
+                        if (n not in decay_parameters and p.requires_grad)
                     ],
                     "weight_decay": 0.0,
                 },
@@ -1264,18 +1429,30 @@ class SentenceTransformerTrainer(Trainer):
         # One of "params", "model", or "optimizer_dict" should be in the optimizer_kwargs
         for parameter_pattern, learning_rate in args.learning_rate_mapping.items():
             # Check which optimizer parameter key is present
-            optimizer_param_keys = set(optimizer_kwargs.keys()) & {"params", "model", "optimizer_dict"}
-            optimizer_param_key = optimizer_param_keys.pop() if optimizer_param_keys else "optimizer_dict"
+            optimizer_param_keys = set(optimizer_kwargs.keys()) & {
+                "params",
+                "model",
+                "optimizer_dict",
+            }
+            optimizer_param_key = (
+                optimizer_param_keys.pop() if optimizer_param_keys else "optimizer_dict"
+            )
 
             # Get parameters that match the pattern
-            matching_params = {n: p for n, p in loss_model.named_parameters() if re.search(parameter_pattern, n)}
+            matching_params = {
+                n: p
+                for n, p in loss_model.named_parameters()
+                if re.search(parameter_pattern, n)
+            }
 
             if matching_params:
                 # Remove matching parameters from existing optimizer groups
                 for group in optimizer_kwargs[optimizer_param_key]:
                     if "params" in group:
                         group["params"] = [
-                            p for p in group["params"] if all(p is not param for param in matching_params.values())
+                            p
+                            for p in group["params"]
+                            if all(p is not param for param in matching_params.values())
                         ]
             else:
                 raise ValueError(
@@ -1285,8 +1462,12 @@ class SentenceTransformerTrainer(Trainer):
 
             # Add new optimizer group with matching parameters
             # decay_parameters = self.get_decay_parameter_names(loss_model)
-            matching_params_with_decay = {n: p for n, p in matching_params.items() if n in decay_parameters}
-            matching_params_without_decay = {n: p for n, p in matching_params.items() if n not in decay_parameters}
+            matching_params_with_decay = {
+                n: p for n, p in matching_params.items() if n in decay_parameters
+            }
+            matching_params_without_decay = {
+                n: p for n, p in matching_params.items() if n not in decay_parameters
+            }
 
             if matching_params_with_decay:
                 optimizer_kwargs[optimizer_param_key].append(

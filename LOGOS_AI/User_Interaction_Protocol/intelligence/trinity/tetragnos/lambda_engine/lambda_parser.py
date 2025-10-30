@@ -8,20 +8,20 @@ Dependencies: re, typing, lambda_logos_core
 """
 
 import re
-from typing import Dict, List, Tuple, Optional, Union, Any, Iterator
 from enum import Enum
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
 # Import from Lambda Logos core (adjust imports as needed)
 try:
     from lambda_logos_core import (
-        LogosExpr,
-        Variable,
-        Value,
         Abstraction,
         Application,
-        SufficientReason,
         Constant,
+        LogosExpr,
         OntologicalType,
+        SufficientReason,
+        Value,
+        Variable,
     )
 except ImportError:
     # Mock classes for standalone development
@@ -196,7 +196,10 @@ class Lexer:
             # Check for number
             if self.input[self.position].isdigit():
                 start = self.position
-                while self.position < len(self.input) and self.input[self.position].isdigit():
+                while (
+                    self.position < len(self.input)
+                    and self.input[self.position].isdigit()
+                ):
                     self.position += 1
                 value = self.input[start : self.position]
                 self.tokens.append(Token(TokenType.NUMBER, value, start))
@@ -206,7 +209,8 @@ class Lexer:
             if self.input[self.position].isalnum() or self.input[self.position] == "_":
                 start = self.position
                 while self.position < len(self.input) and (
-                    self.input[self.position].isalnum() or self.input[self.position] == "_"
+                    self.input[self.position].isalnum()
+                    or self.input[self.position] == "_"
                 ):
                     self.position += 1
                 value = self.input[start : self.position]
@@ -305,7 +309,11 @@ class Parser:
         left = self.parse_atomic()
 
         # Parse application chain
-        while self.current_token.token_type not in [TokenType.RPAREN, TokenType.DOT, TokenType.EOF]:
+        while self.current_token.token_type not in [
+            TokenType.RPAREN,
+            TokenType.DOT,
+            TokenType.EOF,
+        ]:
             right = self.parse_atomic()
             left = Application(left, right)
 
@@ -431,7 +439,9 @@ class Parser:
         if self.current_token.token_type == token_type:
             self._advance()
         else:
-            self._error(f"Expected {token_type.value}, got {self.current_token.token_type.value}")
+            self._error(
+                f"Expected {token_type.value}, got {self.current_token.token_type.value}"
+            )
 
     def _error(self, message: str) -> None:
         """Raise parser error.
@@ -442,7 +452,9 @@ class Parser:
         Raises:
             ValueError: With position information
         """
-        raise ValueError(f"Parser error at position {self.current_token.position}: {message}")
+        raise ValueError(
+            f"Parser error at position {self.current_token.position}: {message}"
+        )
 
 
 def parse_expr(input_str: str, env: Optional[Dict[str, Any]] = None) -> LogosExpr:
@@ -466,7 +478,13 @@ def parse_expr(input_str: str, env: Optional[Dict[str, Any]] = None) -> LogosExp
 # Example usage
 if __name__ == "__main__":
     # Test basic parsing
-    expr_strs = ["λx:𝔼.x", "(λx:𝔼.x) ei", "SR(𝔼,𝔾,3)", "SR(𝔼,𝔾,3) ei", "λp:Prop.λq:Prop.(p q)"]
+    expr_strs = [
+        "λx:𝔼.x",
+        "(λx:𝔼.x) ei",
+        "SR(𝔼,𝔾,3)",
+        "SR(𝔼,𝔾,3) ei",
+        "λp:Prop.λq:Prop.(p q)",
+    ]
 
     for expr_str in expr_strs:
         try:

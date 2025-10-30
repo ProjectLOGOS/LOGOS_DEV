@@ -92,7 +92,9 @@ class BinaryClassificationEvaluator(SentenceEvaluator):
         show_progress_bar: bool = False,
         write_csv: bool = True,
         truncate_dim: int | None = None,
-        similarity_fn_names: list[Literal["cosine", "dot", "euclidean", "manhattan"]] | None = None,
+        similarity_fn_names: (
+            list[Literal["cosine", "dot", "euclidean", "manhattan"]] | None
+        ) = None,
     ):
         super().__init__()
         self.sentences1 = sentences1
@@ -111,11 +113,16 @@ class BinaryClassificationEvaluator(SentenceEvaluator):
         self.batch_size = batch_size
         if show_progress_bar is None:
             show_progress_bar = (
-                logger.getEffectiveLevel() == logging.INFO or logger.getEffectiveLevel() == logging.DEBUG
+                logger.getEffectiveLevel() == logging.INFO
+                or logger.getEffectiveLevel() == logging.DEBUG
             )
         self.show_progress_bar = show_progress_bar
 
-        self.csv_file = "binary_classification_evaluation" + ("_" + name if name else "") + "_results.csv"
+        self.csv_file = (
+            "binary_classification_evaluation"
+            + ("_" + name if name else "")
+            + "_results.csv"
+        )
         self.csv_headers = ["epoch", "steps"]
 
         self._append_csv_headers(self.similarity_fn_names)
@@ -149,7 +156,11 @@ class BinaryClassificationEvaluator(SentenceEvaluator):
         return cls(sentences1, sentences2, scores, **kwargs)
 
     def __call__(
-        self, model: SentenceTransformer, output_path: str | None = None, epoch: int = -1, steps: int = -1
+        self,
+        model: SentenceTransformer,
+        output_path: str | None = None,
+        epoch: int = -1,
+        steps: int = -1,
     ) -> dict[str, float]:
         """
         Compute the evaluation metrics for the given model.
@@ -173,7 +184,9 @@ class BinaryClassificationEvaluator(SentenceEvaluator):
         if self.truncate_dim is not None:
             out_txt += f" (truncated to {self.truncate_dim})"
 
-        logger.info(f"Binary Accuracy Evaluation of the model on the {self.name} dataset{out_txt}:")
+        logger.info(
+            f"Binary Accuracy Evaluation of the model on the {self.name} dataset{out_txt}:"
+        )
 
         if not self.similarity_fn_names:
             self.similarity_fn_names = [model.similarity_fn_name]
@@ -208,7 +221,9 @@ class BinaryClassificationEvaluator(SentenceEvaluator):
         if len(self.similarity_fn_names) > 1:
             metrics.update(
                 {
-                    f"max_{metric}": max(scores[short_name][metric] for short_name in scores)
+                    f"max_{metric}": max(
+                        scores[short_name][metric] for short_name in scores
+                    )
                     for metric in scores["cosine"]
                 }
             )
@@ -220,7 +235,9 @@ class BinaryClassificationEvaluator(SentenceEvaluator):
         self.store_metrics_in_model_card_data(model, metrics, epoch, steps)
         return metrics
 
-    def compute_metrices(self, model: SentenceTransformer) -> dict[str, dict[str, float]]:
+    def compute_metrices(
+        self, model: SentenceTransformer
+    ) -> dict[str, dict[str, float]]:
         try:
             # If the sentences are hashable, then we can use a set to avoid embedding the same sentences multiple
             # times
@@ -262,19 +279,38 @@ class BinaryClassificationEvaluator(SentenceEvaluator):
         output_scores = {}
         for similarity_fn_name in self.similarity_fn_names:
             similarity_fn = similarity_fns[similarity_fn_name]
-            scores = similarity_fn["score_fn"](embeddings1, embeddings2).detach().cpu().numpy()
+            scores = (
+                similarity_fn["score_fn"](embeddings1, embeddings2)
+                .detach()
+                .cpu()
+                .numpy()
+            )
             greater_is_better = similarity_fn["greater_is_better"]
             name = similarity_fn["name"]
 
-            acc, acc_threshold = self.find_best_acc_and_threshold(scores, labels, greater_is_better)
-            f1, precision, recall, f1_threshold = self.find_best_f1_and_threshold(scores, labels, greater_is_better)
-            ap = average_precision_score(labels, scores * (1 if greater_is_better else -1))
+            acc, acc_threshold = self.find_best_acc_and_threshold(
+                scores, labels, greater_is_better
+            )
+            f1, precision, recall, f1_threshold = self.find_best_f1_and_threshold(
+                scores, labels, greater_is_better
+            )
+            ap = average_precision_score(
+                labels, scores * (1 if greater_is_better else -1)
+            )
 
-            predicted_labels = (scores >= f1_threshold) if greater_is_better else (scores <= f1_threshold)
+            predicted_labels = (
+                (scores >= f1_threshold)
+                if greater_is_better
+                else (scores <= f1_threshold)
+            )
             mcc = matthews_corrcoef(labels, predicted_labels)
 
-            logger.info(f"Accuracy with {name}:             {acc * 100:.2f}\t(Threshold: {acc_threshold:.4f})")
-            logger.info(f"F1 with {name}:                   {f1 * 100:.2f}\t(Threshold: {f1_threshold:.4f})")
+            logger.info(
+                f"Accuracy with {name}:             {acc * 100:.2f}\t(Threshold: {acc_threshold:.4f})"
+            )
+            logger.info(
+                f"F1 with {name}:                   {f1 * 100:.2f}\t(Threshold: {f1_threshold:.4f})"
+            )
             logger.info(f"Precision with {name}:            {precision * 100:.2f}")
             logger.info(f"Recall with {name}:               {recall * 100:.2f}")
             logger.info(f"Average Precision with {name}:    {ap * 100:.2f}")

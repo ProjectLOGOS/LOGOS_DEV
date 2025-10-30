@@ -25,7 +25,9 @@ class VoiceProcessor:
             self.speech_recognition_available = True
             logger.info("Speech recognition available")
         except ImportError:
-            logger.warning("Speech recognition not available - install speechrecognition package")
+            logger.warning(
+                "Speech recognition not available - install speechrecognition package"
+            )
 
         try:
             # Check for TTS capabilities

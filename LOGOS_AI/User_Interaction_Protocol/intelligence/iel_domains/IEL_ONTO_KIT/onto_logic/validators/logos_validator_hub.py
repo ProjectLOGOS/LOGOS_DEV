@@ -1,11 +1,13 @@
 # logos_validator_hub.py
 
+
 class BaseValidator:
     def name(self):
         return self.__class__.__name__
 
     def validate(self, content: str) -> bool:
         raise NotImplementedError("Each validator must implement the validate method.")
+
 
 class LOGOSValidatorHub:
     def __init__(self):
@@ -27,20 +29,25 @@ class LOGOSValidatorHub:
     def summary(self):
         return [v.name() for v in self.validators]
 
+
 # Example placeholders for validator implementations
+
 
 class EGTCValidator(BaseValidator):
     def validate(self, content):
         # Placeholder logic — integrate real EGTC logic here
         return all(x in content.lower() for x in ["exist", "true", "good", "logic"])
 
+
 class TLMValidator(BaseValidator):
     def validate(self, content):
         return "transcendent" in content.lower()
 
+
 class AxiomaticAlignmentChecker(BaseValidator):
     def validate(self, content):
         return not any(x in content.lower() for x in ["axiomless", "undefined"])
+
 
 # Usage Example:
 if __name__ == "__main__":
@@ -54,7 +61,7 @@ if __name__ == "__main__":
     samples = [
         "This statement exists and is true, good, and logical",
         "This is undefined and axiomless",
-        "It is transcendent and rooted in divine reason"
+        "It is transcendent and rooted in divine reason",
     ]
 
     for s in samples:

@@ -14,9 +14,9 @@ EXEC = "http://localhost:8072"
 # Get kernel hash
 try:
     CFG = json.loads(
-        (pathlib.Path(__file__).resolve().parents[2] / "configs" / "config.json").read_text(
-            encoding="utf-8"
-        )
+        (
+            pathlib.Path(__file__).resolve().parents[2] / "configs" / "config.json"
+        ).read_text(encoding="utf-8")
     )
     PIN = CFG.get("expected_kernel_hash", "")
 except:
@@ -108,7 +108,10 @@ def ask(inp: AskIn):
 
     # Test LOGOS authorization
     if cmd.startswith("test logos") or cmd.startswith("authorize"):
-        action = cmd.replace("test logos", "").replace("authorize", "").strip() or "probe_test"
+        action = (
+            cmd.replace("test logos", "").replace("authorize", "").strip()
+            or "probe_test"
+        )
         try:
             auth_payload = {
                 "action": f"task:{action}",
@@ -116,11 +119,21 @@ def ask(inp: AskIn):
                 "props": "verified",
                 "provenance": {"src": "probe_console", "cmd": cmd},
             }
-            r = requests.post(f"{LOGOS}/authorize_action", json=auth_payload, timeout=10)
+            r = requests.post(
+                f"{LOGOS}/authorize_action", json=auth_payload, timeout=10
+            )
             if r.ok:
-                return {"test": "LOGOS authorization", "status": "SUCCESS", "response": r.json()}
+                return {
+                    "test": "LOGOS authorization",
+                    "status": "SUCCESS",
+                    "response": r.json(),
+                }
             else:
-                return {"test": "LOGOS authorization", "status": "FAILED", "error": r.text}
+                return {
+                    "test": "LOGOS authorization",
+                    "status": "FAILED",
+                    "error": r.text,
+                }
         except Exception as e:
             return {"test": "LOGOS authorization", "status": "ERROR", "error": str(e)}
 
@@ -128,7 +141,11 @@ def ask(inp: AskIn):
     elif cmd.startswith("test exec"):
         try:
             r = requests.get(f"{EXEC}/health", timeout=5)
-            return {"test": "Executor health", "status": "SUCCESS", "response": r.json()}
+            return {
+                "test": "Executor health",
+                "status": "SUCCESS",
+                "response": r.json(),
+            }
         except Exception as e:
             return {"test": "Executor health", "status": "ERROR", "error": str(e)}
 

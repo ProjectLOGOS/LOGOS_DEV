@@ -62,7 +62,9 @@ class STSDataReader:
 
                 s1 = row[self.s1_col_idx]
                 s2 = row[self.s2_col_idx]
-                examples.append(InputExample(guid=filename + str(id), texts=[s1, s2], label=score))
+                examples.append(
+                    InputExample(guid=filename + str(id), texts=[s1, s2], label=score)
+                )
 
                 if max_examples > 0 and len(examples) >= max_examples:
                     break

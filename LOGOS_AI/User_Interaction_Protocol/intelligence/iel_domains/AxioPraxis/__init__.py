@@ -9,7 +9,7 @@ This domain focuses on the praxis of foundational systems, including:
 """
 
 from .axiom_systems import AxiomSystem
-from .foundational_logic import FoundationalLogic
 from .consistency_checker import ConsistencyChecker
+from .foundational_logic import FoundationalLogic
 
-__all__ = ['AxiomSystem', 'FoundationalLogic', 'ConsistencyChecker']
+__all__ = ["AxiomSystem", "FoundationalLogic", "ConsistencyChecker"]

@@ -4,9 +4,10 @@ Modal Logic Framework
 Provides classes for modal logic systems, operators, and reasoning.
 """
 
-from typing import Dict, List, Any, Optional, Set, Callable
-from enum import Enum
 from dataclasses import dataclass
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Set
+
 
 class ModalOperator(Enum):
     NECESSITY = "□"  # Box - necessarily
@@ -16,29 +17,34 @@ class ModalOperator(Enum):
     KNOWLEDGE = "K"  # Knowledge
     BELIEF = "B"  # Belief
 
+
 class ModalSystem(Enum):
-    K = "K"      # Basic modal logic
-    T = "T"      # Reflexive frames
-    S4 = "S4"    # Transitive and reflexive
-    S5 = "S5"    # Euclidean, transitive, reflexive
-    D = "D"      # Serial frames
-    B = "B"      # Symmetric frames
+    K = "K"  # Basic modal logic
+    T = "T"  # Reflexive frames
+    S4 = "S4"  # Transitive and reflexive
+    S5 = "S5"  # Euclidean, transitive, reflexive
+    D = "D"  # Serial frames
+    B = "B"  # Symmetric frames
+
 
 @dataclass
 class ModalFormula:
     """Represents a modal formula."""
+
     operator: Optional[ModalOperator]
     proposition: str
-    subformula: Optional['ModalFormula'] = None
+    subformula: Optional["ModalFormula"] = None
 
     def __str__(self):
         if self.operator:
             return f"{self.operator.value}{self.proposition}"
         return self.proposition
 
+
 @dataclass
 class AccessibilityRelation:
     """Represents accessibility relation between worlds."""
+
     worlds: Set[str]
     relations: Dict[str, Set[str]]  # world -> set of accessible worlds
 
@@ -80,6 +86,7 @@ class AccessibilityRelation:
                             return False
         return True
 
+
 class ModalLogic:
     """
     Framework for modal logic reasoning.
@@ -92,7 +99,9 @@ class ModalLogic:
         self.system = system
         self.worlds: Set[str] = set()
         self.accessibility = AccessibilityRelation(set(), {})
-        self.valuations: Dict[str, Dict[str, bool]] = {}  # world -> proposition -> truth value
+        self.valuations: Dict[str, Dict[str, bool]] = (
+            {}
+        )  # world -> proposition -> truth value
         self.axioms: List[str] = []
 
         self._initialize_system()
@@ -106,7 +115,12 @@ class ModalLogic:
         elif self.system == ModalSystem.S4:
             self.axioms = ["K: □(p→q)→(□p→□q)", "T: □p→p", "4: □p→□□p"]  # Transitivity
         elif self.system == ModalSystem.S5:
-            self.axioms = ["K: □(p→q)→(□p→□q)", "T: □p→p", "4: □p→□□p", "5: ◇p→□◇p"]  # Euclidean
+            self.axioms = [
+                "K: □(p→q)→(□p→□q)",
+                "T: □p→p",
+                "4: □p→□□p",
+                "5: ◇p→□◇p",
+            ]  # Euclidean
         elif self.system == ModalSystem.D:
             self.axioms = ["K: □(p→q)→(□p→□q)", "D: □p→◇p"]  # Seriality
         elif self.system == ModalSystem.B:
@@ -138,12 +152,16 @@ class ModalLogic:
         elif formula.operator == ModalOperator.NECESSITY:
             # □φ is true in w iff φ is true in all accessible worlds
             accessible_worlds = self.accessibility.relations.get(world, set())
-            return all(self.evaluate_formula(formula.subformula, w) for w in accessible_worlds)
+            return all(
+                self.evaluate_formula(formula.subformula, w) for w in accessible_worlds
+            )
 
         elif formula.operator == ModalOperator.POSSIBILITY:
             # ◇φ is true in w iff φ is true in some accessible world
             accessible_worlds = self.accessibility.relations.get(world, set())
-            return any(self.evaluate_formula(formula.subformula, w) for w in accessible_worlds)
+            return any(
+                self.evaluate_formula(formula.subformula, w) for w in accessible_worlds
+            )
 
         return False
 
@@ -153,10 +171,16 @@ class ModalLogic:
         if self.system == ModalSystem.T and not self.accessibility.is_reflexive():
             return False
         elif self.system == ModalSystem.S4:
-            if not (self.accessibility.is_reflexive() and self.accessibility.is_transitive()):
+            if not (
+                self.accessibility.is_reflexive() and self.accessibility.is_transitive()
+            ):
                 return False
         elif self.system == ModalSystem.S5:
-            if not (self.accessibility.is_reflexive() and self.accessibility.is_transitive() and self.accessibility.is_euclidean()):
+            if not (
+                self.accessibility.is_reflexive()
+                and self.accessibility.is_transitive()
+                and self.accessibility.is_euclidean()
+            ):
                 return False
         elif self.system == ModalSystem.D and not self.accessibility.is_serial():
             return False
@@ -177,7 +201,7 @@ class ModalLogic:
             "transitive": self.accessibility.is_transitive(),
             "symmetric": self.accessibility.is_symmetric(),
             "serial": self.accessibility.is_serial(),
-            "euclidean": self.accessibility.is_euclidean()
+            "euclidean": self.accessibility.is_euclidean(),
         }
 
     def validate_modal_logic(self, theorems: List[str]) -> Dict[str, Any]:
@@ -196,5 +220,5 @@ class ModalLogic:
             "system": self.system.value,
             "consistent": self.check_consistency(),
             "theorems_checked": len(theorems),
-            "results": results
+            "results": results,
         }

@@ -5,13 +5,13 @@ Integrates Internal Extension Libraries (IELs) into the LOGOS core system.
 Provides unified access to all praxis domains and their capabilities.
 """
 
-from typing import Dict, List, Any, Optional, Type
-import sys
 import os
+import sys
+from typing import Any, Dict, List, Optional, Type
 
 # Add IEL directory to path
 current_dir = os.path.dirname(os.path.dirname(__file__))
-iel_path = os.path.join(current_dir, 'IEL')
+iel_path = os.path.join(current_dir, "IEL")
 if iel_path not in sys.path:
     sys.path.insert(0, iel_path)
 if current_dir not in sys.path:
@@ -19,7 +19,8 @@ if current_dir not in sys.path:
 
 try:
     import iel_registry
-    from iel_registry import get_iel_registry, IELRegistry
+    from iel_registry import IELRegistry, get_iel_registry
+
     _iel_available = True
 except ImportError as e:
     print(f"IEL registry import failed: {e}")
@@ -28,11 +29,13 @@ except ImportError as e:
 
     class MockIELRegistry:
         """Mock registry for when IEL is not available."""
+
         def get_domain_description(self, domain_name: str) -> str:
             return "Domain not available"
 
     def get_iel_registry():
         return None
+
 
 class IELIntegration:
     """
@@ -61,7 +64,7 @@ class IELIntegration:
         if success:
             domain_info = self.registry.get_domain(domain_name)
             if domain_info:
-                self.active_domains[domain_name] = domain_info.get('components', [])
+                self.active_domains[domain_name] = domain_info.get("components", [])
 
         return success
 
@@ -77,7 +80,9 @@ class IELIntegration:
         full_name = f"{domain_name}.{component_name}"
         return self.registry.get_component(full_name)
 
-    def create_domain_instance(self, domain_name: str, component_name: str, *args, **kwargs) -> Optional[Any]:
+    def create_domain_instance(
+        self, domain_name: str, component_name: str, *args, **kwargs
+    ) -> Optional[Any]:
         """Create an instance of a domain component."""
         component_class = self.get_component(domain_name, component_name)
         if component_class:
@@ -87,11 +92,15 @@ class IELIntegration:
                 self.domain_instances[instance_key] = instance
                 return instance
             except Exception as e:
-                print(f"Failed to create instance of {domain_name}.{component_name}: {e}")
+                print(
+                    f"Failed to create instance of {domain_name}.{component_name}: {e}"
+                )
                 return None
         return None
 
-    def get_domain_instance(self, domain_name: str, component_name: str) -> Optional[Any]:
+    def get_domain_instance(
+        self, domain_name: str, component_name: str
+    ) -> Optional[Any]:
         """Get an existing instance of a domain component."""
         instance_key = f"{domain_name}.{component_name}"
         return self.domain_instances.get(instance_key)
@@ -125,11 +134,13 @@ class IELIntegration:
             "registry_loaded": self.registry is not None,
             "active_domains": list(self.active_domains.keys()),
             "domain_instances": len(self.domain_instances),
-            "available_domains": self.list_available_domains() if self.registry else []
+            "available_domains": self.list_available_domains() if self.registry else [],
         }
+
 
 # Global IEL integration instance
 _iel_integration = None
+
 
 def get_iel_integration() -> IELIntegration:
     """Get the global IEL integration instance."""
@@ -137,6 +148,7 @@ def get_iel_integration() -> IELIntegration:
     if _iel_integration is None:
         _iel_integration = IELIntegration()
     return _iel_integration
+
 
 def initialize_iel_system() -> bool:
     """Initialize the complete IEL system."""
@@ -146,6 +158,8 @@ def initialize_iel_system() -> bool:
     success_count = sum(results.values())
     total_count = len(results)
 
-    print(f"IEL System Initialization: {success_count}/{total_count} domains initialized and active")
+    print(
+        f"IEL System Initialization: {success_count}/{total_count} domains initialized and active"
+    )
 
     return success_count == total_count

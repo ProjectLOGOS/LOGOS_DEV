@@ -128,7 +128,9 @@ def check_no_unexpected_results(mypy_lines: Iterator[str]):
             "These files did not fail before, so please check the above output"
             f" for errors in {unexpected_failing} and fix them."
         )
-        print("You can run `python scripts/run_mypy.py --verbose` to reproduce this test locally.")
+        print(
+            "You can run `python scripts/run_mypy.py --verbose` to reproduce this test locally."
+        )
         sys.exit(1)
 
     if unexpected_passing:
@@ -147,7 +149,9 @@ def check_no_unexpected_results(mypy_lines: Iterator[str]):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run mypy type checks on PyMC codebase.")
+    parser = argparse.ArgumentParser(
+        description="Run mypy type checks on PyMC codebase."
+    )
     parser.add_argument(
         "--verbose", action="count", default=0, help="Pass this to print mypy output."
     )
@@ -168,7 +172,9 @@ if __name__ == "__main__":
         for section, sdf in df.reset_index().groupby(args.groupby):
             print(f"\n\n[{section}]")
             for row in sdf.itertuples():
-                print(f"{row.file}:{row.line}: {row.type} [{row.errorcode}]: {row.message}")
+                print(
+                    f"{row.file}:{row.line}: {row.type} [{row.errorcode}]: {row.message}"
+                )
         print()
     else:
         print(

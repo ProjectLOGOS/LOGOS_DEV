@@ -59,5 +59,8 @@ def test_nanobeir_evaluator_with_invalid_dataset():
 
 def test_nanobeir_evaluator_empty_inputs():
     """Test that NanoBEIREvaluator behaves correctly with empty datasets."""
-    with pytest.raises(ValueError, match="dataset_names cannot be empty. Use None to evaluate on all datasets."):
+    with pytest.raises(
+        ValueError,
+        match="dataset_names cannot be empty. Use None to evaluate on all datasets.",
+    ):
         NanoBEIREvaluator(dataset_names=[])

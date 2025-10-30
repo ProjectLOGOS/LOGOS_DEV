@@ -116,7 +116,12 @@ def ask(inp: AskIn):
                 return r.json()
 
         # fallback: authorize only (shows proof gating)
-        auth = {"action": f"task:{t}", "state": "queued", "props": "payload", "provenance": prov}
+        auth = {
+            "action": f"task:{t}",
+            "state": "queued",
+            "props": "payload",
+            "provenance": prov,
+        }
         r = requests.post(f"{LOGOS}/authorize_action", json=auth, timeout=10)
         if not r.ok:
             raise HTTPException(403, r.text)

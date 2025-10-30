@@ -23,8 +23,12 @@ class CrossEncoderDataCollator(SentenceTransformerDataCollator):
     """
 
     tokenize_fn: Callable
-    valid_label_columns: list[str] = field(default_factory=lambda: ["label", "labels", "score", "scores"])
-    _warned_columns: set[tuple[str]] = field(default_factory=set, init=False, repr=False)
+    valid_label_columns: list[str] = field(
+        default_factory=lambda: ["label", "labels", "score", "scores"]
+    )
+    _warned_columns: set[tuple[str]] = field(
+        default_factory=set, init=False, repr=False
+    )
 
     def __call__(self, features: list[dict[str, Any]]) -> dict[str, torch.Tensor]:
         column_names = list(features[0].keys())
@@ -41,17 +45,26 @@ class CrossEncoderDataCollator(SentenceTransformerDataCollator):
             if label_column in column_names:
                 # If the label column is a list/tuple/collection, we create a list of tensors
                 if isinstance(features[0][label_column], Collection):
-                    batch["label"] = [torch.tensor(row[label_column]) for row in features]
+                    batch["label"] = [
+                        torch.tensor(row[label_column]) for row in features
+                    ]
                 else:
                     # Otherwise, if it's e.g. single values, we create a tensor
-                    batch["label"] = torch.tensor([row[label_column] for row in features])
+                    batch["label"] = torch.tensor(
+                        [row[label_column] for row in features]
+                    )
                 column_names.remove(label_column)
                 break
 
         for column_name in column_names:
             # If the prompt length has been set, we should add it to the batch
-            if column_name.endswith("_prompt_length") and column_name[: -len("_prompt_length")] in column_names:
-                batch[column_name] = torch.tensor([row[column_name] for row in features], dtype=torch.int)
+            if (
+                column_name.endswith("_prompt_length")
+                and column_name[: -len("_prompt_length")] in column_names
+            ):
+                batch[column_name] = torch.tensor(
+                    [row[column_name] for row in features], dtype=torch.int
+                )
                 continue
 
             batch[column_name] = [row[column_name] for row in features]

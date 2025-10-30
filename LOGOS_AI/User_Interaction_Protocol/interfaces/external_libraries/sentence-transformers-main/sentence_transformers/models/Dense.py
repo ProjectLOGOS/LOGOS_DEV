@@ -49,7 +49,9 @@ class Dense(Module):
         self.in_features = in_features
         self.out_features = out_features
         self.bias = bias
-        self.activation_function = nn.Identity() if activation_function is None else activation_function
+        self.activation_function = (
+            nn.Identity() if activation_function is None else activation_function
+        )
         self.linear = nn.Linear(in_features, out_features, bias=bias)
 
         if init_weight is not None:
@@ -59,7 +61,13 @@ class Dense(Module):
             self.linear.bias = nn.Parameter(init_bias)
 
     def forward(self, features: dict[str, Tensor]):
-        features.update({"sentence_embedding": self.activation_function(self.linear(features["sentence_embedding"]))})
+        features.update(
+            {
+                "sentence_embedding": self.activation_function(
+                    self.linear(features["sentence_embedding"])
+                )
+            }
+        )
         return features
 
     def get_sentence_embedding_dimension(self) -> int:
@@ -73,7 +81,9 @@ class Dense(Module):
             "activation_function": fullname(self.activation_function),
         }
 
-    def save(self, output_path: str, *args, safe_serialization: bool = True, **kwargs) -> None:
+    def save(
+        self, output_path: str, *args, safe_serialization: bool = True, **kwargs
+    ) -> None:
         self.save_config(output_path)
         self.save_torch_weights(output_path, safe_serialization=safe_serialization)
 
@@ -99,7 +109,11 @@ class Dense(Module):
             "local_files_only": local_files_only,
         }
         config = cls.load_config(model_name_or_path=model_name_or_path, **hub_kwargs)
-        config["activation_function"] = import_from_string(config["activation_function"])()
+        config["activation_function"] = import_from_string(
+            config["activation_function"]
+        )()
         model = cls(**config)
-        model = cls.load_torch_weights(model_name_or_path=model_name_or_path, model=model, **hub_kwargs)
+        model = cls.load_torch_weights(
+            model_name_or_path=model_name_or_path, model=model, **hub_kwargs
+        )
         return model

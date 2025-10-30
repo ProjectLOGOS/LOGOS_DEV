@@ -105,7 +105,9 @@ class GISTEmbedLoss(nn.Module):
         self.temperature = temperature
         self.similarity_fct = nn.CosineSimilarity(dim=-1)
         if not hasattr(model, "tokenizer") or not hasattr(guide, "tokenizer"):
-            raise ValueError("Both the training model and the guiding model must have a tokenizer attribute.")
+            raise ValueError(
+                "Both the training model and the guiding model must have a tokenizer attribute."
+            )
         if not isinstance(model.tokenizer, PreTrainedTokenizerBase) or not isinstance(
             guide.tokenizer, PreTrainedTokenizerBase
         ):
@@ -113,7 +115,8 @@ class GISTEmbedLoss(nn.Module):
                 "Both the training model and the guiding model must use a PreTrainedTokenizer from transformers."
             )
         self.must_retokenize = (
-            model.tokenizer.get_vocab() != guide.tokenizer.get_vocab() or guide.max_seq_length < model.max_seq_length
+            model.tokenizer.get_vocab() != guide.tokenizer.get_vocab()
+            or guide.max_seq_length < model.max_seq_length
         )
         if self.must_retokenize:
             self.tokenizer = self.model.tokenizer
@@ -136,22 +139,35 @@ class GISTEmbedLoss(nn.Module):
     def sim_matrix(self, embed1: Tensor, embed2: Tensor) -> Tensor:
         return self.similarity_fct(embed1.unsqueeze(1), embed2.unsqueeze(0))
 
-    def forward(self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor) -> Tensor:
-        embeddings = [self.model(sentence_feature)["sentence_embedding"] for sentence_feature in sentence_features]
+    def forward(
+        self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor
+    ) -> Tensor:
+        embeddings = [
+            self.model(sentence_feature)["sentence_embedding"]
+            for sentence_feature in sentence_features
+        ]
         with torch.no_grad():
             if self.must_retokenize:
                 decoded = [
-                    self.tokenizer.batch_decode(sentence_feature["input_ids"], skip_special_tokens=True)
+                    self.tokenizer.batch_decode(
+                        sentence_feature["input_ids"], skip_special_tokens=True
+                    )
                     for sentence_feature in sentence_features
                 ]
-                sentence_features = [self.guide.tokenize(sentences) for sentences in decoded]
                 sentence_features = [
-                    {key: value.to(self.guide.device) for key, value in sentence_feature.items()}
+                    self.guide.tokenize(sentences) for sentences in decoded
+                ]
+                sentence_features = [
+                    {
+                        key: value.to(self.guide.device)
+                        for key, value in sentence_feature.items()
+                    }
                     for sentence_feature in sentence_features
                 ]
 
             guide_embeddings = [
-                self.guide(sentence_feature)["sentence_embedding"] for sentence_feature in sentence_features
+                self.guide(sentence_feature)["sentence_embedding"]
+                for sentence_feature in sentence_features
             ]
 
         negative = None
@@ -191,7 +207,9 @@ class GISTEmbedLoss(nn.Module):
         guided_sim = guided_ap_sim.diagonal(offset=offset).view(-1, 1)
 
         # This uses guided (teacher) similarity as a dynamic threshold to identify and suppress false negatives
-        def mask_false_negatives(guided_sim_mat, sim_mat, positive_mask: Tensor | None = None):
+        def mask_false_negatives(
+            guided_sim_mat, sim_mat, positive_mask: Tensor | None = None
+        ):
             if self.margin_strategy == "absolute":
                 # Remove samples whose guided similarity is higher than (positive_sim - margin)
                 mask = guided_sim_mat > (guided_sim - self.margin)
@@ -206,10 +224,14 @@ class GISTEmbedLoss(nn.Module):
             return sim_mat
 
         # Create a mask to protect true positive pairs in the anchor-positive matrix (i.e., diagonal elements)
-        positive_mask = torch.eye(*guided_ap_sim.shape, dtype=torch.bool, device=guided_ap_sim.device)
+        positive_mask = torch.eye(
+            *guided_ap_sim.shape, dtype=torch.bool, device=guided_ap_sim.device
+        )
 
         # Apply false negative suppression to each similarity matrix using guided similarity as anchor
-        ap_sim = mask_false_negatives(guided_ap_sim, ap_sim, positive_mask=positive_mask)  # anchor-positive
+        ap_sim = mask_false_negatives(
+            guided_ap_sim, ap_sim, positive_mask=positive_mask
+        )  # anchor-positive
         scores = [ap_sim]
 
         if self.contrast_anchors:
@@ -220,7 +242,9 @@ class GISTEmbedLoss(nn.Module):
 
         if self.contrast_positives:
             pp_sim = self.sim_matrix(positive[offset : offset + batch_size], positive)
-            guided_pp_sim = self.sim_matrix(positive_guide[offset : offset + batch_size], positive_guide)
+            guided_pp_sim = self.sim_matrix(
+                positive_guide[offset : offset + batch_size], positive_guide
+            )
             pp_sim = mask_false_negatives(guided_pp_sim, pp_sim)  # positive-positive
             scores.append(pp_sim)
 

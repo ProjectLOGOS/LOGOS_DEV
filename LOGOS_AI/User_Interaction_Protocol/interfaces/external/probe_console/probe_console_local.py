@@ -17,7 +17,9 @@ PORT = 8081
 
 # Load kernel hash from config
 try:
-    config_path = pathlib.Path(__file__).resolve().parents[1] / "configs" / "config.json"
+    config_path = (
+        pathlib.Path(__file__).resolve().parents[1] / "configs" / "config.json"
+    )
     cfg = json.loads(config_path.read_text(encoding="utf-8"))
     KERNEL_HASH = cfg.get("expected_kernel_hash", "")
 except:
@@ -148,7 +150,11 @@ class ProbeHandler(BaseHTTPRequestHandler):
             except:
                 logos_ok = False
 
-            response = {"kernel_hash": KERNEL_HASH, "archon_ok": archon_ok, "logos_ok": logos_ok}
+            response = {
+                "kernel_hash": KERNEL_HASH,
+                "archon_ok": archon_ok,
+                "logos_ok": logos_ok,
+            }
 
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
@@ -215,7 +221,11 @@ class ProbeHandler(BaseHTTPRequestHandler):
                 else:
                     task, payload = rest, {}
 
-                dispatch_data = {"task_type": task, "payload": payload, "provenance": provenance}
+                dispatch_data = {
+                    "task_type": task,
+                    "payload": payload,
+                    "provenance": provenance,
+                }
                 return self.make_request(f"{ARCHON_URL}/dispatch", dispatch_data)
 
         # Fallback: authorization test
@@ -231,7 +241,9 @@ class ProbeHandler(BaseHTTPRequestHandler):
         """Make HTTP request to backend services"""
         try:
             req = urllib.request.Request(
-                url, data=json.dumps(data).encode(), headers={"Content-Type": "application/json"}
+                url,
+                data=json.dumps(data).encode(),
+                headers={"Content-Type": "application/json"},
             )
             with urllib.request.urlopen(req, timeout=15) as response:
                 return json.loads(response.read().decode())

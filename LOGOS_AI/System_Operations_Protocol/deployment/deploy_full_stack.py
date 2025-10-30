@@ -5,30 +5,32 @@ Comprehensive deployment, health monitoring, and management system
 """
 
 import json
-import time
-import subprocess
-import threading
 import logging
-import signal
-import sys
 import os
-import psutil
-import requests
+import signal
+import subprocess
+import sys
+import threading
+import time
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Any
-from dataclasses import dataclass, asdict
+from typing import Any, Dict, List, Optional
+
+import psutil
+import requests
 import yaml
 
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class ServiceConfig:
     """Configuration for a LOGOS service"""
+
     name: str
     port: int
     module_path: str
@@ -40,13 +42,16 @@ class ServiceConfig:
     required: bool = True
     dependencies: List[str] = None
 
+
 @dataclass
 class DeploymentStatus:
     """Status of the deployment"""
+
     started_at: datetime
     services: Dict[str, Any]
     overall_health: str
     metrics: Dict[str, Any]
+
 
 class LogosFullStackDeployment:
     """
@@ -83,27 +88,23 @@ class LogosFullStackDeployment:
                 "health_check_interval": 30,
                 "max_startup_time": 300,
                 "enable_monitoring": True,
-                "log_level": "INFO"
+                "log_level": "INFO",
             },
             "docker": {
                 "compose_file": "docker-compose.yml",
                 "project_name": "logos-agi",
-                "build_timeout": 600
+                "build_timeout": 600,
             },
-            "networking": {
-                "base_port": 8000,
-                "health_timeout": 10,
-                "startup_delay": 2
-            },
+            "networking": {"base_port": 8000, "health_timeout": 10, "startup_delay": 2},
             "monitoring": {
                 "metrics_port": 9090,
                 "dashboard_port": 3000,
-                "enable_telemetry": True
-            }
+                "enable_telemetry": True,
+            },
         }
 
         if Path(self.config_path).exists():
-            with open(self.config_path, 'r') as f:
+            with open(self.config_path, "r") as f:
                 user_config = yaml.safe_load(f)
                 # Merge with defaults
                 for key, value in user_config.items():
@@ -124,9 +125,8 @@ class LogosFullStackDeployment:
                 module_path="pxl_prover.server:app",
                 working_dir="pxl-prover",
                 environment={"FLASK_ENV": "production"},
-                required=True
+                required=True,
             ),
-
             # Core LOGOS Services
             "logos-core": ServiceConfig(
                 name="logos-core",
@@ -135,21 +135,19 @@ class LogosFullStackDeployment:
                 working_dir="",
                 environment={
                     "PXL_PROVER_URL": "http://localhost:8088",
-                    "PYTHONPATH": str(self.root_dir)
+                    "PYTHONPATH": str(self.root_dir),
                 },
                 dependencies=["pxl-prover"],
-                required=True
+                required=True,
             ),
-
             "logos-api": ServiceConfig(
                 name="logos-api",
                 port=8090,
                 module_path="logos_core.server:app",
                 working_dir="",
                 environment={},
-                required=True
+                required=True,
             ),
-
             # Worker Services
             "archon": ServiceConfig(
                 name="archon",
@@ -158,12 +156,11 @@ class LogosFullStackDeployment:
                 working_dir="services/archon",
                 environment={
                     "RABBIT_URL": "amqp://logos:trinity@localhost:5672/logos",
-                    "LOGOS_API_URL": "http://localhost:8090"
+                    "LOGOS_API_URL": "http://localhost:8090",
                 },
                 dependencies=["logos-core", "rabbitmq"],
-                required=True
+                required=True,
             ),
-
             "telos": ServiceConfig(
                 name="telos",
                 port=8066,
@@ -171,11 +168,10 @@ class LogosFullStackDeployment:
                 working_dir="subsystems/telos",
                 environment={
                     "RABBIT_URL": "amqp://logos:trinity@localhost:5672/logos",
-                    "SUBSYS": "TELOS"
+                    "SUBSYS": "TELOS",
                 },
-                dependencies=["rabbitmq"]
+                dependencies=["rabbitmq"],
             ),
-
             "tetragnos": ServiceConfig(
                 name="tetragnos",
                 port=8065,
@@ -183,11 +179,10 @@ class LogosFullStackDeployment:
                 working_dir="subsystems/tetragnos",
                 environment={
                     "RABBIT_URL": "amqp://logos:trinity@localhost:5672/logos",
-                    "SUBSYS": "TETRAGNOS"
+                    "SUBSYS": "TETRAGNOS",
                 },
-                dependencies=["rabbitmq"]
+                dependencies=["rabbitmq"],
             ),
-
             "thonoc": ServiceConfig(
                 name="thonoc",
                 port=8067,
@@ -195,11 +190,10 @@ class LogosFullStackDeployment:
                 working_dir="subsystems/thonoc",
                 environment={
                     "RABBIT_URL": "amqp://logos:trinity@localhost:5672/logos",
-                    "SUBSYS": "THONOC"
+                    "SUBSYS": "THONOC",
                 },
-                dependencies=["rabbitmq"]
+                dependencies=["rabbitmq"],
             ),
-
             # Tool Services
             "tool-router": ServiceConfig(
                 name="tool-router",
@@ -210,22 +204,18 @@ class LogosFullStackDeployment:
                     "TELOS_URL": "http://localhost:8066",
                     "THONOC_URL": "http://localhost:8067",
                     "TETRAGNOS_URL": "http://localhost:8065",
-                    "CRAWL_URL": "http://localhost:8064"
+                    "CRAWL_URL": "http://localhost:8064",
                 },
-                dependencies=["telos", "tetragnos", "thonoc"]
+                dependencies=["telos", "tetragnos", "thonoc"],
             ),
-
             "executor": ServiceConfig(
                 name="executor",
                 port=8072,
                 module_path="services.executor.app:app",
                 working_dir="",
-                environment={
-                    "TOOL_ROUTER_URL": "http://localhost:8071"
-                },
-                dependencies=["tool-router"]
+                environment={"TOOL_ROUTER_URL": "http://localhost:8071"},
+                dependencies=["tool-router"],
             ),
-
             # User Interfaces
             "interactive-chat": ServiceConfig(
                 name="interactive-chat",
@@ -234,11 +224,10 @@ class LogosFullStackDeployment:
                 working_dir="services/interactive_chat",
                 environment={
                     "LOGOS_API_URL": "http://localhost:8090",
-                    "TOOL_ROUTER_URL": "http://localhost:8071"
+                    "TOOL_ROUTER_URL": "http://localhost:8071",
                 },
-                dependencies=["logos-api", "tool-router"]
+                dependencies=["logos-api", "tool-router"],
             ),
-
             "probe-console": ServiceConfig(
                 name="probe-console",
                 port=8081,
@@ -246,19 +235,18 @@ class LogosFullStackDeployment:
                 working_dir="services/probe_console",
                 environment={
                     "ARCHON_URL": "http://localhost:8075",
-                    "LOGOS_URL": "http://localhost:8090"
+                    "LOGOS_URL": "http://localhost:8090",
                 },
-                dependencies=["archon", "logos-api"]
+                dependencies=["archon", "logos-api"],
             ),
-
             # Infrastructure Services
             "crawl": ServiceConfig(
                 name="crawl",
                 port=8064,
                 module_path="services.toolkits.crawl.app:app",
                 working_dir="",
-                environment={}
-            )
+                environment={},
+            ),
         }
 
     def deploy_docker_stack(self) -> bool:
@@ -268,7 +256,9 @@ class LogosFullStackDeployment:
         try:
             # Check if Docker is available
             subprocess.run(["docker", "--version"], check=True, capture_output=True)
-            subprocess.run(["docker-compose", "--version"], check=True, capture_output=True)
+            subprocess.run(
+                ["docker-compose", "--version"], check=True, capture_output=True
+            )
         except (subprocess.CalledProcessError, FileNotFoundError):
             logger.error("Docker or Docker Compose not available")
             return False
@@ -279,17 +269,19 @@ class LogosFullStackDeployment:
 
             # Pull and build images
             logger.info("Building Docker images...")
-            subprocess.run([
-                "docker-compose", "-f", compose_file, "-p", project_name,
-                "build"
-            ], check=True, cwd=self.root_dir)
+            subprocess.run(
+                ["docker-compose", "-f", compose_file, "-p", project_name, "build"],
+                check=True,
+                cwd=self.root_dir,
+            )
 
             # Start services
             logger.info("Starting Docker services...")
-            subprocess.run([
-                "docker-compose", "-f", compose_file, "-p", project_name,
-                "up", "-d"
-            ], check=True, cwd=self.root_dir)
+            subprocess.run(
+                ["docker-compose", "-f", compose_file, "-p", project_name, "up", "-d"],
+                check=True,
+                cwd=self.root_dir,
+            )
 
             logger.info("✅ Docker stack deployed successfully")
             return True
@@ -331,14 +323,18 @@ class LogosFullStackDeployment:
                     time.sleep(service_config.startup_delay)
 
         # Check if all required services started
-        required_services = {name for name, svc in self.services.items() if svc.required}
+        required_services = {
+            name for name, svc in self.services.items() if svc.required
+        }
         missing_required = required_services - started_services
 
         if missing_required:
             logger.error(f"Failed to start required services: {missing_required}")
             return False
 
-        logger.info(f"✅ Local stack deployed: {len(started_services)} services started")
+        logger.info(
+            f"✅ Local stack deployed: {len(started_services)} services started"
+        )
         return True
 
     def _start_local_service(self, service_name: str, config: ServiceConfig) -> bool:
@@ -351,14 +347,24 @@ class LogosFullStackDeployment:
             env.update(config.environment)
 
             # Determine working directory
-            work_dir = self.root_dir / config.working_dir if config.working_dir else self.root_dir
+            work_dir = (
+                self.root_dir / config.working_dir
+                if config.working_dir
+                else self.root_dir
+            )
 
             # Start process
             cmd = [
-                sys.executable, "-m", "uvicorn", config.module_path,
-                "--host", "127.0.0.1",
-                "--port", str(config.port),
-                "--log-level", "warning"
+                sys.executable,
+                "-m",
+                "uvicorn",
+                config.module_path,
+                "--host",
+                "127.0.0.1",
+                "--port",
+                str(config.port),
+                "--log-level",
+                "warning",
             ]
 
             process = subprocess.Popen(
@@ -366,13 +372,13 @@ class LogosFullStackDeployment:
                 cwd=work_dir,
                 env=env,
                 stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
+                stderr=subprocess.PIPE,
             )
 
             self.running_processes[service_name] = {
                 "process": process,
                 "config": config,
-                "started_at": datetime.now()
+                "started_at": datetime.now(),
             }
 
             logger.info(f"   ✅ {service_name} started (PID: {process.pid})")
@@ -387,20 +393,22 @@ class LogosFullStackDeployment:
         health_status = {
             "timestamp": datetime.now().isoformat(),
             "services": {},
-            "overall_healthy": True
+            "overall_healthy": True,
         }
 
         for service_name, service_config in self.services.items():
             url = f"http://localhost:{service_config.port}{service_config.health_endpoint}"
 
             try:
-                response = requests.get(url, timeout=self.config["networking"]["health_timeout"])
+                response = requests.get(
+                    url, timeout=self.config["networking"]["health_timeout"]
+                )
                 status = "healthy" if response.status_code == 200 else "unhealthy"
                 health_status["services"][service_name] = {
                     "status": status,
                     "port": service_config.port,
                     "response_time_ms": response.elapsed.total_seconds() * 1000,
-                    "status_code": response.status_code
+                    "status_code": response.status_code,
                 }
 
                 if status != "healthy":
@@ -410,7 +418,7 @@ class LogosFullStackDeployment:
                 health_status["services"][service_name] = {
                     "status": "unreachable",
                     "port": service_config.port,
-                    "error": str(e)
+                    "error": str(e),
                 }
                 health_status["overall_healthy"] = False
 
@@ -425,14 +433,18 @@ class LogosFullStackDeployment:
                 health = self.check_health()
 
                 # Log health status
-                log_file = self.logs_dir / f"health_{datetime.now().strftime('%Y%m%d')}.jsonl"
-                with open(log_file, 'a') as f:
-                    f.write(json.dumps(health) + '\n')
+                log_file = (
+                    self.logs_dir / f"health_{datetime.now().strftime('%Y%m%d')}.jsonl"
+                )
+                with open(log_file, "a") as f:
+                    f.write(json.dumps(health) + "\n")
 
                 # Check for failures and restart if needed
                 for service_name, status in health["services"].items():
                     if status["status"] in ["unhealthy", "unreachable"]:
-                        logger.warning(f"⚠️ Service {service_name} is {status['status']}")
+                        logger.warning(
+                            f"⚠️ Service {service_name} is {status['status']}"
+                        )
 
                         # Attempt restart for local services
                         if service_name in self.running_processes:
@@ -442,8 +454,11 @@ class LogosFullStackDeployment:
                 if health["overall_healthy"]:
                     logger.info("✅ All services healthy")
                 else:
-                    unhealthy = [name for name, status in health["services"].items()
-                               if status["status"] != "healthy"]
+                    unhealthy = [
+                        name
+                        for name, status in health["services"].items()
+                        if status["status"] != "healthy"
+                    ]
                     logger.warning(f"⚠️ Unhealthy services: {unhealthy}")
 
                 time.sleep(self.config["deployment"]["health_check_interval"])
@@ -521,7 +536,9 @@ class LogosFullStackDeployment:
 
         # Start monitoring if enabled
         if self.config["deployment"]["enable_monitoring"]:
-            monitoring_thread = threading.Thread(target=self.monitor_services, daemon=True)
+            monitoring_thread = threading.Thread(
+                target=self.monitor_services, daemon=True
+            )
             monitoring_thread.start()
 
         # Create deployment status
@@ -529,17 +546,17 @@ class LogosFullStackDeployment:
             started_at=datetime.now(),
             services=health["services"],
             overall_health="healthy" if health["overall_healthy"] else "degraded",
-            metrics={}
+            metrics={},
         )
 
         # Save deployment info
         deployment_info = {
             "status": asdict(self.deployment_status),
             "config": self.config,
-            "docker_mode": self.docker_mode
+            "docker_mode": self.docker_mode,
         }
 
-        with open(self.logs_dir / "deployment_info.json", 'w') as f:
+        with open(self.logs_dir / "deployment_info.json", "w") as f:
             json.dump(deployment_info, f, indent=2, default=str)
 
         return True
@@ -551,14 +568,18 @@ class LogosFullStackDeployment:
         return {
             "deployment_active": self.deployment_status is not None,
             "mode": "docker" if self.docker_mode else "local",
-            "started_at": self.deployment_status.started_at if self.deployment_status else None,
+            "started_at": (
+                self.deployment_status.started_at if self.deployment_status else None
+            ),
             "health": health,
             "services_count": len(self.services),
-            "healthy_count": len([s for s in health["services"].values() if s["status"] == "healthy"]),
+            "healthy_count": len(
+                [s for s in health["services"].values() if s["status"] == "healthy"]
+            ),
             "endpoints": {
                 name: f"http://localhost:{config.port}"
                 for name, config in self.services.items()
-            }
+            },
         }
 
     def shutdown(self):
@@ -571,10 +592,10 @@ class LogosFullStackDeployment:
                 compose_file = self.config["docker"]["compose_file"]
                 project_name = self.config["docker"]["project_name"]
 
-                subprocess.run([
-                    "docker-compose", "-f", compose_file, "-p", project_name,
-                    "down"
-                ], cwd=self.root_dir)
+                subprocess.run(
+                    ["docker-compose", "-f", compose_file, "-p", project_name, "down"],
+                    cwd=self.root_dir,
+                )
 
                 logger.info("✅ Docker services stopped")
             except Exception as e:
@@ -601,14 +622,19 @@ class LogosFullStackDeployment:
         self.shutdown()
         sys.exit(0)
 
+
 def main():
     """Main deployment function"""
     import argparse
 
     parser = argparse.ArgumentParser(description="LOGOS AGI Full Stack Deployment")
     parser.add_argument("--config", help="Configuration file path")
-    parser.add_argument("--mode", choices=["docker", "local", "auto"], default="auto",
-                       help="Deployment mode")
+    parser.add_argument(
+        "--mode",
+        choices=["docker", "local", "auto"],
+        default="auto",
+        help="Deployment mode",
+    )
     parser.add_argument("--status", action="store_true", help="Show deployment status")
     parser.add_argument("--shutdown", action="store_true", help="Shutdown deployment")
     parser.add_argument("--monitor", action="store_true", help="Monitor services only")
@@ -642,26 +668,30 @@ def main():
     try:
         if deployment.deploy():
             logger.info("🎉 LOGOS AGI deployment successful!")
-            logger.info("\n" + "="*60)
+            logger.info("\n" + "=" * 60)
             logger.info("DEPLOYMENT SUMMARY")
-            logger.info("="*60)
+            logger.info("=" * 60)
 
             status = deployment.status()
             logger.info(f"Mode: {status['mode'].upper()}")
-            logger.info(f"Services: {status['healthy_count']}/{status['services_count']} healthy")
+            logger.info(
+                f"Services: {status['healthy_count']}/{status['services_count']} healthy"
+            )
 
             logger.info("\nKey Endpoints:")
             key_endpoints = {
                 "LOGOS Core API": "http://localhost:8090",
                 "Interactive Chat": "http://localhost:8080",
                 "Probe Console": "http://localhost:8081",
-                "Archon Gateway": "http://localhost:8075"
+                "Archon Gateway": "http://localhost:8075",
             }
 
             for name, url in key_endpoints.items():
                 logger.info(f"  {name}: {url}")
 
-            logger.info("\n🔍 Monitoring enabled - services will be auto-restarted on failure")
+            logger.info(
+                "\n🔍 Monitoring enabled - services will be auto-restarted on failure"
+            )
             logger.info("Press Ctrl+C to shutdown")
 
             # Keep main thread alive
@@ -679,6 +709,7 @@ def main():
         logger.error(f"Deployment error: {e}")
         deployment.shutdown()
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

@@ -5,28 +5,33 @@ This module provides the main entry point for the LOGOS AGI system,
 integrating the enhanced reference monitor with all reasoning operations.
 """
 
+import atexit
+import json
+import logging
 import os
 import sys
-import json
-import atexit
-import logging
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 # Ensure logos_core is in path
 current_dir = Path(__file__).parent
 sys.path.insert(0, str(current_dir))
 
-from core.logos_core.reference_monitor import ReferenceMonitor
-from safety.integrity_framework.integrity_safeguard import get_global_safety_system, check_operation_safety, emergency_halt
-from core.logos_core import get_iel_integration, initialize_iel_system
-from core.worker_integration import get_worker_integration, initialize_workers
 from core.adaptive_reasoning.bayesian_inference import UnifiedBayesianInferencer
 from core.adaptive_reasoning.semantic_transformers import UnifiedSemanticTransformer
-from core.logos_core.natural_language_processor import NaturalLanguageProcessor
 from core.learning.autonomous_learning import LearningCycleManager
+from core.logos_core import get_iel_integration, initialize_iel_system
+from core.logos_core.natural_language_processor import NaturalLanguageProcessor
+from core.logos_core.reference_monitor import ReferenceMonitor
+from core.worker_integration import get_worker_integration, initialize_workers
+from safety.integrity_framework.integrity_safeguard import (
+    check_operation_safety,
+    emergency_halt,
+    get_global_safety_system,
+)
 
 logger = logging.getLogger(__name__)
+
 
 class LOGOSCore:
     """
@@ -72,14 +77,16 @@ class LOGOSCore:
         # Register cleanup
         atexit.register(self.shutdown)
 
-        logger.info("LOGOS Core system initialized with advanced reasoning, NLP, and distributed workers")
+        logger.info(
+            "LOGOS Core system initialized with advanced reasoning, NLP, and distributed workers"
+        )
 
     def _setup_logging(self):
         """Setup system logging"""
-        log_level = self.config.get('log_level', 'INFO')
+        log_level = self.config.get("log_level", "INFO")
         logging.basicConfig(
             level=getattr(logging, log_level),
-            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         )
 
     def _initialize_monitor(self):
@@ -114,7 +121,9 @@ class LOGOSCore:
             if iel_success:
                 logger.info("IEL System integration successful")
             else:
-                logger.warning("IEL System partially initialized - some domains may be unavailable")
+                logger.warning(
+                    "IEL System partially initialized - some domains may be unavailable"
+                )
 
         except Exception as e:
             logger.error(f"Failed to initialize IEL system: {e}")
@@ -170,7 +179,9 @@ class LOGOSCore:
 
     def _handle_safety_violation(self, violation):
         """Handle safety violations from the safety system"""
-        logger.critical(f"SAFETY VIOLATION: {violation.safeguard_state.name} - {violation.metadata.get('reason', 'Unknown')}")
+        logger.critical(
+            f"SAFETY VIOLATION: {violation.safeguard_state.name} - {violation.metadata.get('reason', 'Unknown')}"
+        )
 
         # Log the violation - reference monitor blocking not implemented in current version
         logger.warning("Safety violation detected - operations may be restricted")
@@ -190,27 +201,27 @@ class LOGOSCore:
     @property
     def iel(self):
         """Access to the IEL integration system"""
-        return getattr(self, '_iel_integration', None)
+        return getattr(self, "_iel_integration", None)
 
     @property
     def workers(self):
         """Access to the worker integration system"""
-        return getattr(self, '_worker_integration', None)
+        return getattr(self, "_worker_integration", None)
 
     @property
     def bayesian(self):
         """Access to the Bayesian inference system"""
-        return getattr(self, '_bayesian_inferencer', None)
+        return getattr(self, "_bayesian_inferencer", None)
 
     @property
     def semantic(self):
         """Access to the semantic transformer system"""
-        return getattr(self, '_semantic_transformer', None)
+        return getattr(self, "_semantic_transformer", None)
 
     @property
     def nlp(self):
         """Access to the natural language processor"""
-        return getattr(self, '_nlp_processor', None)
+        return getattr(self, "_nlp_processor", None)
 
     def evaluate_modal_logic(self, proposition: str, **kwargs) -> Dict[str, Any]:
         """
@@ -232,15 +243,15 @@ class LOGOSCore:
             {
                 "operation_type": "modal_evaluation",
                 "proposition": proposition,
-                "parameters": kwargs
-            }
+                "parameters": kwargs,
+            },
         ):
             logger.error(f"Modal evaluation blocked by safety system: {proposition}")
             return {
                 "result": "BLOCKED",
                 "reason": "Safety violation - operation not permitted",
                 "proposition": proposition,
-                "safety_status": "BLOCKED"
+                "safety_status": "BLOCKED",
             }
 
         logger.debug(f"Evaluating modal logic: {proposition}")
@@ -267,15 +278,15 @@ class LOGOSCore:
                 "operation_type": "iel_evaluation",
                 "proposition": proposition,
                 "parameters": kwargs,
-                "consequences": kwargs.get("consequences", {})
-            }
+                "consequences": kwargs.get("consequences", {}),
+            },
         ):
             logger.error(f"IEL evaluation blocked by safety system: {proposition}")
             return {
                 "result": "BLOCKED",
                 "reason": "Safety violation - operation not permitted",
                 "proposition": proposition,
-                "safety_status": "BLOCKED"
+                "safety_status": "BLOCKED",
             }
 
         logger.debug(f"Evaluating IEL logic: {proposition}")
@@ -302,15 +313,17 @@ class LOGOSCore:
                 "operation_type": "batch_evaluation",
                 "proposition_count": len(propositions),
                 "propositions": propositions[:5],  # Sample for safety check
-                "parameters": kwargs
-            }
+                "parameters": kwargs,
+            },
         ):
-            logger.error(f"Batch evaluation blocked by safety system: {len(propositions)} propositions")
+            logger.error(
+                f"Batch evaluation blocked by safety system: {len(propositions)} propositions"
+            )
             return {
                 "result": "BLOCKED",
                 "reason": "Safety violation - batch operation not permitted",
                 "proposition_count": len(propositions),
-                "safety_status": "BLOCKED"
+                "safety_status": "BLOCKED",
             }
 
         logger.debug(f"Evaluating batch of {len(propositions)} propositions")
@@ -327,14 +340,22 @@ class LOGOSCore:
             return {"status": "not_initialized"}
 
         monitor_status = self._monitor.health_check()
-        safety_status = self._safety_system.get_safety_status() if self._safety_system else {"status": "not_initialized"}
-        iel_status = self._iel_integration.get_system_status() if self._iel_integration else {"iel_available": False}
+        safety_status = (
+            self._safety_system.get_safety_status()
+            if self._safety_system
+            else {"status": "not_initialized"}
+        )
+        iel_status = (
+            self._iel_integration.get_system_status()
+            if self._iel_integration
+            else {"iel_available": False}
+        )
 
         return {
             "logos_core": {
                 "status": "operational" if self._initialized else "offline",
                 "version": "2.0.0",
-                "initialized": self._initialized
+                "initialized": self._initialized,
             },
             "reference_monitor": monitor_status,
             "integrity_safeguard": safety_status,
@@ -346,8 +367,8 @@ class LOGOSCore:
                 "anomaly_detection": True,
                 "consistency_validation": True,
                 "safety_gates": True,
-                "emergency_halt": True
-            }
+                "emergency_halt": True,
+            },
         }
 
     def emergency_shutdown(self, reason: str = "Manual shutdown"):
@@ -395,8 +416,10 @@ class LOGOSCore:
             # Reference monitor cleanup not needed
             self._initialized = False
 
+
 # Global LOGOS Core instance
 _global_core = None
+
 
 def initialize_logos_core(config: Optional[Dict[str, Any]] = None) -> LOGOSCore:
     """
@@ -413,6 +436,7 @@ def initialize_logos_core(config: Optional[Dict[str, Any]] = None) -> LOGOSCore:
         _global_core = LOGOSCore(config)
     return _global_core
 
+
 def get_logos_core() -> LOGOSCore:
     """
     Get global LOGOS Core instance (initialize if needed)
@@ -425,6 +449,7 @@ def get_logos_core() -> LOGOSCore:
         _global_core = LOGOSCore()
     return _global_core
 
+
 def shutdown_logos_core():
     """Shutdown global LOGOS Core instance"""
     global _global_core
@@ -432,22 +457,27 @@ def shutdown_logos_core():
         _global_core.shutdown()
         _global_core = None
 
+
 # Convenience functions for direct access
 def evaluate_modal(proposition: str, **kwargs) -> Dict[str, Any]:
     """Convenience function for modal logic evaluation"""
     return get_logos_core().evaluate_modal_logic(proposition, **kwargs)
 
+
 def evaluate_iel(proposition: str, **kwargs) -> Dict[str, Any]:
     """Convenience function for IEL evaluation"""
     return get_logos_core().evaluate_iel_logic(proposition, **kwargs)
+
 
 def evaluate_batch(propositions: list, **kwargs) -> Dict[str, Any]:
     """Convenience function for batch evaluation"""
     return get_logos_core().evaluate_batch(propositions, **kwargs)
 
+
 def get_status() -> Dict[str, Any]:
     """Convenience function for system status"""
     return get_logos_core().get_system_status()
+
 
 # Module-level initialization for import-time setup
 def _module_init():
@@ -463,8 +493,9 @@ def _module_init():
     if not logging.getLogger().handlers:
         logging.basicConfig(
             level=logging.INFO,
-            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         )
+
 
 # Auto-initialize on import
 _module_init()
@@ -474,11 +505,13 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="LOGOS Core System")
-    parser.add_argument('--test-modal', type=str, help="Test modal proposition")
-    parser.add_argument('--test-iel', type=str, help="Test IEL proposition")
-    parser.add_argument('--status', action='store_true', help="Show system status")
-    parser.add_argument('--shutdown', action='store_true', help="Shutdown system")
-    parser.add_argument('--emergency-halt', type=str, help="Trigger emergency halt with reason")
+    parser.add_argument("--test-modal", type=str, help="Test modal proposition")
+    parser.add_argument("--test-iel", type=str, help="Test IEL proposition")
+    parser.add_argument("--status", action="store_true", help="Show system status")
+    parser.add_argument("--shutdown", action="store_true", help="Shutdown system")
+    parser.add_argument(
+        "--emergency-halt", type=str, help="Trigger emergency halt with reason"
+    )
 
     args = parser.parse_args()
 

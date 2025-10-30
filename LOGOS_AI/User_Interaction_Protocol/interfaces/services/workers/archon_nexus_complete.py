@@ -14,39 +14,43 @@ Responsibilities:
 - Error handling and recovery strategies
 """
 
-import os
-import sys
-import json
-import time
-import logging
-import signal
-import uuid
 import asyncio
-from typing import Dict, List, Any, Optional, Set, Tuple
-from datetime import datetime, timedelta
-from dataclasses import dataclass, field
-from enum import Enum
+import json
+import logging
+import os
+import signal
+import sys
 import threading
+import time
+import uuid
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Set, Tuple
+
+# Graph processing for workflow DAGs
+import networkx as nx
 
 # RabbitMQ and messaging
 import pika
 import pika.exceptions
 
-# Graph processing for workflow DAGs
-import networkx as nx
-
 # Core LOGOS imports
 try:
-    from core.unified_formalisms import UnifiedFormalismValidator
+    from core.data_structures import OperationResult, TaskDescriptor
     from core.principles import PrincipleEngine, validate_with_principles
-    from core.data_structures import TaskDescriptor, OperationResult
-    from shared.worker_config import WorkerType, TASK_TYPE_MAPPINGS, RABBITMQ_CONFIG
+    from core.unified_formalisms import UnifiedFormalismValidator
+    from shared.worker_config import RABBITMQ_CONFIG, TASK_TYPE_MAPPINGS, WorkerType
 except ImportError:
     # Fallback implementations if core modules aren't available
     class UnifiedFormalismValidator:
         def validate_agi_operation(self, request):
-            return {"status": "authorized", "authorized": True, "token": f"avt_{uuid.uuid4().hex}"}
+            return {
+                "status": "authorized",
+                "authorized": True,
+                "token": f"avt_{uuid.uuid4().hex}",
+            }
 
     def validate_with_principles(func):
         return func
@@ -181,7 +185,9 @@ class WorkflowArchitect:
         """Design a DAG workflow for achieving the given goal."""
 
         workflow_id = f"wf_{uuid.uuid4().hex[:8]}"
-        self.logger.info(f"Designing workflow {workflow_id} for goal: {goal_description}")
+        self.logger.info(
+            f"Designing workflow {workflow_id} for goal: {goal_description}"
+        )
 
         # Validate the goal with the formal validator
         validation_request = {
@@ -221,14 +227,19 @@ class WorkflowArchitect:
 
         return workflow
 
-    def _decompose_goal(self, goal_description: str, context: Dict[str, Any]) -> List[TaskNode]:
+    def _decompose_goal(
+        self, goal_description: str, context: Dict[str, Any]
+    ) -> List[TaskNode]:
         """Decompose a high-level goal into executable tasks."""
 
         tasks = []
         goal_lower = goal_description.lower()
 
         # Analysis phase - understanding the goal
-        if any(keyword in goal_lower for keyword in ["analyze", "understand", "examine", "study"]):
+        if any(
+            keyword in goal_lower
+            for keyword in ["analyze", "understand", "examine", "study"]
+        ):
             # Start with text analysis
             analysis_task = TaskNode(
                 task_id=f"task_{uuid.uuid4().hex[:8]}",
@@ -243,7 +254,10 @@ class WorkflowArchitect:
             tasks.append(analysis_task)
 
         # Prediction/modeling phase
-        if any(keyword in goal_lower for keyword in ["predict", "forecast", "model", "simulate"]):
+        if any(
+            keyword in goal_lower
+            for keyword in ["predict", "forecast", "model", "simulate"]
+        ):
             prediction_task = TaskNode(
                 task_id=f"task_{uuid.uuid4().hex[:8]}",
                 task_type="predict_outcomes",
@@ -257,7 +271,9 @@ class WorkflowArchitect:
             tasks.append(prediction_task)
 
         # Reasoning/proof phase
-        if any(keyword in goal_lower for keyword in ["prove", "verify", "reason", "logic"]):
+        if any(
+            keyword in goal_lower for keyword in ["prove", "verify", "reason", "logic"]
+        ):
             reasoning_task = TaskNode(
                 task_id=f"task_{uuid.uuid4().hex[:8]}",
                 task_type="modal_reasoning",
@@ -376,12 +392,18 @@ class AgentOrchestrator:
         }
 
         # Determine target queue based on subsystem
-        queue_map = {"tetragnos": TETRAGNOS_QUEUE, "telos": TELOS_QUEUE, "thonoc": THONOC_QUEUE}
+        queue_map = {
+            "tetragnos": TETRAGNOS_QUEUE,
+            "telos": TELOS_QUEUE,
+            "thonoc": THONOC_QUEUE,
+        }
 
         target_queue = queue_map.get(task.subsystem)
 
         if not target_queue:
-            self._handle_task_error(task, workflow, f"Unknown subsystem: {task.subsystem}")
+            self._handle_task_error(
+                task, workflow, f"Unknown subsystem: {task.subsystem}"
+            )
             return
 
         try:
@@ -391,7 +413,8 @@ class AgentOrchestrator:
                 routing_key=target_queue,
                 body=json.dumps(task_message),
                 properties=pika.BasicProperties(
-                    delivery_mode=2, correlation_id=task.task_id  # Make message persistent
+                    delivery_mode=2,
+                    correlation_id=task.task_id,  # Make message persistent
                 ),
             )
 
@@ -432,7 +455,9 @@ class AgentOrchestrator:
             error_msg = result_data.get("error", "Unknown error")
             self._handle_task_error(task, workflow, error_msg)
 
-    def _handle_task_error(self, task: TaskNode, workflow: WorkflowExecution, error_msg: str):
+    def _handle_task_error(
+        self, task: TaskNode, workflow: WorkflowExecution, error_msg: str
+    ):
         """Handle task execution error."""
 
         task.error = error_msg
@@ -474,11 +499,15 @@ class AgentOrchestrator:
             if all_completed:
                 # Check if any tasks failed
                 failed_tasks = [
-                    task for task in workflow.tasks.values() if task.status == TaskStatus.FAILED
+                    task
+                    for task in workflow.tasks.values()
+                    if task.status == TaskStatus.FAILED
                 ]
 
                 if failed_tasks:
-                    error_msg = f"Workflow failed due to {len(failed_tasks)} failed tasks"
+                    error_msg = (
+                        f"Workflow failed due to {len(failed_tasks)} failed tasks"
+                    )
                     self._complete_workflow(workflow, WorkflowStatus.FAILED, error_msg)
                 else:
                     # All tasks completed successfully
@@ -500,9 +529,13 @@ class AgentOrchestrator:
                 "goal": workflow.goal_description,
                 "status": "completed",
                 "task_results": {
-                    task_id: task.result for task_id, task in workflow.tasks.items() if task.result
+                    task_id: task.result
+                    for task_id, task in workflow.tasks.items()
+                    if task.result
                 },
-                "execution_time": (workflow.completed_at - workflow.started_at).total_seconds(),
+                "execution_time": (
+                    workflow.completed_at - workflow.started_at
+                ).total_seconds(),
                 "task_count": len(workflow.tasks),
             }
 
@@ -601,12 +634,16 @@ class ArchonNexus:
         # Consumer for goal requests
         self.channel.basic_qos(prefetch_count=1)
         self.channel.basic_consume(
-            queue=ARCHON_GOALS_QUEUE, on_message_callback=self._handle_goal_message, auto_ack=False
+            queue=ARCHON_GOALS_QUEUE,
+            on_message_callback=self._handle_goal_message,
+            auto_ack=False,
         )
 
         # Consumer for task results
         self.channel.basic_consume(
-            queue=TASK_RESULT_QUEUE, on_message_callback=self._handle_result_message, auto_ack=False
+            queue=TASK_RESULT_QUEUE,
+            on_message_callback=self._handle_result_message,
+            auto_ack=False,
         )
 
         self.logger.info("Message consumers setup complete")
@@ -622,7 +659,9 @@ class ArchonNexus:
             self.logger.info(f"Received goal: {goal_description}")
 
             # Design workflow for the goal
-            workflow = self.workflow_architect.design_workflow(goal_description, context)
+            workflow = self.workflow_architect.design_workflow(
+                goal_description, context
+            )
 
             # Execute the workflow
             self.agent_orchestrator.execute_workflow(workflow)

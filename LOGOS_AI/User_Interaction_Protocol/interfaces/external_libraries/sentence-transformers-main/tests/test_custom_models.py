@@ -50,9 +50,15 @@ def test_cde_small_v2():
 
     # 5. Compute the similarity between the queries and docs
     similarities = model.similarity(query_embeddings, doc_embeddings)
-    assert similarities.shape == (2, 5), f"Expected shape (2, 5), but got {similarities.shape}"
+    assert similarities.shape == (
+        2,
+        5,
+    ), f"Expected shape (2, 5), but got {similarities.shape}"
     expected = torch.tensor(
-        [[0.8778, 0.7851, 0.7810, 0.7781, 0.7966], [0.7916, 0.8648, 0.7845, 0.7865, 0.8136]],
+        [
+            [0.8778, 0.7851, 0.7810, 0.7781, 0.7966],
+            [0.7916, 0.8648, 0.7845, 0.7865, 0.8136],
+        ],
         device=similarities.device,
     )
     assert torch.isclose(similarities, expected, atol=1e-3).all()
@@ -67,7 +73,10 @@ def test_jina_embeddings_v3():
         task=task,
         prompt_name=task,
     )
-    assert embeddings.shape == (1, 1024), f"Expected shape (1, 1024), but got {embeddings.shape}"
+    assert embeddings.shape == (
+        1,
+        1024,
+    ), f"Expected shape (1, 1024), but got {embeddings.shape}"
     assert embeddings[0][0] == pytest.approx(
         -0.08203125, abs=0.01
     ), f"Expected value close to 0.08203125, but got {embeddings[0][0]}"
@@ -100,7 +109,10 @@ def test_jina_clip():
     ]
 
     # Public image URLs or PIL Images
-    image_urls = ["https://i.ibb.co/nQNGqL0/beach1.jpg", "https://i.ibb.co/r5w8hG8/beach2.jpg"]
+    image_urls = [
+        "https://i.ibb.co/nQNGqL0/beach1.jpg",
+        "https://i.ibb.co/r5w8hG8/beach2.jpg",
+    ]
 
     # Encode text and images
     text_embeddings = model.encode(sentences, normalize_embeddings=True)
@@ -109,12 +121,28 @@ def test_jina_clip():
 
     # Encode query text
     query = "beautiful sunset over the beach"  # English
-    query_embeddings = model.encode(query, prompt_name="retrieval.query", normalize_embeddings=True)
+    query_embeddings = model.encode(
+        query, prompt_name="retrieval.query", normalize_embeddings=True
+    )
 
     similarities = model.similarity(query_embeddings, embeddings)
     assert similarities.shape == (
         1,
         len(sentences) + len(image_urls),
     ), f"Expected shape (1, {len(sentences) + len(image_urls)}), but got {similarities.shape}"
-    expected = torch.tensor([0.5342, 0.6753, 0.6130, 0.6234, 0.5823, 0.6351, 0.5950, 0.5691, 0.6070, 0.3101, 0.3291])
+    expected = torch.tensor(
+        [
+            0.5342,
+            0.6753,
+            0.6130,
+            0.6234,
+            0.5823,
+            0.6351,
+            0.5950,
+            0.5691,
+            0.6070,
+            0.3101,
+            0.3291,
+        ]
+    )
     assert torch.isclose(similarities, expected, atol=1e-3).all()

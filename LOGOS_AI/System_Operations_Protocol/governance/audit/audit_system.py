@@ -3,13 +3,14 @@ Basic Audit System for LOGOS AGI
 Provides audit logging functionality for system operations.
 """
 
-import logging
 import json
+import logging
 from datetime import datetime
-from typing import Dict, Any, Optional
 from pathlib import Path
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
+
 
 class AuditSystem:
     """Basic audit logging system"""
@@ -24,14 +25,15 @@ class AuditSystem:
             "timestamp": datetime.now().isoformat(),
             "event": event,
             "data": data,
-            "level": level
+            "level": level,
         }
 
         try:
-            with open(self.log_path, 'a') as f:
-                f.write(json.dumps(entry) + '\n')
+            with open(self.log_path, "a") as f:
+                f.write(json.dumps(entry) + "\n")
         except Exception as e:
             logger.error(f"Failed to write audit log: {e}")
+
 
 # Global audit instance
 audit = AuditSystem()

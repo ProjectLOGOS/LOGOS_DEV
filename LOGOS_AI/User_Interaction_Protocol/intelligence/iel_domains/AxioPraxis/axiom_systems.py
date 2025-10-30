@@ -5,6 +5,7 @@ Provides classes for defining and working with axiom systems,
 including ZFC, Peano arithmetic, and custom axiom sets.
 """
 
+
 class AxiomSystem:
     """
     Represents a formal axiom system.
@@ -24,7 +25,7 @@ class AxiomSystem:
         """
         self.name = name
         self.axioms = axioms
-        self.inference_rules = inference_rules or ['modus_ponens', 'generalization']
+        self.inference_rules = inference_rules or ["modus_ponens", "generalization"]
         self.theorems = set()
         self.proven_theorems = set()
 
@@ -49,7 +50,7 @@ class AxiomSystem:
         """
         # Placeholder - in practice would use model theory or proof theory
         # Check for obvious contradictions
-        contradictions = ['A ∧ ¬A', '⊥']
+        contradictions = ["A ∧ ¬A", "⊥"]
         for axiom in self.axioms:
             if any(contr in axiom for contr in contradictions):
                 return False
@@ -71,25 +72,21 @@ class AxiomSystem:
 
         # Simple modus ponens check
         if len(premises) == 2:
-            if '→' in premises[0]:
-                antecedent, consequent = premises[0].split('→')
+            if "→" in premises[0]:
+                antecedent, consequent = premises[0].split("→")
                 if antecedent.strip() == premises[1]:
                     proof_steps = [
                         f"Premise: {premises[0]}",
                         f"Premise: {premises[1]}",
-                        f"Modus Ponens: {conclusion}"
+                        f"Modus Ponens: {conclusion}",
                     ]
                     return {
-                        'derived': True,
-                        'proof': proof_steps,
-                        'method': 'modus_ponens'
+                        "derived": True,
+                        "proof": proof_steps,
+                        "method": "modus_ponens",
                     }
 
-        return {
-            'derived': False,
-            'proof': [],
-            'method': None
-        }
+        return {"derived": False, "proof": [], "method": None}
 
     def get_independence_results(self) -> dict:
         """
@@ -100,7 +97,7 @@ class AxiomSystem:
         """
         # Placeholder - would require model construction
         return {
-            'independent_axioms': [],
-            'dependent_axioms': self.axioms,
-            'analysis_complete': False
+            "independent_axioms": [],
+            "dependent_axioms": self.axioms,
+            "analysis_complete": False,
         }

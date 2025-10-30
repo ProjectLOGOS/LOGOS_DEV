@@ -209,16 +209,22 @@ def semantic_search(
     for query_start_idx in range(0, len(query_embeddings), query_chunk_size):
         query_end_idx = min(query_start_idx + query_chunk_size, len(query_embeddings))
         if query_embeddings.is_sparse:
-            indices = torch.arange(query_start_idx, query_end_idx, device=query_embeddings.device)
+            indices = torch.arange(
+                query_start_idx, query_end_idx, device=query_embeddings.device
+            )
             query_chunk = query_embeddings.index_select(0, indices)
         else:
             query_chunk = query_embeddings[query_start_idx:query_end_idx]
 
         # Iterate over chunks of the corpus
         for corpus_start_idx in range(0, len(corpus_embeddings), corpus_chunk_size):
-            corpus_end_idx = min(corpus_start_idx + corpus_chunk_size, len(corpus_embeddings))
+            corpus_end_idx = min(
+                corpus_start_idx + corpus_chunk_size, len(corpus_embeddings)
+            )
             if corpus_embeddings.is_sparse:
-                indices = torch.arange(corpus_start_idx, corpus_end_idx, device=corpus_embeddings.device)
+                indices = torch.arange(
+                    corpus_start_idx, corpus_end_idx, device=corpus_embeddings.device
+                )
                 corpus_chunk = corpus_embeddings.index_select(0, indices)
             else:
                 corpus_chunk = corpus_embeddings[corpus_start_idx:corpus_end_idx]
@@ -228,13 +234,19 @@ def semantic_search(
 
             # Get top-k scores
             cos_scores_top_k_values, cos_scores_top_k_idx = torch.topk(
-                cos_scores, min(top_k, len(cos_scores[0])), dim=1, largest=True, sorted=False
+                cos_scores,
+                min(top_k, len(cos_scores[0])),
+                dim=1,
+                largest=True,
+                sorted=False,
             )
             cos_scores_top_k_values = cos_scores_top_k_values.cpu().tolist()
             cos_scores_top_k_idx = cos_scores_top_k_idx.cpu().tolist()
 
             for query_itr in range(len(cos_scores)):
-                for sub_corpus_id, score in zip(cos_scores_top_k_idx[query_itr], cos_scores_top_k_values[query_itr]):
+                for sub_corpus_id, score in zip(
+                    cos_scores_top_k_idx[query_itr], cos_scores_top_k_values[query_itr]
+                ):
                     corpus_id = corpus_start_idx + sub_corpus_id
                     query_id = query_start_idx + query_itr
                     if len(queries_result_list[query_id]) < top_k:
@@ -242,14 +254,21 @@ def semantic_search(
                             queries_result_list[query_id], (score, corpus_id)
                         )  # heaqp tracks the quantity of the first element in the tuple
                     else:
-                        heapq.heappushpop(queries_result_list[query_id], (score, corpus_id))
+                        heapq.heappushpop(
+                            queries_result_list[query_id], (score, corpus_id)
+                        )
 
     # change the data format and sort
     for query_id in range(len(queries_result_list)):
         for doc_itr in range(len(queries_result_list[query_id])):
             score, corpus_id = queries_result_list[query_id][doc_itr]
-            queries_result_list[query_id][doc_itr] = {"corpus_id": corpus_id, "score": score}
-        queries_result_list[query_id] = sorted(queries_result_list[query_id], key=lambda x: x["score"], reverse=True)
+            queries_result_list[query_id][doc_itr] = {
+                "corpus_id": corpus_id,
+                "score": score,
+            }
+        queries_result_list[query_id] = sorted(
+            queries_result_list[query_id], key=lambda x: x["score"], reverse=True
+        )
 
     return queries_result_list
 
@@ -291,7 +310,9 @@ def community_detection(
     sort_max_size = min(max(2 * min_community_size, 50), len(embeddings))
 
     for start_idx in tqdm(
-        range(0, len(embeddings), batch_size), desc="Finding clusters", disable=not show_progress_bar
+        range(0, len(embeddings), batch_size),
+        desc="Finding clusters",
+        disable=not show_progress_bar,
     ):
         # Compute cosine similarity scores
         cos_scores = embeddings[start_idx : start_idx + batch_size] @ embeddings.T
@@ -325,17 +346,27 @@ def community_detection(
             for i in range(len(top_k_values)):
                 if top_k_values[i][-1] >= threshold:
                     # Only check top k most similar entries
-                    top_val_large, top_idx_large = cos_scores[i].topk(k=sort_max_size, largest=True)
+                    top_val_large, top_idx_large = cos_scores[i].topk(
+                        k=sort_max_size, largest=True
+                    )
 
                     # Check if we need to increase sort_max_size
-                    while top_val_large[-1] > threshold and sort_max_size < len(embeddings):
+                    while top_val_large[-1] > threshold and sort_max_size < len(
+                        embeddings
+                    ):
                         sort_max_size = min(2 * sort_max_size, len(embeddings))
-                        top_val_large, top_idx_large = cos_scores[i].topk(k=sort_max_size, largest=True)
+                        top_val_large, top_idx_large = cos_scores[i].topk(
+                            k=sort_max_size, largest=True
+                        )
 
-                    extracted_communities.append(top_idx_large[top_val_large >= threshold].tolist())
+                    extracted_communities.append(
+                        top_idx_large[top_val_large >= threshold].tolist()
+                    )
 
     # Largest cluster first
-    extracted_communities = sorted(extracted_communities, key=lambda x: len(x), reverse=True)
+    extracted_communities = sorted(
+        extracted_communities, key=lambda x: len(x), reverse=True
+    )
 
     # Step 2) Remove overlapping communities
     unique_communities = []

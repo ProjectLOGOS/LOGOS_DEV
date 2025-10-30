@@ -4,11 +4,12 @@ Tetragnos Subsystem FastAPI Application
 Provides REST API interface for the Tetragnos pattern recognition subsystem.
 """
 
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
 import logging
 import os
+
 import numpy as np
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import TfidfVectorizer
 
@@ -19,12 +20,14 @@ logger = logging.getLogger("tetragnos_app")
 app = FastAPI(
     title="Tetragnos Pattern Recognition API",
     description="Advanced pattern recognition and clustering subsystem",
-    version="1.0.0"
+    version="1.0.0",
 )
+
 
 class ClusteringRequest(BaseModel):
     texts: list[str]
     num_clusters: int = 5
+
 
 class ClusteringResponse(BaseModel):
     clusters: list[list[str]]
@@ -32,11 +35,12 @@ class ClusteringResponse(BaseModel):
     success: bool
     message: str
 
+
 def perform_text_clustering(texts, num_clusters=5):
     """Perform text clustering using TF-IDF and K-means"""
     try:
         # Create TF-IDF vectors
-        vectorizer = TfidfVectorizer(max_features=1000, stop_words='english')
+        vectorizer = TfidfVectorizer(max_features=1000, stop_words="english")
         tfidf_matrix = vectorizer.fit_transform(texts)
 
         # Perform clustering
@@ -51,20 +55,22 @@ def perform_text_clustering(texts, num_clusters=5):
         return {
             "clusters": cluster_texts,
             "cluster_centers": kmeans.cluster_centers_.tolist(),
-            "success": True
+            "success": True,
         }
     except Exception as e:
         return {
             "clusters": [],
             "cluster_centers": [],
             "success": False,
-            "error": str(e)
+            "error": str(e),
         }
+
 
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
     return {"status": "healthy", "subsystem": "tetragnos"}
+
 
 @app.post("/cluster", response_model=ClusteringResponse)
 async def cluster_texts(request: ClusteringRequest):
@@ -76,18 +82,22 @@ async def cluster_texts(request: ClusteringRequest):
         result = perform_text_clustering(request.texts, request.num_clusters)
 
         if not result["success"]:
-            raise HTTPException(status_code=500, detail=f"Clustering failed: {result.get('error', 'Unknown error')}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Clustering failed: {result.get('error', 'Unknown error')}",
+            )
 
         return ClusteringResponse(
             clusters=result.get("clusters", []),
             cluster_centers=result.get("cluster_centers", []),
             success=True,
-            message="Clustering completed successfully"
+            message="Clustering completed successfully",
         )
 
     except Exception as e:
         logger.error(f"Clustering failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Clustering failed: {str(e)}")
+
 
 @app.get("/status")
 async def get_status():
@@ -96,8 +106,9 @@ async def get_status():
         "subsystem": "tetragnos",
         "status": "active",
         "capabilities": ["text_clustering", "pattern_recognition"],
-        "version": "1.0.0"
+        "version": "1.0.0",
     }
+
 
 @app.post("/process")
 async def process_task(request: dict):
@@ -117,7 +128,9 @@ async def process_task(request: dict):
         logger.error(f"Task processing failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Task processing failed: {str(e)}")
 
+
 if __name__ == "__main__":
     import uvicorn
+
     port = int(os.getenv("PORT", 8065))
     uvicorn.run(app, host="0.0.0.0", port=port)

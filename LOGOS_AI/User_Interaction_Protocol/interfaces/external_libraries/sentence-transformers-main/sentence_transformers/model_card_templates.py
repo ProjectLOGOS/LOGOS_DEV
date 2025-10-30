@@ -163,7 +163,11 @@ def cls_pooling(model_output, attention_mask):
                 loader_params = dataloader.get_config_dict()
             else:
                 loader_params = {}
-                loader_params["batch_size"] = dataloader.batch_size if hasattr(dataloader, "batch_size") else "unknown"
+                loader_params["batch_size"] = (
+                    dataloader.batch_size
+                    if hasattr(dataloader, "batch_size")
+                    else "unknown"
+                )
                 if hasattr(dataloader, "sampler"):
                     loader_params["sampler"] = fullname(dataloader.sampler)
                 if hasattr(dataloader, "batch_sampler"):
@@ -176,12 +180,14 @@ def cls_pooling(model_output, attention_mask):
 
             loss_str = "**Loss**:\n\n`{}` {}".format(
                 fullname(loss),
-                f"""with parameters:
+                (
+                    f"""with parameters:
   ```
   {loss.get_config_dict()}
   ```"""
-                if hasattr(loss, "get_config_dict")
-                else "",
+                    if hasattr(loss, "get_config_dict")
+                    else ""
+                ),
             )
 
             return [dataloader_str, loss_str]

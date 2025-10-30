@@ -5,6 +5,7 @@ Provides high-precision arithmetic operations, number theory functions,
 and computational mathematics capabilities.
 """
 
+
 class ArithmeticEngine:
     """
     Engine for performing various arithmetic computations.
@@ -38,25 +39,23 @@ class ArithmeticEngine:
         try:
             # Very basic evaluation (unsafe for production)
             if variables:
-                safe_dict = {k: v for k, v in variables.items() if isinstance(v, (int, float))}
+                safe_dict = {
+                    k: v for k, v in variables.items() if isinstance(v, (int, float))
+                }
                 result = eval(expression, {"__builtins__": {}}, safe_dict)
             else:
                 result = eval(expression, {"__builtins__": {}})
 
             computation = {
-                'expression': expression,
-                'result': result,
-                'variables': variables or {},
-                'precision': self.precision,
-                'success': True
+                "expression": expression,
+                "result": result,
+                "variables": variables or {},
+                "precision": self.precision,
+                "success": True,
             }
 
         except Exception as e:
-            computation = {
-                'expression': expression,
-                'error': str(e),
-                'success': False
-            }
+            computation = {"expression": expression, "error": str(e), "success": False}
 
         self.computation_history.append(computation)
         return computation
@@ -72,7 +71,7 @@ class ArithmeticEngine:
             Dictionary containing prime factors and their exponents
         """
         if number < 2:
-            return {'factors': {}, 'original': number}
+            return {"factors": {}, "original": number}
 
         factors = {}
         n = number
@@ -94,9 +93,9 @@ class ArithmeticEngine:
             factors[n] = factors.get(n, 0) + 1
 
         return {
-            'factors': factors,
-            'original': number,
-            'prime_factors': list(factors.keys())
+            "factors": factors,
+            "original": number,
+            "prime_factors": list(factors.keys()),
         }
 
     def compute_gcd(self, a: int, b: int) -> int:
@@ -170,12 +169,14 @@ class ArithmeticEngine:
 
         for i in range(2, int(limit**0.5) + 1):
             if sieve[i]:
-                for j in range(i*i, limit + 1, i):
+                for j in range(i * i, limit + 1, i):
                     sieve[j] = False
 
         return [i for i in range(2, limit + 1) if sieve[i]]
 
-    def compute_modular_exponentiation(self, base: int, exponent: int, modulus: int) -> int:
+    def compute_modular_exponentiation(
+        self, base: int, exponent: int, modulus: int
+    ) -> int:
         """
         Compute (base^exponent) mod modulus efficiently.
 

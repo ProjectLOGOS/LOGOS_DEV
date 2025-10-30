@@ -102,7 +102,9 @@ class SoftmaxLoss(nn.Module):
             num_vectors_concatenated += 1
         logger.info(f"Softmax loss: #Vectors concatenated: {num_vectors_concatenated}")
         self.classifier = nn.Linear(
-            num_vectors_concatenated * sentence_embedding_dimension, num_labels, device=model.device
+            num_vectors_concatenated * sentence_embedding_dimension,
+            num_labels,
+            device=model.device,
         )
         self.loss_fct = loss_fct
 
@@ -116,7 +118,10 @@ class SoftmaxLoss(nn.Module):
     def forward(
         self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor
     ) -> Tensor | tuple[Tensor, Tensor]:
-        reps = [self.model(sentence_feature)["sentence_embedding"] for sentence_feature in sentence_features]
+        reps = [
+            self.model(sentence_feature)["sentence_embedding"]
+            for sentence_feature in sentence_features
+        ]
         rep_a, rep_b = reps
 
         vectors_concat = []

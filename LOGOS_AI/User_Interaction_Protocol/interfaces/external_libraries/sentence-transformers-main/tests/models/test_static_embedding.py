@@ -14,10 +14,14 @@ try:
 except ImportError:
     model2vec = None
 
-skip_if_no_model2vec = pytest.mark.skipif(model2vec is None, reason="The model2vec library is not installed.")
+skip_if_no_model2vec = pytest.mark.skipif(
+    model2vec is None, reason="The model2vec library is not installed."
+)
 
 
-def test_initialization_with_embedding_weights(tokenizer: Tokenizer, embedding_weights) -> None:
+def test_initialization_with_embedding_weights(
+    tokenizer: Tokenizer, embedding_weights
+) -> None:
     model = StaticEmbedding(tokenizer, embedding_weights=embedding_weights)
     assert model.embedding.weight.shape == (30522, 768)
 
@@ -47,12 +51,17 @@ def test_save_and_load(tmp_path: Path, static_embedding_model: StaticEmbedding) 
     static_embedding_model.save(str(save_dir))
 
     loaded_model = StaticEmbedding.load(str(save_dir))
-    assert loaded_model.embedding.weight.shape == static_embedding_model.embedding.weight.shape
+    assert (
+        loaded_model.embedding.weight.shape
+        == static_embedding_model.embedding.weight.shape
+    )
 
 
 @skip_if_no_model2vec()
 def test_from_distillation() -> None:
-    model = StaticEmbedding.from_distillation("sentence-transformers-testing/stsb-bert-tiny-safetensors", pca_dims=32)
+    model = StaticEmbedding.from_distillation(
+        "sentence-transformers-testing/stsb-bert-tiny-safetensors", pca_dims=32
+    )
     # The shape has been 29528 for <0.5.0, 29525 for 0.5.0, and 29524 for >=0.6.0, so let's make a safer test
     # that checks the first dimension is close to 29525 and the second dimension is 32.
     assert abs(model.embedding.weight.shape[0] - 29525) < 5

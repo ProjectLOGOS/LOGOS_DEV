@@ -8,4 +8,4 @@ Enables autonomous reasoning extension while preserving formal verification guar
 from .iel_generator import IELGenerator
 from .iel_registry import IELRegistry
 
-__all__ = ['IELGenerator', 'IELRegistry']
+__all__ = ["IELGenerator", "IELRegistry"]

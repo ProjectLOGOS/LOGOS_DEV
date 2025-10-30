@@ -14,7 +14,11 @@ from sentence_transformers.models.Module import Module
 class CNN(Module):
     """CNN-layer with multiple kernel-sizes over the word embeddings"""
 
-    config_keys: list[str] = ["in_word_embedding_dimension", "out_channels", "kernel_sizes"]
+    config_keys: list[str] = [
+        "in_word_embedding_dimension",
+        "out_channels",
+        "kernel_sizes",
+    ]
     config_file_name: str = "cnn_config.json"
 
     def __init__(
@@ -60,7 +64,9 @@ class CNN(Module):
     def get_word_embedding_dimension(self) -> int:
         return self.embeddings_dimension
 
-    def save(self, output_path: str, *args, safe_serialization: bool = True, **kwargs) -> None:
+    def save(
+        self, output_path: str, *args, safe_serialization: bool = True, **kwargs
+    ) -> None:
         self.save_config(output_path)
         self.save_torch_weights(output_path, safe_serialization=safe_serialization)
 
@@ -84,5 +90,7 @@ class CNN(Module):
         }
         config = cls.load_config(model_name_or_path=model_name_or_path, **hub_kwargs)
         model = cls(**config)
-        model = cls.load_torch_weights(model_name_or_path=model_name_or_path, model=model, **hub_kwargs)
+        model = cls.load_torch_weights(
+            model_name_or_path=model_name_or_path, model=model, **hub_kwargs
+        )
         return model

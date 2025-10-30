@@ -12,6 +12,7 @@ critical statistics of a time series object.
 
    <br/>
 """
+
 print(__doc__)
 
 # Author: Taylor Smith <taylor.smith@alkaline-ml.com>
@@ -32,10 +33,11 @@ pm.tsdisplay(y, lag_max=90, title="Sunspots", show=True)
 # Notice that the histogram is very skewed. This is a prime candidate for
 # box-cox transformation
 y_bc, _ = preprocessing.BoxCoxEndogTransformer(lmbda2=1e-6).fit_transform(y)
-pm.tsdisplay(
-    y_bc, lag_max=90, title="Sunspots (BoxCox-transformed)", show=True)
+pm.tsdisplay(y_bc, lag_max=90, title="Sunspots (BoxCox-transformed)", show=True)
 
-print("""
+print(
+    """
 As evidenced by the more normally distributed values in the transformed series,
 using a Box-Cox transformation may prove useful prior to fitting your model.
-""")
+"""
+)

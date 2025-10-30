@@ -14,14 +14,14 @@ Version: 2.0.0
 Date: 2025-01-28
 """
 
-import logging
-import json
 import hashlib
+import json
+import logging
 import secrets
 import time
-from typing import Dict, List, Tuple, Any, Optional
-from dataclasses import dataclass
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Tuple
 
 from core.data_structures import ValidationStatus
 from core.principles import PrincipleEngine
@@ -103,7 +103,9 @@ class _MoralSetValidator:
         # Check for privation (absence of good)
         privation_indicators = ["void", "null", "empty", "meaningless", "worthless"]
         if any(indicator in operation_lower for indicator in privation_indicators):
-            return ValidationResult("invalid", f"Operation exhibits privation: {operation}")
+            return ValidationResult(
+                "invalid", f"Operation exhibits privation: {operation}"
+            )
 
         return ValidationResult("valid", "Operation morally acceptable")
 
@@ -117,7 +119,9 @@ class _RealitySetValidator:
         """Validate operation against reality constraints"""
 
         if not proposition and not operation:
-            return ValidationResult("invalid", "No proposition or operation to validate")
+            return ValidationResult(
+                "invalid", "No proposition or operation to validate"
+            )
 
         prop_lower = (proposition or "").lower()
         op_lower = (operation or "").lower()
@@ -143,7 +147,9 @@ class _RealitySetValidator:
         impossible_ops = ["create contradiction", "destroy truth", "make false true"]
         for impossible in impossible_ops:
             if impossible in content:
-                return ValidationResult("rejected", f"Impossible operation: {impossible}")
+                return ValidationResult(
+                    "rejected", f"Impossible operation: {impossible}"
+                )
 
         return ValidationResult("valid", "Operation consistent with reality")
 
@@ -203,7 +209,9 @@ class _ExistenceSetValidator:
         anti_existence = ["annihilate", "void", "make nothing", "destroy being"]
         for anti_op in anti_existence:
             if anti_op in operation_lower:
-                return ValidationResult("rejected", f"Anti-existence operation: {anti_op}")
+                return ValidationResult(
+                    "rejected", f"Anti-existence operation: {anti_op}"
+                )
 
         # Validate entity has existence properties
         if isinstance(entity, str) and entity.strip() == "":
@@ -215,7 +223,9 @@ class _ExistenceSetValidator:
 class _RelationalSetValidator:
     """Validates relational consistency of operations"""
 
-    def validate(self, entity: Any, operation: str, context: Dict[str, Any]) -> ValidationResult:
+    def validate(
+        self, entity: Any, operation: str, context: Dict[str, Any]
+    ) -> ValidationResult:
         """Validate relational consistency"""
 
         # Check for relational contradictions
@@ -266,7 +276,9 @@ class _CoherenceFormalismValidator:
 
         # Check for direct contradictions
         if self._detect_contradictions(propositions):
-            return ValidationResult("rejected", "Direct logical contradictions detected")
+            return ValidationResult(
+                "rejected", "Direct logical contradictions detected"
+            )
 
         # Check for circular reasoning
         if self._detect_circular_reasoning(propositions):
@@ -407,7 +419,8 @@ class UnifiedFormalismValidator:
             # OPERATION AUTHORIZED - Generate Trinity-Locked Token
             operation_hash = hashlib.sha256(
                 json.dumps(
-                    {k: str(v) for k, v in locals().items() if k != "self"}, sort_keys=True
+                    {k: str(v) for k, v in locals().items() if k != "self"},
+                    sort_keys=True,
                 ).encode()
             ).hexdigest()
 
@@ -419,14 +432,19 @@ class UnifiedFormalismValidator:
                 "status": "LOCKED",
                 "authorized": True,
                 "token": token,
-                "validation_results": {name: "valid" for name in validation_results.keys()},
+                "validation_results": {
+                    name: "valid" for name in validation_results.keys()
+                },
                 "principle_compliance": True,
                 "timestamp": time.time(),
             }
         else:
             # OPERATION REJECTED
             reason = "; ".join(
-                [f"{name.upper()}: {reason}" for name, reason in failed_validations.items()]
+                [
+                    f"{name.upper()}: {reason}"
+                    for name, reason in failed_validations.items()
+                ]
             )
 
             log.warning(f"✗ Operation REJECTED: {operation} on {entity} - {reason}")
@@ -440,7 +458,9 @@ class UnifiedFormalismValidator:
                 "timestamp": time.time(),
             }
 
-    def validate_query(self, query_text: str, requester_id: str = "unknown") -> Dict[str, Any]:
+    def validate_query(
+        self, query_text: str, requester_id: str = "unknown"
+    ) -> Dict[str, Any]:
         """Validate a natural language query"""
 
         # Convert query to operation format
@@ -527,7 +547,9 @@ def require_validation(validator: UnifiedFormalismValidator):
             validation_result = validator.validate_agi_operation(operation_request)
 
             if not validation_result["authorized"]:
-                raise PermissionError(f"Operation not authorized: {validation_result['reason']}")
+                raise PermissionError(
+                    f"Operation not authorized: {validation_result['reason']}"
+                )
 
             # Store validation token for audit
             kwargs["_validation_token"] = validation_result["token"]
@@ -543,7 +565,12 @@ def require_validation(validator: UnifiedFormalismValidator):
 # V. MODULE EXPORTS
 # =========================================================================
 
-__all__ = ["ValidationResult", "Proposition", "UnifiedFormalismValidator", "require_validation"]
+__all__ = [
+    "ValidationResult",
+    "Proposition",
+    "UnifiedFormalismValidator",
+    "require_validation",
+]
 
 # For convenience, create a global validator instance
 _global_validator = None

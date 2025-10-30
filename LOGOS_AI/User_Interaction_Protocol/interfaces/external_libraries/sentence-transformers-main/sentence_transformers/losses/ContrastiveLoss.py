@@ -91,15 +91,25 @@ class ContrastiveLoss(nn.Module):
                 distance_metric_name = f"SiameseDistanceMetric.{name}"
                 break
 
-        return {"distance_metric": distance_metric_name, "margin": self.margin, "size_average": self.size_average}
+        return {
+            "distance_metric": distance_metric_name,
+            "margin": self.margin,
+            "size_average": self.size_average,
+        }
 
-    def forward(self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor) -> Tensor:
-        reps = [self.model(sentence_feature)["sentence_embedding"] for sentence_feature in sentence_features]
+    def forward(
+        self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor
+    ) -> Tensor:
+        reps = [
+            self.model(sentence_feature)["sentence_embedding"]
+            for sentence_feature in sentence_features
+        ]
         assert len(reps) == 2
         rep_anchor, rep_other = reps
         distances = self.distance_metric(rep_anchor, rep_other)
         losses = 0.5 * (
-            labels.float() * distances.pow(2) + (1 - labels).float() * F.relu(self.margin - distances).pow(2)
+            labels.float() * distances.pow(2)
+            + (1 - labels).float() * F.relu(self.margin - distances).pow(2)
         )
         return losses.mean() if self.size_average else losses.sum()
 

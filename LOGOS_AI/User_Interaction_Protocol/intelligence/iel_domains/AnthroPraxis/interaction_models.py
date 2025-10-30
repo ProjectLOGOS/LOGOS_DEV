@@ -5,6 +5,7 @@ Provides classes and functions for modeling human-AI interactions,
 including natural language processing, intent recognition, and response generation.
 """
 
+
 class HumanAIInterface:
     """
     Core interface for human-AI interaction.
@@ -28,10 +29,10 @@ class HumanAIInterface:
         """
         # Placeholder implementation
         return {
-            'intent': 'general_query',
-            'entities': {},
-            'confidence': 0.8,
-            'processed_input': user_input.lower()
+            "intent": "general_query",
+            "entities": {},
+            "confidence": 0.8,
+            "processed_input": user_input.lower(),
         }
 
     def generate_response(self, intent_data: dict) -> str:
@@ -45,16 +46,18 @@ class HumanAIInterface:
             Generated response string
         """
         # Placeholder implementation
-        intent = intent_data.get('intent', 'unknown')
-        if intent == 'general_query':
+        intent = intent_data.get("intent", "unknown")
+        if intent == "general_query":
             return "I understand you're asking a question. Let me help you with that."
         else:
             return "I'm processing your request."
 
     def update_history(self, user_input: str, ai_response: str):
         """Update conversation history."""
-        self.conversation_history.append({
-            'user': user_input,
-            'ai': ai_response,
-            'timestamp': None  # Could add datetime
-        })
+        self.conversation_history.append(
+            {
+                "user": user_input,
+                "ai": ai_response,
+                "timestamp": None,  # Could add datetime
+            }
+        )

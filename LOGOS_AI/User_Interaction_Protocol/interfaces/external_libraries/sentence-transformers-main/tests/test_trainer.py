@@ -11,7 +11,11 @@ import torch
 from tokenizers.processors import TemplateProcessing
 from torch.utils.data import ConcatDataset
 
-from sentence_transformers import SentenceTransformer, SentenceTransformerTrainer, losses
+from sentence_transformers import (
+    SentenceTransformer,
+    SentenceTransformerTrainer,
+    losses,
+)
 from sentence_transformers.evaluation import EmbeddingSimilarityEvaluator
 from sentence_transformers.losses import MultipleNegativesRankingLoss
 from sentence_transformers.sampler import (
@@ -46,9 +50,12 @@ def test_trainer_multi_dataset_errors(
         "stsb": losses.CosineSimilarityLoss(model=stsb_bert_tiny_model),
     }
     with pytest.raises(
-        ValueError, match="If the provided `loss` is a dict, then the `train_dataset` must be a `DatasetDict`."
+        ValueError,
+        match="If the provided `loss` is a dict, then the `train_dataset` must be a `DatasetDict`.",
     ):
-        SentenceTransformerTrainer(model=stsb_bert_tiny_model, train_dataset=train_dataset, loss=loss)
+        SentenceTransformerTrainer(
+            model=stsb_bert_tiny_model, train_dataset=train_dataset, loss=loss
+        )
 
     train_dataset = DatasetDict(
         {
@@ -63,7 +70,9 @@ def test_trainer_multi_dataset_errors(
         match="If the provided `loss` is a dict, then all keys from the `train_dataset` dictionary must occur in `loss` also. "
         r"Currently, \['stsb-extra'\] occurs in `train_dataset` but not in `loss`.",
     ):
-        SentenceTransformerTrainer(model=stsb_bert_tiny_model, train_dataset=train_dataset, loss=loss)
+        SentenceTransformerTrainer(
+            model=stsb_bert_tiny_model, train_dataset=train_dataset, loss=loss
+        )
 
     train_dataset = DatasetDict(
         {
@@ -73,7 +82,8 @@ def test_trainer_multi_dataset_errors(
         }
     )
     with pytest.raises(
-        ValueError, match="If the provided `loss` is a dict, then the `eval_dataset` must be a `DatasetDict`."
+        ValueError,
+        match="If the provided `loss` is a dict, then the `eval_dataset` must be a `DatasetDict`.",
     ):
         SentenceTransformerTrainer(
             model=stsb_bert_tiny_model,
@@ -97,7 +107,10 @@ def test_trainer_multi_dataset_errors(
         r"Currently, \['stsb-extra-1', 'stsb-extra-2'\] occur in `eval_dataset` but not in `loss`.",
     ):
         SentenceTransformerTrainer(
-            model=stsb_bert_tiny_model, train_dataset=train_dataset, eval_dataset=eval_dataset, loss=loss
+            model=stsb_bert_tiny_model,
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            loss=loss,
         )
 
 
@@ -114,7 +127,9 @@ def test_trainer_invalid_column_names(
                 " Avoid using these column names, as they are reserved for internal use.",
             ),
         ):
-            trainer = SentenceTransformerTrainer(model=stsb_bert_tiny_model, train_dataset=invalid_train_dataset)
+            trainer = SentenceTransformerTrainer(
+                model=stsb_bert_tiny_model, train_dataset=invalid_train_dataset
+            )
 
         invalid_train_dataset = DatasetDict(
             {
@@ -129,7 +144,9 @@ def test_trainer_invalid_column_names(
                 " Avoid using these column names, as they are reserved for internal use."
             ),
         ):
-            trainer = SentenceTransformerTrainer(model=stsb_bert_tiny_model, train_dataset=invalid_train_dataset)
+            trainer = SentenceTransformerTrainer(
+                model=stsb_bert_tiny_model, train_dataset=invalid_train_dataset
+            )
 
     train_dataset = stsb_dataset_dict["train"]
     eval_dataset = stsb_dataset_dict["validation"]
@@ -143,10 +160,14 @@ def test_trainer_invalid_column_names(
             ),
         ):
             trainer = SentenceTransformerTrainer(
-                model=stsb_bert_tiny_model, train_dataset=train_dataset, eval_dataset=invalid_eval_dataset
+                model=stsb_bert_tiny_model,
+                train_dataset=train_dataset,
+                eval_dataset=invalid_eval_dataset,
             )
 
-        trainer = SentenceTransformerTrainer(model=stsb_bert_tiny_model, train_dataset=train_dataset)
+        trainer = SentenceTransformerTrainer(
+            model=stsb_bert_tiny_model, train_dataset=train_dataset
+        )
         with pytest.raises(
             ValueError,
             match=re.escape(
@@ -170,10 +191,14 @@ def test_trainer_invalid_column_names(
             ),
         ):
             trainer = SentenceTransformerTrainer(
-                model=stsb_bert_tiny_model, train_dataset=train_dataset, eval_dataset=invalid_eval_dataset
+                model=stsb_bert_tiny_model,
+                train_dataset=train_dataset,
+                eval_dataset=invalid_eval_dataset,
             )
 
-        trainer = SentenceTransformerTrainer(model=stsb_bert_tiny_model, train_dataset=train_dataset)
+        trainer = SentenceTransformerTrainer(
+            model=stsb_bert_tiny_model, train_dataset=train_dataset
+        )
         with pytest.raises(
             ValueError,
             match=re.escape(
@@ -233,11 +258,13 @@ def test_trainer(
     context = nullcontext()
     if loss_dict and not train_dict:
         context = pytest.raises(
-            ValueError, match="If the provided `loss` is a dict, then the `train_dataset` must be a `DatasetDict`."
+            ValueError,
+            match="If the provided `loss` is a dict, then the `train_dataset` must be a `DatasetDict`.",
         )
     elif loss_dict and not eval_dict:
         context = pytest.raises(
-            ValueError, match="If the provided `loss` is a dict, then the `eval_dataset` must be a `DatasetDict`."
+            ValueError,
+            match="If the provided `loss` is a dict, then the `eval_dataset` must be a `DatasetDict`.",
         )
     elif streaming and train_dict:
         context = pytest.raises(
@@ -284,8 +311,12 @@ def test_trainer(
             trainer.train()
 
     if isinstance(context, nullcontext):
-        original_embeddings = original_model.encode("The cat is on the mat.", convert_to_tensor=True)
-        new_embeddings = model.encode("The cat is on the the mat.", convert_to_tensor=True)
+        original_embeddings = original_model.encode(
+            "The cat is on the mat.", convert_to_tensor=True
+        )
+        new_embeddings = model.encode(
+            "The cat is on the the mat.", convert_to_tensor=True
+        )
         assert not torch.equal(original_embeddings, new_embeddings)
 
 
@@ -301,8 +332,14 @@ def test_trainer(
     [
         None,  # No prompt
         "Prompt: ",  # Single prompt to all columns and all datasets
-        {"stsb-1": "Prompt 1: ", "stsb-2": "Prompt 2: "},  # Different prompts for different datasets
-        {"sentence1": "Prompt 1: ", "sentence2": "Prompt 2: "},  # Different prompts for different columns
+        {
+            "stsb-1": "Prompt 1: ",
+            "stsb-2": "Prompt 2: ",
+        },  # Different prompts for different datasets
+        {
+            "sentence1": "Prompt 1: ",
+            "sentence2": "Prompt 2: ",
+        },  # Different prompts for different columns
         {
             "stsb-1": {"sentence1": "Prompt 1: ", "sentence2": "Prompt 2: "},
             "stsb-2": {"sentence1": "Prompt 3: ", "sentence2": "Prompt 4: "},
@@ -375,9 +412,13 @@ def test_trainer_prompts(
 
     if train_dict:
         if streaming:
-            train_dataset = IterableDatasetDict({"stsb-1": train_dataset_1, "stsb-2": train_dataset_2})
+            train_dataset = IterableDatasetDict(
+                {"stsb-1": train_dataset_1, "stsb-2": train_dataset_2}
+            )
         else:
-            train_dataset = DatasetDict({"stsb-1": train_dataset_1, "stsb-2": train_dataset_2})
+            train_dataset = DatasetDict(
+                {"stsb-1": train_dataset_1, "stsb-2": train_dataset_2}
+            )
     else:
         if streaming:
             train_dataset = train_dataset_1.to_iterable_dataset()
@@ -386,9 +427,13 @@ def test_trainer_prompts(
 
     if eval_dict:
         if streaming:
-            eval_dataset = IterableDatasetDict({"stsb-1": eval_dataset_1, "stsb-2": eval_dataset_2})
+            eval_dataset = IterableDatasetDict(
+                {"stsb-1": eval_dataset_1, "stsb-2": eval_dataset_2}
+            )
         else:
-            eval_dataset = DatasetDict({"stsb-1": eval_dataset_1, "stsb-2": eval_dataset_2})
+            eval_dataset = DatasetDict(
+                {"stsb-1": eval_dataset_1, "stsb-2": eval_dataset_2}
+            )
     else:
         if streaming:
             eval_dataset = eval_dataset_1.to_iterable_dataset()
@@ -405,21 +450,29 @@ def test_trainer_prompts(
             if train_dict:
                 train_dataset = IterableDatasetDict(
                     {
-                        dataset_name: dataset.map(upper_transform, batched=True, features=dataset.features)
+                        dataset_name: dataset.map(
+                            upper_transform, batched=True, features=dataset.features
+                        )
                         for dataset_name, dataset in train_dataset.items()
                     }
                 )
             else:
-                train_dataset = train_dataset.map(upper_transform, batched=True, features=train_dataset.features)
+                train_dataset = train_dataset.map(
+                    upper_transform, batched=True, features=train_dataset.features
+                )
             if eval_dict:
                 eval_dataset = IterableDatasetDict(
                     {
-                        dataset_name: dataset.map(upper_transform, batched=True, features=dataset.features)
+                        dataset_name: dataset.map(
+                            upper_transform, batched=True, features=dataset.features
+                        )
                         for dataset_name, dataset in eval_dataset.items()
                     }
                 )
             else:
-                eval_dataset = eval_dataset.map(upper_transform, batched=True, features=eval_dataset.features)
+                eval_dataset = eval_dataset.map(
+                    upper_transform, batched=True, features=eval_dataset.features
+                )
         else:
             train_dataset.set_transform(upper_transform)
             eval_dataset.set_transform(upper_transform)
@@ -432,14 +485,38 @@ def test_trainer_prompts(
 
     # Variables to more easily track the expected outputs. Uppercased if add_transform is True as we expect
     # the transform to be applied to the data.
-    all_train_1_1 = {sentence.upper() if add_transform else sentence for sentence in train_dataset_1["sentence1"]}
-    all_train_1_2 = {sentence.upper() if add_transform else sentence for sentence in train_dataset_1["sentence2"]}
-    all_train_2_1 = {sentence.upper() if add_transform else sentence for sentence in train_dataset_2["sentence1"]}
-    all_train_2_2 = {sentence.upper() if add_transform else sentence for sentence in train_dataset_2["sentence2"]}
-    all_eval_1_1 = {sentence.upper() if add_transform else sentence for sentence in eval_dataset_1["sentence1"]}
-    all_eval_1_2 = {sentence.upper() if add_transform else sentence for sentence in eval_dataset_1["sentence2"]}
-    all_eval_2_1 = {sentence.upper() if add_transform else sentence for sentence in eval_dataset_2["sentence1"]}
-    all_eval_2_2 = {sentence.upper() if add_transform else sentence for sentence in eval_dataset_2["sentence2"]}
+    all_train_1_1 = {
+        sentence.upper() if add_transform else sentence
+        for sentence in train_dataset_1["sentence1"]
+    }
+    all_train_1_2 = {
+        sentence.upper() if add_transform else sentence
+        for sentence in train_dataset_1["sentence2"]
+    }
+    all_train_2_1 = {
+        sentence.upper() if add_transform else sentence
+        for sentence in train_dataset_2["sentence1"]
+    }
+    all_train_2_2 = {
+        sentence.upper() if add_transform else sentence
+        for sentence in train_dataset_2["sentence2"]
+    }
+    all_eval_1_1 = {
+        sentence.upper() if add_transform else sentence
+        for sentence in eval_dataset_1["sentence1"]
+    }
+    all_eval_1_2 = {
+        sentence.upper() if add_transform else sentence
+        for sentence in eval_dataset_1["sentence2"]
+    }
+    all_eval_2_1 = {
+        sentence.upper() if add_transform else sentence
+        for sentence in eval_dataset_2["sentence1"]
+    }
+    all_eval_2_2 = {
+        sentence.upper() if add_transform else sentence
+        for sentence in eval_dataset_2["sentence2"]
+    }
     all_train_1 = all_train_1_1 | all_train_1_2
     all_train_2 = all_train_2_1 | all_train_2_2
     all_eval_1 = all_eval_1_1 | all_eval_1_2
@@ -503,7 +580,8 @@ def test_trainer_prompts(
         prompts
         and not pool_include_prompt
         and not (
-            prompts == {"stsb-1": "Prompt 1: ", "stsb-2": "Prompt 2: "} and (train_dict, eval_dict) == (False, False)
+            prompts == {"stsb-1": "Prompt 1: ", "stsb-2": "Prompt 2: "}
+            and (train_dict, eval_dict) == (False, False)
         )
     ):
         assert "prompt_length" in tracked_forward_keys
@@ -528,13 +606,21 @@ def test_trainer_prompts(
 
     elif prompts == "Prompt: ":
         if (train_dict, eval_dict) == (False, False):
-            expected = {prompts + sample for sample in all_train_1} | {prompts + sample for sample in all_eval_1}
+            expected = {prompts + sample for sample in all_train_1} | {
+                prompts + sample for sample in all_eval_1
+            }
         elif (train_dict, eval_dict) == (True, False):
-            expected = {prompts + sample for sample in all_train} | {prompts + sample for sample in all_eval_1}
+            expected = {prompts + sample for sample in all_train} | {
+                prompts + sample for sample in all_eval_1
+            }
         if (train_dict, eval_dict) == (False, True):
-            expected = {prompts + sample for sample in all_train_1} | {prompts + sample for sample in all_eval}
+            expected = {prompts + sample for sample in all_train_1} | {
+                prompts + sample for sample in all_eval
+            }
         elif (train_dict, eval_dict) == (True, True):
-            expected = {prompts + sample for sample in all_train} | {prompts + sample for sample in all_eval}
+            expected = {prompts + sample for sample in all_train} | {
+                prompts + sample for sample in all_eval
+            }
 
         if not pool_include_prompt:
             expected.add(prompts)
@@ -627,7 +713,13 @@ def test_trainer_prompts(
             )
 
         if not pool_include_prompt:
-            expected.update({prompt for inner_dict in prompts.values() for prompt in inner_dict.values()})
+            expected.update(
+                {
+                    prompt
+                    for inner_dict in prompts.values()
+                    for prompt in inner_dict.values()
+                }
+            )
 
     assert set(tracked_texts) == expected
 
@@ -653,7 +745,9 @@ def test_trainer_no_eval_dataset_with_eval_strategy(
         name="stsb-validation",
     )
     loss = losses.CosineSimilarityLoss(model=model)
-    args = SentenceTransformerTrainingArguments(output_dir=tmp_path, eval_strategy="steps")
+    args = SentenceTransformerTrainingArguments(
+        output_dir=tmp_path, eval_strategy="steps"
+    )
 
     kwargs = {}
     if use_eval_dataset:
@@ -728,14 +822,26 @@ def test_data_collator(
 
     # Check that we can update the tokenizer in this way
     if has_eos_token:
-        assert model.tokenize(["dummy text"])["input_ids"].flatten()[-1] == dummy_eos_token_id
+        assert (
+            model.tokenize(["dummy text"])["input_ids"].flatten()[-1]
+            == dummy_eos_token_id
+        )
     else:
-        assert model.tokenize(["dummy text"])["input_ids"].flatten()[-1] != dummy_eos_token_id
+        assert (
+            model.tokenize(["dummy text"])["input_ids"].flatten()[-1]
+            != dummy_eos_token_id
+        )
 
     if has_bos_token:
-        assert model.tokenize(["dummy text"])["input_ids"].flatten()[0] == dummy_bos_token_id
+        assert (
+            model.tokenize(["dummy text"])["input_ids"].flatten()[0]
+            == dummy_bos_token_id
+        )
     else:
-        assert model.tokenize(["dummy text"])["input_ids"].flatten()[0] != dummy_bos_token_id
+        assert (
+            model.tokenize(["dummy text"])["input_ids"].flatten()[0]
+            != dummy_bos_token_id
+        )
 
     train_dataset = stsb_dataset_dict["train"].select(range(10))
     eval_dataset = stsb_dataset_dict["validation"].select(range(10))
@@ -761,10 +867,14 @@ def test_data_collator(
     trainer.train()
 
     # Check that the data collator correctly recognizes the prompt length
-    only_prompt_length = len(model.tokenizer(["Prompt: "], add_special_tokens=False)["input_ids"][0])
+    only_prompt_length = len(
+        model.tokenizer(["Prompt: "], add_special_tokens=False)["input_ids"][0]
+    )
     if has_bos_token:
         only_prompt_length += 1
-    assert trainer.data_collator._prompt_length_mapping == {("Prompt: ", None): only_prompt_length}
+    assert trainer.data_collator._prompt_length_mapping == {
+        ("Prompt: ", None): only_prompt_length
+    }
 
 
 def test_trainer_get_batch_sampler_class(
@@ -779,7 +889,9 @@ def test_trainer_get_batch_sampler_class(
         output_dir="dummy",
         batch_sampler=GroupByLabelBatchSampler,
     )
-    trainer = SentenceTransformerTrainer(model=stsb_bert_tiny_model, args=args, train_dataset=train_dataset)
+    trainer = SentenceTransformerTrainer(
+        model=stsb_bert_tiny_model, args=args, train_dataset=train_dataset
+    )
     batch_sampler = trainer.get_batch_sampler(
         train_dataset,
         batch_size=8,
@@ -795,7 +907,9 @@ def test_trainer_get_batch_sampler_class(
         output_dir="dummy",
         batch_sampler=NoDuplicatesBatchSampler,
     )
-    trainer = SentenceTransformerTrainer(model=stsb_bert_tiny_model, args=args, train_dataset=train_dataset)
+    trainer = SentenceTransformerTrainer(
+        model=stsb_bert_tiny_model, args=args, train_dataset=train_dataset
+    )
     batch_sampler = trainer.get_batch_sampler(
         train_dataset,
         batch_size=8,
@@ -815,7 +929,9 @@ def test_trainer_get_batch_sampler_function(
     train_dataset = stsb_dataset_dict["train"]
 
     # Define a custom batch sampler function
-    def custom_batch_sampler(dataset, batch_size, drop_last, valid_label_columns, generator, seed):
+    def custom_batch_sampler(
+        dataset, batch_size, drop_last, valid_label_columns, generator, seed
+    ):
         # This function returns a GroupByLabelBatchSampler regardless of input
         return GroupByLabelBatchSampler(
             dataset=dataset,
@@ -830,7 +946,9 @@ def test_trainer_get_batch_sampler_function(
         output_dir="dummy",
         batch_sampler=custom_batch_sampler,
     )
-    trainer = SentenceTransformerTrainer(model=stsb_bert_tiny_model, args=args, train_dataset=train_dataset)
+    trainer = SentenceTransformerTrainer(
+        model=stsb_bert_tiny_model, args=args, train_dataset=train_dataset
+    )
 
     batch_sampler = trainer.get_batch_sampler(
         train_dataset,
@@ -852,7 +970,9 @@ def test_trainer_get_batch_sampler_function(
         output_dir="dummy",
         batch_sampler=null_batch_sampler,
     )
-    trainer = SentenceTransformerTrainer(model=stsb_bert_tiny_model, args=args, train_dataset=train_dataset)
+    trainer = SentenceTransformerTrainer(
+        model=stsb_bert_tiny_model, args=args, train_dataset=train_dataset
+    )
 
     batch_sampler = trainer.get_batch_sampler(
         train_dataset,
@@ -892,7 +1012,9 @@ def test_trainer_get_multi_dataset_batch_sampler_class(
         output_dir="dummy",
         multi_dataset_batch_sampler=RoundRobinBatchSampler,
     )
-    trainer = SentenceTransformerTrainer(model=stsb_bert_tiny_model, args=args, train_dataset=train_dataset)
+    trainer = SentenceTransformerTrainer(
+        model=stsb_bert_tiny_model, args=args, train_dataset=train_dataset
+    )
 
     batch_sampler = trainer.get_multi_dataset_batch_sampler(
         concat_dataset,
@@ -911,7 +1033,9 @@ def test_trainer_get_multi_dataset_batch_sampler_class(
         output_dir="dummy",
         multi_dataset_batch_sampler=CopiedProportionalBatchSampler,
     )
-    trainer = SentenceTransformerTrainer(model=stsb_bert_tiny_model, args=args, train_dataset=train_dataset)
+    trainer = SentenceTransformerTrainer(
+        model=stsb_bert_tiny_model, args=args, train_dataset=train_dataset
+    )
 
     batch_sampler = trainer.get_multi_dataset_batch_sampler(
         concat_dataset,
@@ -958,7 +1082,9 @@ def test_trainer_get_multi_dataset_batch_sampler_function(
         output_dir="dummy",
         multi_dataset_batch_sampler=custom_multi_dataset_batch_sampler,
     )
-    trainer = SentenceTransformerTrainer(model=stsb_bert_tiny_model, args=args, train_dataset=train_dataset)
+    trainer = SentenceTransformerTrainer(
+        model=stsb_bert_tiny_model, args=args, train_dataset=train_dataset
+    )
 
     batch_sampler = trainer.get_multi_dataset_batch_sampler(
         concat_dataset,
@@ -978,7 +1104,9 @@ def test_trainer_get_multi_dataset_batch_sampler_function(
         output_dir="dummy",
         multi_dataset_batch_sampler=null_multi_dataset_batch_sampler,
     )
-    trainer = SentenceTransformerTrainer(model=stsb_bert_tiny_model, args=args, train_dataset=train_dataset)
+    trainer = SentenceTransformerTrainer(
+        model=stsb_bert_tiny_model, args=args, train_dataset=train_dataset
+    )
 
     batch_sampler = trainer.get_multi_dataset_batch_sampler(
         concat_dataset,

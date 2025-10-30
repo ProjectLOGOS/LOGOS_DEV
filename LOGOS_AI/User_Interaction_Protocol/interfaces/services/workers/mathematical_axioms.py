@@ -14,13 +14,14 @@ Version: 2.0.0
 Date: 2025-01-28
 """
 
-import numpy as np
-import math
 import logging
-from typing import Dict, List, Tuple, Any, Optional, Callable
+import math
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-from abc import ABC, abstractmethod
+from typing import Any, Callable, Dict, List, Optional, Tuple
+
+import numpy as np
 
 # =========================================================================
 # I. FOUNDATIONAL AXIOM SYSTEM
@@ -265,7 +266,9 @@ class AxiomSystem:
         for i, stmt1 in enumerate(statements):
             for stmt2 in statements[i + 1 :]:
                 if self._are_contradictory_statements(stmt1, stmt2):
-                    self.logger.warning(f"Potential contradiction detected: {stmt1} vs {stmt2}")
+                    self.logger.warning(
+                        f"Potential contradiction detected: {stmt1} vs {stmt2}"
+                    )
                     return False
 
         return True
@@ -295,7 +298,9 @@ class AxiomSystem:
         for axiom in self.axioms.values():
             for dep_id in axiom.dependencies:
                 if dep_id not in self.axioms:
-                    self.logger.error(f"Axiom {axiom.axiom_id} depends on missing axiom {dep_id}")
+                    self.logger.error(
+                        f"Axiom {axiom.axiom_id} depends on missing axiom {dep_id}"
+                    )
                     return False
 
         return True
@@ -303,7 +308,9 @@ class AxiomSystem:
     def _check_trinity_coherence(self) -> bool:
         """Check that Trinity axioms are coherent"""
 
-        trinity_axioms = [a for a in self.axioms.values() if a.axiom_type == AxiomType.TRINITY]
+        trinity_axioms = [
+            a for a in self.axioms.values() if a.axiom_type == AxiomType.TRINITY
+        ]
 
         # Check that we have essential Trinity axioms
         required_trinity_axioms = ["T1", "T2", "T3"]
@@ -328,7 +335,9 @@ class AxiomSystem:
 
     def get_axioms_by_type(self, axiom_type: AxiomType) -> List[Axiom]:
         """Get all axioms of a specific type"""
-        return [axiom for axiom in self.axioms.values() if axiom.axiom_type == axiom_type]
+        return [
+            axiom for axiom in self.axioms.values() if axiom.axiom_type == axiom_type
+        ]
 
 
 # =========================================================================
@@ -466,7 +475,8 @@ class OntologicalProofSystem:
         """Prove that Trinity structure is optimal"""
 
         proof = OntologicalProof(
-            "Trinity structure (n=3) is optimal for all optimization functions", ["T1", "T2", "T3"]
+            "Trinity structure (n=3) is optimal for all optimization functions",
+            ["T1", "T2", "T3"],
         )
 
         proof.add_step("Given: Trinity Unity Axiom (T1)")
@@ -494,8 +504,12 @@ class OntologicalProofSystem:
         )
 
         proof.add_step("Given: Axiom of Existence (E1) - Something exists")
-        proof.add_step("Given: Axiom of Self-Existence (E2) - Existing things exist as themselves")
-        proof.add_step("Given: Trinity Unity Axiom (T1) - Reality has Trinity structure")
+        proof.add_step(
+            "Given: Axiom of Self-Existence (E2) - Existing things exist as themselves"
+        )
+        proof.add_step(
+            "Given: Trinity Unity Axiom (T1) - Reality has Trinity structure"
+        )
         proof.add_step("Mathematical objects are part of reality")
         proof.add_step("Therefore: Mathematical objects must exist")
         proof.add_step("Therefore: Mathematical objects must be existence-grounded ∎")
@@ -507,10 +521,13 @@ class OntologicalProofSystem:
         """Prove that evil (privation of good) cannot be optimized"""
 
         proof = OntologicalProof(
-            "Evil (privation of good) cannot be computationally optimized", ["T1", "T3", "E1"]
+            "Evil (privation of good) cannot be computationally optimized",
+            ["T1", "T3", "E1"],
         )
 
-        proof.add_step("Given: Trinity structure requires Existence, Goodness, and Truth")
+        proof.add_step(
+            "Given: Trinity structure requires Existence, Goodness, and Truth"
+        )
         proof.add_step("Evil is defined as privation (absence) of good")
         proof.add_step("Privation means Goodness = 0 in Trinity product")
         proof.add_step("Trinity product E×G×T = E×0×T = 0 when G=0")

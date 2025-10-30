@@ -39,7 +39,9 @@ class BatchHardTripletLossDistanceFunction:
         # Compute the pairwise distance matrix as we have:
         # ||a - b||^2 = ||a||^2  - 2 <a, b> + ||b||^2
         # shape (batch_size, batch_size)
-        distances = square_norm.unsqueeze(0) - 2.0 * dot_product + square_norm.unsqueeze(1)
+        distances = (
+            square_norm.unsqueeze(0) - 2.0 * dot_product + square_norm.unsqueeze(1)
+        )
 
         # Because of computation errors, some distances might be negative so we put everything >= 0.0
         distances[distances < 0] = 0
@@ -168,7 +170,9 @@ class BatchHardTripletLoss(nn.Module):
 
         # For each anchor, get the hardest positive
         # First, we need to get a mask for every valid positive (they should have same label)
-        mask_anchor_positive = BatchHardTripletLoss.get_anchor_positive_triplet_mask(labels).float()
+        mask_anchor_positive = BatchHardTripletLoss.get_anchor_positive_triplet_mask(
+            labels
+        ).float()
 
         # We put to 0 any element where (a, p) is not valid (valid if a != p and label(a) == label(p))
         anchor_positive_dist = mask_anchor_positive * pairwise_dist
@@ -178,11 +182,15 @@ class BatchHardTripletLoss(nn.Module):
 
         # For each anchor, get the hardest negative
         # First, we need to get a mask for every valid negative (they should have different labels)
-        mask_anchor_negative = BatchHardTripletLoss.get_anchor_negative_triplet_mask(labels).float()
+        mask_anchor_negative = BatchHardTripletLoss.get_anchor_negative_triplet_mask(
+            labels
+        ).float()
 
         # We add the maximum value in each row to the invalid negatives (label(a) == label(n))
         max_anchor_negative_dist, _ = pairwise_dist.max(1, keepdim=True)
-        anchor_negative_dist = pairwise_dist + max_anchor_negative_dist * (1.0 - mask_anchor_negative)
+        anchor_negative_dist = pairwise_dist + max_anchor_negative_dist * (
+            1.0 - mask_anchor_negative
+        )
 
         # shape (batch_size,)
         hardest_negative_dist, _ = anchor_negative_dist.min(1, keepdim=True)

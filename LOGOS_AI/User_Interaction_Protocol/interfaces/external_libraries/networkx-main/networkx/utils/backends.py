@@ -437,11 +437,15 @@ class _dispatchable:
             self.graphs = {}
         else:
             self.graphs = {
-                self.optional_graphs.add(val := k[:-1]) or val
-                if (last := k[-1]) == "?"
-                else self.list_graphs.add(val := k[1:-1]) or val
-                if last == "]"
-                else k: v
+                (
+                    self.optional_graphs.add(val := k[:-1]) or val
+                    if (last := k[-1]) == "?"
+                    else (
+                        self.list_graphs.add(val := k[1:-1]) or val
+                        if last == "]"
+                        else k
+                    )
+                ): v
                 for k, v in graphs.items()
             }
         # The above is equivalent to:
@@ -612,9 +616,11 @@ class _dispatchable:
 
         backend_priority = nx.config.backend_priority.get(
             self.name,
-            nx.config.backend_priority.generators
-            if self._returns_graph
-            else nx.config.backend_priority.algos,
+            (
+                nx.config.backend_priority.generators
+                if self._returns_graph
+                else nx.config.backend_priority.algos
+            ),
         )
         fallback_to_nx = nx.config.fallback_to_nx and "networkx" in self.backends
         if self._is_testing and backend_priority and backend_name is None:
@@ -1057,10 +1063,14 @@ class _dispatchable:
         # But we treat it like it might have more than 1 item for generality.
         n = len(args)
         return any(
-            (args[arg_pos] if n > arg_pos else kwargs.get(arg_name)) is not None
-            if not arg_name.startswith("not ")
-            # This assumes that e.g. `copy=True` is the default
-            else not (args[arg_pos] if n > arg_pos else kwargs.get(arg_name[4:], True))
+            (
+                (args[arg_pos] if n > arg_pos else kwargs.get(arg_name)) is not None
+                if not arg_name.startswith("not ")
+                # This assumes that e.g. `copy=True` is the default
+                else not (
+                    args[arg_pos] if n > arg_pos else kwargs.get(arg_name[4:], True)
+                )
+            )
             for arg_name, arg_pos in mutates_input.items()
         )
 
@@ -1289,20 +1299,23 @@ class _dispatchable:
         for gname in self.graphs:
             if gname in self.list_graphs:
                 bound.arguments[gname] = [
-                    self._convert_graph(
-                        backend_name,
-                        g,
-                        edge_attrs=edge_attrs,
-                        node_attrs=node_attrs,
-                        preserve_edge_attrs=preserve_edge_attrs,
-                        preserve_node_attrs=preserve_node_attrs,
-                        preserve_graph_attrs=preserve_graph_attrs,
-                        graph_name=gname,
-                        use_cache=use_cache,
-                        mutations=mutations,
+                    (
+                        self._convert_graph(
+                            backend_name,
+                            g,
+                            edge_attrs=edge_attrs,
+                            node_attrs=node_attrs,
+                            preserve_edge_attrs=preserve_edge_attrs,
+                            preserve_node_attrs=preserve_node_attrs,
+                            preserve_graph_attrs=preserve_graph_attrs,
+                            graph_name=gname,
+                            use_cache=use_cache,
+                            mutations=mutations,
+                        )
+                        if getattr(g, "__networkx_backend__", "networkx")
+                        != backend_name
+                        else g
                     )
-                    if getattr(g, "__networkx_backend__", "networkx") != backend_name
-                    else g
                     for g in bound.arguments[gname]
                 ]
             else:
@@ -1526,9 +1539,11 @@ class _dispatchable:
         other_backend_names = input_backend_names - {backend_name}
         _logger.debug(
             "Converting input graphs from %s backend%s to '%s' backend for call to '%s'",
-            other_backend_names
-            if len(other_backend_names) > 1
-            else f"'{next(iter(other_backend_names))}'",
+            (
+                other_backend_names
+                if len(other_backend_names) > 1
+                else f"'{next(iter(other_backend_names))}'"
+            ),
             "s" if len(other_backend_names) > 1 else "",
             backend_name,
             self.name,
@@ -1646,14 +1661,20 @@ class _dispatchable:
         else:
             args_to_convert, args_nx = zip(
                 *(
-                    (arg, deepcopy(arg))
-                    if isinstance(arg, RandomState)
-                    else (arg, copy(arg))
-                    if isinstance(arg, BytesIO | StringIO | Random | Generator)
-                    else tee(arg)
-                    if isinstance(arg, Iterator)
-                    and not isinstance(arg, BufferedReader | TextIOWrapper)
-                    else (arg, arg)
+                    (
+                        (arg, deepcopy(arg))
+                        if isinstance(arg, RandomState)
+                        else (
+                            (arg, copy(arg))
+                            if isinstance(arg, BytesIO | StringIO | Random | Generator)
+                            else (
+                                tee(arg)
+                                if isinstance(arg, Iterator)
+                                and not isinstance(arg, BufferedReader | TextIOWrapper)
+                                else (arg, arg)
+                            )
+                        )
+                    )
                     for arg in args
                 )
             )
@@ -1662,14 +1683,20 @@ class _dispatchable:
         else:
             kwargs_to_convert, kwargs_nx = zip(
                 *(
-                    ((k, v), (k, deepcopy(v)))
-                    if isinstance(v, RandomState)
-                    else ((k, v), (k, copy(v)))
-                    if isinstance(v, BytesIO | StringIO | Random | Generator)
-                    else ((k, (teed := tee(v))[0]), (k, teed[1]))
-                    if isinstance(v, Iterator)
-                    and not isinstance(v, BufferedReader | TextIOWrapper)
-                    else ((k, v), (k, v))
+                    (
+                        ((k, v), (k, deepcopy(v)))
+                        if isinstance(v, RandomState)
+                        else (
+                            ((k, v), (k, copy(v)))
+                            if isinstance(v, BytesIO | StringIO | Random | Generator)
+                            else (
+                                ((k, (teed := tee(v))[0]), (k, teed[1]))
+                                if isinstance(v, Iterator)
+                                and not isinstance(v, BufferedReader | TextIOWrapper)
+                                else ((k, v), (k, v))
+                            )
+                        )
+                    )
                     for k, v in kwargs.items()
                 )
             )
@@ -1974,12 +2001,16 @@ def _get_cache_key(
     # preserve_edge_attrs: bool (False if edge_attrs is not None)
     # preserve_node_attrs: bool (False if node_attrs is not None)
     return (
-        frozenset(edge_attrs.items())
-        if edge_attrs is not None
-        else preserve_edge_attrs,
-        frozenset(node_attrs.items())
-        if node_attrs is not None
-        else preserve_node_attrs,
+        (
+            frozenset(edge_attrs.items())
+            if edge_attrs is not None
+            else preserve_edge_attrs
+        ),
+        (
+            frozenset(node_attrs.items())
+            if node_attrs is not None
+            else preserve_node_attrs
+        ),
     )
 
 

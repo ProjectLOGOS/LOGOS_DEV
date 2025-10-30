@@ -2,15 +2,14 @@
 Forecasting Toolkit: ARIMA Wrapper
 Scaffold + operational code
 """
+
 import json
 import threading
 from pathlib import Path
 
-from trinity_vector import TrinityVector
-from bayesian_inferencer import BayesianTrinityInferencer
 from bayes_update_real_time import run_BERT_pipeline as run_burt_pipeline
+from bayesian_inferencer import BayesianTrinityInferencer
 from causal_inference import run_pc_causal_discovery, simulate_example_data
-from translation_engine import TranslationEngine
 
 # Forecasting imports
 from forecasting.arima_wrapper import fit_arima_model, forecast_arima
@@ -18,6 +17,9 @@ from forecasting.garch_wrapper import fit_garch_model, forecast_garch
 from forecasting.kalman_filter import KalmanFilter
 from forecasting.state_space_utils import build_state_space_model
 from forecasting.ts_kalman_filter import TimeSeriesKalman
+from translation_engine import TranslationEngine
+from trinity_vector import TrinityVector
+
 
 class DivineMind:
     """
@@ -25,9 +27,10 @@ class DivineMind:
     coordinates inference, feedback, causal analysis, translation,
     and forecasting.
     """
+
     def __init__(self, julia_json_path: str, priors_path: str):
         # Load ontological matrix
-        with open(julia_json_path, 'r', encoding='utf-8') as f:
+        with open(julia_json_path, "r", encoding="utf-8") as f:
             props = json.load(f)
         self.vector = TrinityVector(props)
         self.priors_path = priors_path
@@ -56,6 +59,7 @@ class DivineMind:
 
     def _background_loop(self):
         import time
+
         while not self._stop_bg.is_set():
             # Periodic health check or maintenance tasks
             time.sleep(5)
@@ -94,7 +98,7 @@ class DivineMind:
         return tr
 
     # Forecasting methods
-    def forecast_mean(self, series, order=(1,1,1), steps=5):
+    def forecast_mean(self, series, order=(1, 1, 1), steps=5):
         arima_fit = fit_arima_model(series, order=order)
         fc = forecast_arima(arima_fit, steps=steps)
         print(f"[Forecast Mean] next {steps} => {list(fc)}")
@@ -129,11 +133,12 @@ class DivineMind:
         # 5. Forecasting examples
         series = [0.9, 0.92, 0.95, 0.93, 0.96]
         self.forecast_mean(series)
-        residuals = [series[i+1]-series[i] for i in range(len(series)-1)]
+        residuals = [series[i + 1] - series[i] for i in range(len(series) - 1)]
         self.forecast_volatility(residuals)
         self.kalman_smooth(series)
 
         self.stop_background()
+
 
 if __name__ == "__main__":
     root = Path(__file__).parent

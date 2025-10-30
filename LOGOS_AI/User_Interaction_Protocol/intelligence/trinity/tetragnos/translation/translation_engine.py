@@ -7,16 +7,16 @@ using the SIGN→MIND→BRIDGE translation pipeline.
 Dependencies: nltk, spacy, typing
 """
 
-from typing import Dict, List, Tuple, Optional, Union, Any, Set
-import re
-import logging
 import json
+import logging
+import re
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 try:
     import nltk
-    from nltk.tokenize import word_tokenize
     from nltk.corpus import stopwords
     from nltk.stem import WordNetLemmatizer
+    from nltk.tokenize import word_tokenize
 
     NLTK_AVAILABLE = True
 except ImportError:
@@ -29,10 +29,11 @@ try:
 except ImportError:
     SPACY_AVAILABLE = False
 
-# Import from other modules (adjust paths as needed)
-from .pdn_bridge import TranslationResult, PDNBridge
 from ..ontology.trinity_vector import TrinityVector
 from ..utils.data_structures import OntologicalType
+
+# Import from other modules (adjust paths as needed)
+from .pdn_bridge import PDNBridge, TranslationResult
 
 logger = logging.getLogger(__name__)
 
@@ -205,7 +206,9 @@ class TranslationEngine:
             processed["lemmas"] = [token.lemma_ for token in doc]
             processed["pos_tags"] = [(token.text, token.pos_) for token in doc]
             processed["entities"] = [(ent.text, ent.label_) for ent in doc.ents]
-            processed["dependencies"] = [(token.text, token.dep_, token.head.text) for token in doc]
+            processed["dependencies"] = [
+                (token.text, token.dep_, token.head.text) for token in doc
+            ]
 
             return processed
 
@@ -215,7 +218,9 @@ class TranslationEngine:
             processed["tokens"] = tokens
 
             if self.lemmatizer:
-                processed["lemmas"] = [self.lemmatizer.lemmatize(token) for token in tokens]
+                processed["lemmas"] = [
+                    self.lemmatizer.lemmatize(token) for token in tokens
+                ]
 
             return processed
 
@@ -226,7 +231,9 @@ class TranslationEngine:
 
         return processed
 
-    def _extract_sign_layer(self, processed_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _extract_sign_layer(
+        self, processed_data: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Extract SIGN layer from processed data.
 
         Args:
@@ -402,7 +409,9 @@ class TranslationEngine:
 
         return dimensions
 
-    def get_keywords_dimensions(self, keywords: List[str]) -> Dict[str, Dict[str, float]]:
+    def get_keywords_dimensions(
+        self, keywords: List[str]
+    ) -> Dict[str, Dict[str, float]]:
         """Get ontological dimensions for keywords.
 
         Args:
@@ -435,7 +444,8 @@ class TranslationEngine:
             for word in ["can", "could", "may", "might", "must", "should", "would"]
         )
         has_negation = any(
-            word in query.lower() for word in ["not", "no", "never", "nothing", "nowhere", "none"]
+            word in query.lower()
+            for word in ["not", "no", "never", "nothing", "nowhere", "none"]
         )
 
         # Identify query focus

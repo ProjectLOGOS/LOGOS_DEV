@@ -13,19 +13,19 @@ Critical Safety Feature:
 Dependencies: fastapi, pika, uuid, logging
 """
 
-import os
 import json
-import uuid
 import logging
-from typing import Dict, Any, Optional
+import os
+import uuid
 from datetime import datetime
+from typing import Any, Dict, Optional
 
+import pika
+import uvicorn
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
-import pika
-import uvicorn
 
 # Configuration
 SERVICE_NAME = "KERYX_API"
@@ -39,7 +39,8 @@ LOGOS_NEXUS_REQUESTS = "logos_nexus_requests"
 
 # Logging setup
 logging.basicConfig(
-    level=logging.INFO, format=f"%(asctime)s - %(levelname)s - {SERVICE_NAME} - %(message)s"
+    level=logging.INFO,
+    format=f"%(asctime)s - %(levelname)s - {SERVICE_NAME} - %(message)s",
 )
 logger = logging.getLogger(SERVICE_NAME)
 
@@ -48,10 +49,16 @@ logger = logging.getLogger(SERVICE_NAME)
 class GoalSubmission(BaseModel):
     """External goal submission request model."""
 
-    content: str = Field(..., min_length=1, max_length=2000, description="Goal description")
+    content: str = Field(
+        ..., min_length=1, max_length=2000, description="Goal description"
+    )
     type: str = Field(default="query", description="Request type classification")
-    context: Dict[str, Any] = Field(default_factory=dict, description="Additional context")
-    requester_id: Optional[str] = Field(default=None, description="Requester identification")
+    context: Dict[str, Any] = Field(
+        default_factory=dict, description="Additional context"
+    )
+    requester_id: Optional[str] = Field(
+        default=None, description="Requester identification"
+    )
 
 
 class APIResponse(BaseModel):
@@ -95,7 +102,9 @@ class MessageBroker:
         """Establish RabbitMQ connection."""
         try:
             self.connection = pika.BlockingConnection(
-                pika.ConnectionParameters(host=RABBITMQ_HOST, port=RABBITMQ_PORT, heartbeat=600)
+                pika.ConnectionParameters(
+                    host=RABBITMQ_HOST, port=RABBITMQ_PORT, heartbeat=600
+                )
             )
             self.channel = self.connection.channel()
 
@@ -131,7 +140,9 @@ class MessageBroker:
                 ),
             )
 
-            logger.info(f"Request {request_data['request_id']} published to Logos Nexus")
+            logger.info(
+                f"Request {request_data['request_id']} published to Logos Nexus"
+            )
             return True
 
         except Exception as e:
@@ -185,9 +196,11 @@ async def system_status():
         timestamp=datetime.utcnow().isoformat(),
         data={
             "gateway_status": "active",
-            "message_broker": "connected"
-            if broker.connection and not broker.connection.is_closed
-            else "disconnected",
+            "message_broker": (
+                "connected"
+                if broker.connection and not broker.connection.is_closed
+                else "disconnected"
+            ),
             "target_queue": LOGOS_NEXUS_REQUESTS,
             "safety_routing": "enabled",
         },
@@ -237,7 +250,8 @@ async def submit_goal(goal: GoalSubmission, request: Request):
 
         if not publication_success:
             raise HTTPException(
-                status_code=503, detail="Service temporarily unavailable - message broker error"
+                status_code=503,
+                detail="Service temporarily unavailable - message broker error",
             )
 
         # Return fire-and-forget acknowledgment

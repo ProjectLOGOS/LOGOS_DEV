@@ -95,14 +95,20 @@ def normalize_embeddings(embeddings: Tensor) -> Tensor:
 
 
 @overload
-def truncate_embeddings(embeddings: np.ndarray, truncate_dim: int | None) -> np.ndarray: ...
+def truncate_embeddings(
+    embeddings: np.ndarray, truncate_dim: int | None
+) -> np.ndarray: ...
 
 
 @overload
-def truncate_embeddings(embeddings: torch.Tensor, truncate_dim: int | None) -> torch.Tensor: ...
+def truncate_embeddings(
+    embeddings: torch.Tensor, truncate_dim: int | None
+) -> torch.Tensor: ...
 
 
-def truncate_embeddings(embeddings: np.ndarray | torch.Tensor, truncate_dim: int | None) -> np.ndarray | torch.Tensor:
+def truncate_embeddings(
+    embeddings: np.ndarray | torch.Tensor, truncate_dim: int | None
+) -> np.ndarray | torch.Tensor:
     """
     Truncates the embeddings matrix.
 
@@ -134,7 +140,9 @@ def truncate_embeddings(embeddings: np.ndarray | torch.Tensor, truncate_dim: int
     return embeddings[..., :truncate_dim]
 
 
-def select_max_active_dims(embeddings: np.ndarray | torch.Tensor, max_active_dims: int | None) -> torch.Tensor:
+def select_max_active_dims(
+    embeddings: np.ndarray | torch.Tensor, max_active_dims: int | None
+) -> torch.Tensor:
     """
     Keeps only the top-k values (in absolute terms) for each embedding and creates a sparse tensor.
 
@@ -155,11 +163,17 @@ def select_max_active_dims(embeddings: np.ndarray | torch.Tensor, max_active_dim
     device = embeddings.device
 
     # Get the top-k indices for each embedding (by absolute value)
-    _, top_indices = torch.topk(torch.abs(embeddings), k=min(max_active_dims, dim), dim=1)
+    _, top_indices = torch.topk(
+        torch.abs(embeddings), k=min(max_active_dims, dim), dim=1
+    )
 
     # Create a mask of zeros, then set the top-k positions to 1
     mask = torch.zeros_like(embeddings, dtype=torch.bool)
-    batch_indices = torch.arange(batch_size, device=device).unsqueeze(1).expand(-1, min(max_active_dims, dim))
+    batch_indices = (
+        torch.arange(batch_size, device=device)
+        .unsqueeze(1)
+        .expand(-1, min(max_active_dims, dim))
+    )
     mask[batch_indices.flatten(), top_indices.flatten()] = True
 
     # Create a sparse tensor with only the top values

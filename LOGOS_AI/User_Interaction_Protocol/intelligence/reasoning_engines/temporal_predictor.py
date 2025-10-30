@@ -14,14 +14,15 @@ Core Design Principles:
 - Causal consistency: Maintains causal ordering constraints
 """
 
+import json
 import logging
 import traceback
-from typing import Dict, Any, Optional, List, Tuple, Union, Sequence
+from collections import deque
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+
 import numpy as np
-from collections import deque
-import json
 
 # Safe imports with fallback handling
 try:
@@ -33,7 +34,9 @@ try:
 
     PYRO_AVAILABLE = True
 except ImportError as e:
-    logging.warning(f"Pyro not available: {e}. Temporal predictor will use mock implementations.")
+    logging.warning(
+        f"Pyro not available: {e}. Temporal predictor will use mock implementations."
+    )
     PYRO_AVAILABLE = False
     pyro = None
     dist = None
@@ -41,11 +44,11 @@ except ImportError as e:
 
 # LOGOS Core imports (assuming these exist from v0.6)
 try:
-    from logos_core.trinity_coherence import TrinityCoherenceValidator
-    from logos_core.reference_monitor import ReferenceMonitor
-    from logos_core.proof_gates import ProofGate
-    from logos_core.verification import VerificationContext
     from logos_core.chronos import ChronosPraxis  # Temporal reasoning from v0.6
+    from logos_core.proof_gates import ProofGate
+    from logos_core.reference_monitor import ReferenceMonitor
+    from logos_core.trinity_coherence import TrinityCoherenceValidator
+    from logos_core.verification import VerificationContext
 except ImportError:
     # Mock implementations for development
     class TrinityCoherenceValidator:
@@ -141,7 +144,10 @@ class TemporalSequenceModel:
     """
 
     def __init__(
-        self, model_config: Dict[str, Any], verification_bounds: Dict[str, Any], operation_id: str
+        self,
+        model_config: Dict[str, Any],
+        verification_bounds: Dict[str, Any],
+        operation_id: str,
     ):
         """
         Initialize temporal sequence model.
@@ -156,7 +162,9 @@ class TemporalSequenceModel:
         self.verification_bounds = verification_bounds
 
         # Temporal tracking
-        self.event_history = deque(maxlen=verification_bounds.get("max_history_length", 1000))
+        self.event_history = deque(
+            maxlen=verification_bounds.get("max_history_length", 1000)
+        )
         self.prediction_cache = {}
 
         # Model parameters
@@ -239,7 +247,9 @@ class TemporalSequenceModel:
             # Variational parameters
             initial_loc = pyro.param("initial_loc", torch.zeros(self.hidden_dim))
             initial_scale = pyro.param(
-                "initial_scale", torch.ones(self.hidden_dim), constraint=dist.constraints.positive
+                "initial_scale",
+                torch.ones(self.hidden_dim),
+                constraint=dist.constraints.positive,
             )
 
             transition_loc = pyro.param(
@@ -262,8 +272,12 @@ class TemporalSequenceModel:
 
             # Sample from variational distributions
             pyro.sample("initial_state", dist.Normal(initial_loc, initial_scale))
-            pyro.sample("transition_weights", dist.Normal(transition_loc, transition_scale))
-            pyro.sample("observation_weights", dist.Normal(observation_loc, observation_scale))
+            pyro.sample(
+                "transition_weights", dist.Normal(transition_loc, transition_scale)
+            )
+            pyro.sample(
+                "observation_weights", dist.Normal(observation_loc, observation_scale)
+            )
 
             # Sample states
             for t in range(1, self.sequence_length):
@@ -289,16 +303,24 @@ class TemporalSequenceModel:
         """
         try:
             # Validate causal ordering
-            if not ChronosPraxis.validate_temporal_ordering([*self.event_history, event]):
-                self.logger.warning(f"Causal ordering violation for event {event.event_id}")
+            if not ChronosPraxis.validate_temporal_ordering(
+                [*self.event_history, event]
+            ):
+                self.logger.warning(
+                    f"Causal ordering violation for event {event.event_id}"
+                )
                 return False
 
             # Temporal bounds check
             now = datetime.now()
-            max_history_age = timedelta(days=self.verification_bounds.get("max_history_days", 30))
+            max_history_age = timedelta(
+                days=self.verification_bounds.get("max_history_days", 30)
+            )
 
             if now - event.timestamp > max_history_age:
-                self.logger.warning(f"Event {event.event_id} exceeds maximum history age")
+                self.logger.warning(
+                    f"Event {event.event_id} exceeds maximum history age"
+                )
                 return False
 
             # Add to history
@@ -339,7 +361,9 @@ class TemporalSequenceModel:
                 if i % 20 == 0:
                     self.logger.debug(f"Training iteration {i}, loss: {loss:.4f}")
 
-            self.logger.info(f"Temporal model training completed for {self.operation_id}")
+            self.logger.info(
+                f"Temporal model training completed for {self.operation_id}"
+            )
             return True
 
         except Exception as e:
@@ -455,9 +479,11 @@ class TemporalSequenceModel:
                 timestamp=timestamp,
                 event_type="temporal_prediction",
                 data={
-                    "predicted_values": prediction.tolist()
-                    if hasattr(prediction, "tolist")
-                    else [float(prediction)],
+                    "predicted_values": (
+                        prediction.tolist()
+                        if hasattr(prediction, "tolist")
+                        else [float(prediction)]
+                    ),
                     "prediction_step": i,
                     "total_steps": len(predictions_np),
                 },
@@ -520,7 +546,9 @@ class TemporalPredictor:
         self.logger = logging.getLogger(f"LOGOS.{self.__class__.__name__}")
         self.logger.setLevel(logging.INFO)
 
-        self.logger.info(f"TemporalPredictor initialized with Pyro available: {PYRO_AVAILABLE}")
+        self.logger.info(
+            f"TemporalPredictor initialized with Pyro available: {PYRO_AVAILABLE}"
+        )
 
     def _generate_operation_id(self) -> str:
         """Generate unique operation identifier"""
@@ -611,24 +639,32 @@ class TemporalPredictor:
             with VerificationContext(operation_id) as ctx:
                 # Proof-gate: Verify preconditions
                 if not self.proof_gate.verify_preconditions(operation.preconditions):
-                    self.logger.error(f"Precondition verification failed for {operation_id}")
+                    self.logger.error(
+                        f"Precondition verification failed for {operation_id}"
+                    )
                     return None
 
                 # Trinity-Coherence validation
                 if not self._verify_trinity_coherence(operation):
-                    self.logger.error(f"Trinity-Coherence validation failed for {operation_id}")
+                    self.logger.error(
+                        f"Trinity-Coherence validation failed for {operation_id}"
+                    )
                     return None
 
                 self.active_operations[operation_id] = operation
 
                 # Create temporal sequence model
                 model = TemporalSequenceModel(
-                    model_config=model_config, verification_bounds=bounds, operation_id=operation_id
+                    model_config=model_config,
+                    verification_bounds=bounds,
+                    operation_id=operation_id,
                 )
 
                 # Proof-gate: Verify postconditions
                 if not self.proof_gate.verify_postconditions(operation.postconditions):
-                    self.logger.error(f"Postcondition verification failed for {operation_id}")
+                    self.logger.error(
+                        f"Postcondition verification failed for {operation_id}"
+                    )
                     return None
 
                 # Store model
@@ -751,11 +787,15 @@ class TemporalPredictor:
                 )
 
                 # Calculate prediction confidence and uncertainty
-                confidence_metrics = self._calculate_prediction_confidence(predicted_events)
+                confidence_metrics = self._calculate_prediction_confidence(
+                    predicted_events
+                )
                 uncertainty_metrics = self._quantify_uncertainty(predicted_events)
 
                 # Verify causal consistency
-                causal_consistency = ChronosPraxis.validate_temporal_ordering(predicted_events)
+                causal_consistency = ChronosPraxis.validate_temporal_ordering(
+                    predicted_events
+                )
 
                 # Temporal bounds verification
                 now = datetime.now()
@@ -805,14 +845,18 @@ class TemporalPredictor:
                     prediction_confidence=confidence_metrics,
                     temporal_bounds=temporal_bounds,
                     causal_consistency=causal_consistency,
-                    verification_status="verified"
-                    if (causal_consistency and bounds_satisfied)
-                    else "warning",
+                    verification_status=(
+                        "verified"
+                        if (causal_consistency and bounds_satisfied)
+                        else "warning"
+                    ),
                     provenance_ref=provenance_ref,
                     uncertainty_quantification=uncertainty_metrics,
                 )
 
-                self.logger.info(f"Temporal prediction completed successfully for {model_id}")
+                self.logger.info(
+                    f"Temporal prediction completed successfully for {model_id}"
+                )
                 return result
 
         except Exception as e:
@@ -839,7 +883,9 @@ class TemporalPredictor:
             "max_confidence": float(np.max(confidences)),
         }
 
-    def _quantify_uncertainty(self, predicted_events: List[TemporalEvent]) -> Dict[str, float]:
+    def _quantify_uncertainty(
+        self, predicted_events: List[TemporalEvent]
+    ) -> Dict[str, float]:
         """Quantify uncertainty in predictions"""
         if not predicted_events:
             return {"epistemic_uncertainty": 1.0, "aleatoric_uncertainty": 1.0}
@@ -962,8 +1008,12 @@ def example_temporal_prediction():
         )
 
         if prediction_result:
-            print(f"Temporal prediction successful: {prediction_result.verification_status}")
-            print(f"Number of predicted events: {len(prediction_result.predicted_events)}")
+            print(
+                f"Temporal prediction successful: {prediction_result.verification_status}"
+            )
+            print(
+                f"Number of predicted events: {len(prediction_result.predicted_events)}"
+            )
             print(
                 f"Mean confidence: {prediction_result.prediction_confidence['mean_confidence']:.3f}"
             )
@@ -984,7 +1034,8 @@ def example_temporal_prediction():
 if __name__ == "__main__":
     # Configure logging
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     # Run example

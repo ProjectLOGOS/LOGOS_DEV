@@ -116,7 +116,10 @@ def create_sparse_tensor(rows, cols, num_nonzero, seed=None):
 
     for i in range(rows):
         row_indices = torch.stack(
-            [torch.full((num_nonzero,), i, dtype=torch.long), torch.randint(0, cols, (num_nonzero,))]
+            [
+                torch.full((num_nonzero,), i, dtype=torch.long),
+                torch.randint(0, cols, (num_nonzero,)),
+            ]
         )
         row_values = torch.randn(num_nonzero)
 
@@ -272,7 +275,10 @@ def test_performance_with_large_vectors():
     similarity_functions = [
         ("cos_sim", cos_sim),
         ("dot_score", dot_score),
-        ("manhattan_sim", manhattan_sim),  # Comment until the function is implemented in a fast way
+        (
+            "manhattan_sim",
+            manhattan_sim,
+        ),  # Comment until the function is implemented in a fast way
         ("euclidean_sim", euclidean_sim),
         ("pairwise_cos_sim", pairwise_cos_sim),
         ("pairwise_dot_score", pairwise_dot_score),
@@ -297,12 +303,19 @@ def test_performance_with_large_vectors():
         speedup_ratio = dense_time / sparse_time if sparse_time > 0 else float("inf")
 
         results.append(
-            {"function": name, "sparse_time": sparse_time, "dense_time": dense_time, "speedup_ratio": speedup_ratio}
+            {
+                "function": name,
+                "sparse_time": sparse_time,
+                "dense_time": dense_time,
+                "speedup_ratio": speedup_ratio,
+            }
         )
 
     # Print results in a table
     print("\nPerformance Results:")
-    print(f"{'Function':<25} | {'Sparse Time (s)':<15} | {'Dense Time (s)':<15} | {'Speedup Ratio':<15}")
+    print(
+        f"{'Function':<25} | {'Sparse Time (s)':<15} | {'Dense Time (s)':<15} | {'Speedup Ratio':<15}"
+    )
     print("-" * 80)
 
     for r in results:

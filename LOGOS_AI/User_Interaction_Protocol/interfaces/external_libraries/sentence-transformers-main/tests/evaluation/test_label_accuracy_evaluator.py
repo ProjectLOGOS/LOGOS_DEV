@@ -21,8 +21,12 @@ from sentence_transformers import (
 )
 
 
-@pytest.mark.skip(reason="This test is rather slow, and the LabelAccuracyEvaluator is not commonly used.")
-def test_LabelAccuracyEvaluator(paraphrase_distilroberta_base_v1_model: SentenceTransformer, tmp_path: Path) -> None:
+@pytest.mark.skip(
+    reason="This test is rather slow, and the LabelAccuracyEvaluator is not commonly used."
+)
+def test_LabelAccuracyEvaluator(
+    paraphrase_distilroberta_base_v1_model: SentenceTransformer, tmp_path: Path
+) -> None:
     """Tests that the LabelAccuracyEvaluator can be loaded correctly"""
     model = paraphrase_distilroberta_base_v1_model
     nli_dataset_path = "datasets/AllNLI.tsv.gz"
@@ -36,7 +40,11 @@ def test_LabelAccuracyEvaluator(paraphrase_distilroberta_base_v1_model: Sentence
         for row in reader:
             if row["split"] == "train":
                 label_id = label2int[row["label"]]
-                dev_samples.append(InputExample(texts=[row["sentence1"], row["sentence2"]], label=label_id))
+                dev_samples.append(
+                    InputExample(
+                        texts=[row["sentence1"], row["sentence2"]], label=label_id
+                    )
+                )
                 if len(dev_samples) >= 100:
                     break
 
@@ -47,7 +55,9 @@ def test_LabelAccuracyEvaluator(paraphrase_distilroberta_base_v1_model: Sentence
     )
 
     dev_dataloader = DataLoader(dev_samples, shuffle=False, batch_size=16)
-    evaluator = evaluation.LabelAccuracyEvaluator(dev_dataloader, softmax_model=train_loss)
+    evaluator = evaluation.LabelAccuracyEvaluator(
+        dev_dataloader, softmax_model=train_loss
+    )
     metrics = evaluator(model, output_path=str(tmp_path))
     assert "accuracy" in metrics
     assert metrics["accuracy"] > 0.2

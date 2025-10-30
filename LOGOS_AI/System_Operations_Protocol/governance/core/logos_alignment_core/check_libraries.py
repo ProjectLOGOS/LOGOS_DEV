@@ -2,19 +2,19 @@
 """Quick library status check"""
 
 libs_to_test = [
-    ('pyro', 'pyro'),
-    ('torch', 'torch'),
-    ('sentence_transformers', 'sentence_transformers'),
-    ('networkx', 'networkx'),
-    ('arch', 'arch'),
-    ('filterpy', 'filterpy'),
-    ('pykalman', 'pykalman'),
-    ('sklearn', 'sklearn'),
-    ('speech_recognition', 'speech_recognition'),
-    ('pyttsx3', 'pyttsx3'),
-    ('tkinter', 'tkinter'),
-    ('pymc', 'pymc'),
-    ('pmdarima', 'pmdarima'),
+    ("pyro", "pyro"),
+    ("torch", "torch"),
+    ("sentence_transformers", "sentence_transformers"),
+    ("networkx", "networkx"),
+    ("arch", "arch"),
+    ("filterpy", "filterpy"),
+    ("pykalman", "pykalman"),
+    ("sklearn", "sklearn"),
+    ("speech_recognition", "speech_recognition"),
+    ("pyttsx3", "pyttsx3"),
+    ("tkinter", "tkinter"),
+    ("pymc", "pymc"),
+    ("pmdarima", "pmdarima"),
 ]
 
 print("=== LOGOS Library Status Check ===\n")

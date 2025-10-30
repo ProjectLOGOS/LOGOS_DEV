@@ -10,9 +10,10 @@ from typing import Any
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from services.policies.privative_policies import preserves_invariants
+
 from .reference_monitor import ProofGateError, ReferenceMonitor
 from .unified_formalisms import UnifiedFormalismValidator
-from services.policies.privative_policies import preserves_invariants
 
 
 class ArchonPlannerGate:
@@ -20,7 +21,9 @@ class ArchonPlannerGate:
         if config_path is None:
             # Default to config in parent directory
             current_dir = os.path.dirname(os.path.abspath(__file__))
-            config_path = os.path.join(os.path.dirname(current_dir), "configs", "config.json")
+            config_path = os.path.join(
+                os.path.dirname(current_dir), "configs", "config.json"
+            )
 
         self.validator = UnifiedFormalismValidator(config_path)
         self.rm = ReferenceMonitor(config_path)
@@ -76,7 +79,9 @@ class ArchonPlannerGate:
     def check_step(self, step: str, provenance: dict[str, Any]) -> dict[str, Any]:
         """Check that a workflow step preserves invariants"""
         obligation = f"BOX({preserves_invariants(step)})"
-        proof_token = self.rm.require_proof_token(obligation, dict(provenance, step=step))
+        proof_token = self.rm.require_proof_token(
+            obligation, dict(provenance, step=step)
+        )
 
         # Cache verified step
         self.verified_steps[step] = {
@@ -95,7 +100,9 @@ class ArchonPlannerGate:
         result = self.client.prove_box(reachability_goal)
 
         if not result.get("ok", False):
-            raise ValueError(f"plan not reachable (¬◇Goal): {result.get('error', 'Unknown error')}")
+            raise ValueError(
+                f"plan not reachable (¬◇Goal): {result.get('error', 'Unknown error')}"
+            )
 
     def prune_on_countermodel(self, safety_phi: str) -> None:
         """Prune plan if countermodel found for safety property"""
@@ -106,7 +113,9 @@ class ArchonPlannerGate:
                 f"countermodel found; plan unsafe: {countermodel_result.get('countermodel_desc', 'No description')}"
             )
 
-    def authorize_plan(self, steps: list[str], plan_id: str, provenance: dict[str, Any]) -> bool:
+    def authorize_plan(
+        self, steps: list[str], plan_id: str, provenance: dict[str, Any]
+    ) -> bool:
         """
         Comprehensive plan authorization with:
         - Per-step invariant preservation
@@ -147,7 +156,11 @@ class ArchonPlannerGate:
             raise
 
     def execute_step(
-        self, plan_id: str, step_id: str, step_data: dict[str, Any], provenance: dict[str, Any]
+        self,
+        plan_id: str,
+        step_id: str,
+        step_data: dict[str, Any],
+        provenance: dict[str, Any],
     ) -> dict[str, Any]:
         """
         Execute a single plan step with proof gate
@@ -179,9 +192,16 @@ class ArchonPlannerGate:
             }
 
         except ProofGateError as e:
-            return {"step_executed": False, "plan_id": plan_id, "step_id": step_id, "error": str(e)}
+            return {
+                "step_executed": False,
+                "plan_id": plan_id,
+                "step_id": step_id,
+                "error": str(e),
+            }
 
-    def _generate_steps(self, goal: str, context: dict[str, Any]) -> list[dict[str, Any]]:
+    def _generate_steps(
+        self, goal: str, context: dict[str, Any]
+    ) -> list[dict[str, Any]]:
         """
         Generate plan steps for the given goal (simplified implementation)
         """
@@ -220,8 +240,14 @@ class ArchonPlannerGate:
         elif action == "finalize":
             return {"status": "finalized", "message": "Goal finalized"}
         elif action == "analyze_goal":
-            return {"status": "analyzed", "analysis": f"Goal analysis: {params.get('goal')}"}
+            return {
+                "status": "analyzed",
+                "analysis": f"Goal analysis: {params.get('goal')}",
+            }
         elif action == "execute_goal":
-            return {"status": "executed", "message": f"Executed goal: {params.get('goal')}"}
+            return {
+                "status": "executed",
+                "message": f"Executed goal: {params.get('goal')}",
+            }
         else:
             return {"status": "completed", "message": f"Completed action: {action}"}

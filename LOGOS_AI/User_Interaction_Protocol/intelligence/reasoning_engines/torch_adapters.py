@@ -161,7 +161,9 @@ class TrinityNeuralNetwork(nn.Module if TORCH_AVAILABLE else object):
         self.trinity_projection = nn.Linear(current_dim, 3)  # E, G, T components
 
         # Final output layer
-        self.output_layer = nn.Linear(current_dim + 3, self.output_dim)  # Concat trinity
+        self.output_layer = nn.Linear(
+            current_dim + 3, self.output_dim
+        )  # Concat trinity
 
         # Combine layers
         self.hidden_layers = nn.Sequential(*layers)
@@ -354,11 +356,16 @@ class UnifiedTorchAdapter:
         network = TrinityNeuralNetwork(input_dim, output_dim, config)
         self.networks[network_name] = network
 
-        self.logger.info(f"Created trinity network '{network_name}': {input_dim}→{output_dim}")
+        self.logger.info(
+            f"Created trinity network '{network_name}': {input_dim}→{output_dim}"
+        )
         return network
 
     def process_with_verification(
-        self, network_name: str, input_data: Union[np.ndarray, Any], verify_output: bool = True
+        self,
+        network_name: str,
+        input_data: Union[np.ndarray, Any],
+        verify_output: bool = True,
     ) -> NeuralOutput:
         """
         Process input through network with trinity verification.
@@ -397,7 +404,9 @@ class UnifiedTorchAdapter:
                     trinity_array = trinity_raw
         else:
             # Mock processing
-            output_tensor = np.random.randn(*input_data.shape[:-1], network.output_dim) * 0.1
+            output_tensor = (
+                np.random.randn(*input_data.shape[:-1], network.output_dim) * 0.1
+            )
             trinity_array = np.random.randn(3)
             trinity_array = trinity_array / np.sum(trinity_array)
 
@@ -419,8 +428,8 @@ class UnifiedTorchAdapter:
         proof_validation = {"status": "not_verified"}
 
         if verify_output:
-            verification_status, confidence_score, proof_validation = self._verify_neural_output(
-                output_tensor, trinity_vector, network_name
+            verification_status, confidence_score, proof_validation = (
+                self._verify_neural_output(output_tensor, trinity_vector, network_name)
             )
 
         return NeuralOutput(
@@ -450,7 +459,9 @@ class UnifiedTorchAdapter:
         output_valid = self._check_output_bounds(output_tensor)
 
         # Network-specific validation
-        network_specific = self._network_specific_validation(output_tensor, network_name)
+        network_specific = self._network_specific_validation(
+            output_tensor, network_name
+        )
 
         # Combined verification score
         verification_score = (trinity_coherence + output_valid + network_specific) / 3
@@ -476,7 +487,11 @@ class UnifiedTorchAdapter:
     def _check_trinity_coherence(self, trinity_vector: TrinityVector) -> float:
         """Check coherence of trinity vector"""
         # Sum should be approximately 1 for normalized vector
-        total = trinity_vector.e_identity + trinity_vector.g_experience + trinity_vector.t_logos
+        total = (
+            trinity_vector.e_identity
+            + trinity_vector.g_experience
+            + trinity_vector.t_logos
+        )
         normalization_score = 1 - abs(1 - total)
 
         # Check for reasonable component values
@@ -490,7 +505,9 @@ class UnifiedTorchAdapter:
         # Confidence factor
         confidence_factor = trinity_vector.confidence
 
-        return max(0, min(1, (normalization_score + balance_score) * confidence_factor / 2))
+        return max(
+            0, min(1, (normalization_score + balance_score) * confidence_factor / 2)
+        )
 
     def _check_output_bounds(self, output_tensor: Any) -> float:
         """Check if output tensor is within reasonable bounds"""
@@ -516,7 +533,9 @@ class UnifiedTorchAdapter:
         except Exception:
             return 0.1
 
-    def _network_specific_validation(self, output_tensor: Any, network_name: str) -> float:
+    def _network_specific_validation(
+        self, output_tensor: Any, network_name: str
+    ) -> float:
         """Network-specific validation logic"""
         # Default validation (could be extended per network type)
         try:
@@ -562,7 +581,9 @@ class UnifiedTorchAdapter:
 
         # Prepare data
         train_dataset = TrinityDataset(train_data)
-        train_loader = DataLoader(train_dataset, batch_size=config.batch_size, shuffle=True)
+        train_loader = DataLoader(
+            train_dataset, batch_size=config.batch_size, shuffle=True
+        )
 
         # Setup optimizer
         optimizer = optim.Adam(network.parameters(), lr=config.learning_rate)
@@ -614,7 +635,9 @@ class UnifiedTorchAdapter:
 
             # Verification during training
             if verify_training and epoch % 10 == 0:
-                verification_score = self._verify_training_progress(network, train_loader)
+                verification_score = self._verify_training_progress(
+                    network, train_loader
+                )
                 training_history[-1]["verification_score"] = verification_score
 
                 self.logger.info(
@@ -636,7 +659,9 @@ class UnifiedTorchAdapter:
         batch_size = batch_target.shape[0]
 
         # Identity component: based on target magnitude
-        identity = torch.sigmoid(torch.mean(torch.abs(batch_target), dim=-1, keepdim=True))
+        identity = torch.sigmoid(
+            torch.mean(torch.abs(batch_target), dim=-1, keepdim=True)
+        )
 
         # Experience component: based on target variance
         experience = torch.sigmoid(torch.var(batch_target, dim=-1, keepdim=True))
@@ -664,7 +689,9 @@ class UnifiedTorchAdapter:
                 output_quality = 1 / (1 + F.mse_loss(output, batch_target).item())
 
                 # Check trinity coherence
-                trinity_coherence = torch.mean(torch.sum(trinity_pred, dim=-1))  # Should be ~1
+                trinity_coherence = torch.mean(
+                    torch.sum(trinity_pred, dim=-1)
+                )  # Should be ~1
                 trinity_coherence = 1 - abs(1 - trinity_coherence.item())
 
                 verification_scores.append((output_quality + trinity_coherence) / 2)
@@ -787,7 +814,8 @@ def example_trinity_neural_processing():
 if __name__ == "__main__":
     # Configure logging
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     # Run example

@@ -8,7 +8,11 @@ import torch.nn.functional as F
 from torch import Tensor, nn
 
 from sentence_transformers.SentenceTransformer import SentenceTransformer
-from sentence_transformers.util import pairwise_cos_sim, pairwise_euclidean_sim, pairwise_manhattan_sim
+from sentence_transformers.util import (
+    pairwise_cos_sim,
+    pairwise_euclidean_sim,
+    pairwise_manhattan_sim,
+)
 
 
 class TripletDistanceMetric(Enum):
@@ -21,7 +25,10 @@ class TripletDistanceMetric(Enum):
 
 class TripletLoss(nn.Module):
     def __init__(
-        self, model: SentenceTransformer, distance_metric=TripletDistanceMetric.EUCLIDEAN, triplet_margin: float = 5
+        self,
+        model: SentenceTransformer,
+        distance_metric=TripletDistanceMetric.EUCLIDEAN,
+        triplet_margin: float = 5,
     ) -> None:
         """
         This class implements triplet loss. Given a triplet of (anchor, positive, negative),
@@ -79,12 +86,19 @@ class TripletLoss(nn.Module):
         self.distance_metric = distance_metric
         self.triplet_margin = triplet_margin
 
-    def forward(self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor) -> Tensor:
-        embeddings = [self.model(sentence_feature)["sentence_embedding"] for sentence_feature in sentence_features]
+    def forward(
+        self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor
+    ) -> Tensor:
+        embeddings = [
+            self.model(sentence_feature)["sentence_embedding"]
+            for sentence_feature in sentence_features
+        ]
 
         return self.compute_loss_from_embeddings(embeddings, labels)
 
-    def compute_loss_from_embeddings(self, embeddings: list[Tensor], labels: Tensor) -> Tensor:
+    def compute_loss_from_embeddings(
+        self, embeddings: list[Tensor], labels: Tensor
+    ) -> Tensor:
         """
         Compute the CoSENT loss from embeddings.
 
@@ -108,7 +122,10 @@ class TripletLoss(nn.Module):
                 distance_metric_name = f"TripletDistanceMetric.{name}"
                 break
 
-        return {"distance_metric": distance_metric_name, "triplet_margin": self.triplet_margin}
+        return {
+            "distance_metric": distance_metric_name,
+            "triplet_margin": self.triplet_margin,
+        }
 
     @property
     def citation(self) -> str:

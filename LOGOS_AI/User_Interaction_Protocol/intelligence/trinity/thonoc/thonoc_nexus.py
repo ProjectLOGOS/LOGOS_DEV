@@ -9,11 +9,12 @@ import json
 import traceback
 from typing import Any, Dict, List, Optional
 
+from bayesian_predictor.bayesian_nexus import BayesianNexus
+
 # Import toolkit-level and core orchestrators
 from core.thonoc_core_API import ThonocCoreAPI
-from bayesian_predictor.bayesian_nexus import BayesianNexus
-from fractal_orbital.fractal_nexus import FractalNexus
 from forecasting.forecasting_nexus import ForecastingNexus
+from fractal_orbital.fractal_nexus import FractalNexus
 
 
 class ThonocNexus:  # Your existing class
@@ -37,8 +38,12 @@ class ThonocNexus:  # Your existing class
 
     def _process_prediction_request(self, enhanced_data):
         # Your existing logic
-        query = enhanced_data.get("query") or enhanced_data.get("original_data", {}).get("query")
-        series = enhanced_data.get("series") or enhanced_data.get("original_data", {}).get("series")
+        query = enhanced_data.get("query") or enhanced_data.get(
+            "original_data", {}
+        ).get("query")
+        series = enhanced_data.get("series") or enhanced_data.get(
+            "original_data", {}
+        ).get("series")
 
         # Your existing processing
         return self.your_existing_prediction_logic(query, series)
@@ -70,7 +75,10 @@ class TrinityNexusIntegration:
             if self._validate_trinity_coherence(result):
                 return result
             else:
-                return {"status": "trinity_validation_failed", "component": self.component}
+                return {
+                    "status": "trinity_validation_failed",
+                    "component": self.component,
+                }
 
         except Exception as e:
             return {
@@ -147,14 +155,21 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Thonoc Master Nexus")
     parser.add_argument("--query", required=True, help="Input natural-language query")
     parser.add_argument(
-        "--series", nargs="+", type=float, help="Optional time series data for forecasting"
+        "--series",
+        nargs="+",
+        type=float,
+        help="Optional time series data for forecasting",
     )
     parser.add_argument("--core-config", help="Path to core JSON config")
     parser.add_argument(
-        "--bayes-priors", default="config/bayes_priors.json", help="Bayesian priors JSON"
+        "--bayes-priors",
+        default="config/bayes_priors.json",
+        help="Bayesian priors JSON",
     )
     parser.add_argument(
-        "--fractal-priors", default="config/bayes_priors.json", help="Fractal priors JSON"
+        "--fractal-priors",
+        default="config/bayes_priors.json",
+        help="Fractal priors JSON",
     )
     args = parser.parse_args()
 

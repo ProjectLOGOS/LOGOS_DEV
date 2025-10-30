@@ -4,6 +4,7 @@
 import math
 import random
 
+
 def is_prime(n):
     if n <= 1:
         return False
@@ -18,6 +19,7 @@ def is_prime(n):
         i += 6
     return True
 
+
 def goldbach_pair(n):
     if n <= 2 or n % 2 != 0:
         return None
@@ -26,6 +28,7 @@ def goldbach_pair(n):
             return (i, n - i)
     return None
 
+
 def generate_mandelbrot_seed(real_base, imag_base, steps):
     c_values = []
     for i in range(steps):
@@ -33,6 +36,7 @@ def generate_mandelbrot_seed(real_base, imag_base, steps):
         imag = imag_base + (i * 0.0001)
         c_values.append(complex(real, imag))
     return c_values
+
 
 def banach_node_trace(seed_number, depth):
     nodes = [seed_number]
@@ -48,6 +52,7 @@ def banach_node_trace(seed_number, depth):
             current = current * 3 + 1  # Collatz-like behavior
         nodes.append(current)
     return nodes
+
 
 def run_imae_test(seed_real=0.355, seed_imag=0.355, steps=10, depth=20):
     c_vals = generate_mandelbrot_seed(seed_real, seed_imag, steps)

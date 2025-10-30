@@ -6,18 +6,19 @@ LOGOS AGI v0.7-rc2 Production Validation Script
 Comprehensive validation for production deployment of LOGOS AGI v7.
 """
 
+import argparse
 import asyncio
 import json
 import logging
-import time
-import argparse
 import sys
-from typing import Dict, Any, List, Optional
+import time
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 try:
     import requests
     import yaml
+
     EXTERNAL_DEPS_AVAILABLE = True
 except ImportError:
     EXTERNAL_DEPS_AVAILABLE = False
@@ -36,20 +37,21 @@ class ProductionValidator:
 
         # Configure logging
         logging.basicConfig(
-            level=logging.INFO,
-            format="%(asctime)s - %(levelname)s - %(message)s"
+            level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
         )
         self.logger = logging.getLogger(__name__)
 
     def log_test(self, test_name: str, status: str, details: str = ""):
         """Log test result"""
         timestamp = datetime.now().isoformat()
-        self.results["tests"].append({
-            "name": test_name,
-            "status": status,
-            "details": details,
-            "timestamp": timestamp
-        })
+        self.results["tests"].append(
+            {
+                "name": test_name,
+                "status": status,
+                "details": details,
+                "timestamp": timestamp,
+            }
+        )
 
         if status == "PASSED":
             self.results["passed"] += 1
@@ -72,22 +74,36 @@ class ProductionValidator:
             # Check if docker-compose is available
             result = subprocess.run(
                 ["docker-compose", "-f", "docker-compose.v7.yml", "ps"],
-                capture_output=True, text=True, cwd="."
+                capture_output=True,
+                text=True,
+                cwd=".",
             )
 
             if result.returncode == 0:
                 output = result.stdout
-                services = ["logos-unified", "logos-proof-server", "logos-reasoning", "redis", "rabbitmq"]
+                services = [
+                    "logos-unified",
+                    "logos-proof-server",
+                    "logos-reasoning",
+                    "redis",
+                    "rabbitmq",
+                ]
 
                 for service in services:
                     if service in output and "Up" in output:
                         self.log_test(f"Docker service: {service}", "PASSED")
                     else:
-                        self.log_test(f"Docker service: {service}", "FAILED", "Service not running")
+                        self.log_test(
+                            f"Docker service: {service}",
+                            "FAILED",
+                            "Service not running",
+                        )
 
                 return True
             else:
-                self.log_test("Docker Compose", "FAILED", "docker-compose command failed")
+                self.log_test(
+                    "Docker Compose", "FAILED", "docker-compose command failed"
+                )
                 return False
 
         except Exception as e:
@@ -118,8 +134,11 @@ class ProductionValidator:
                 if response.status_code == 200:
                     self.log_test(f"Health check: {service_name}", "PASSED")
                 else:
-                    self.log_test(f"Health check: {service_name}", "FAILED",
-                                f"HTTP {response.status_code}")
+                    self.log_test(
+                        f"Health check: {service_name}",
+                        "FAILED",
+                        f"HTTP {response.status_code}",
+                    )
                     all_healthy = False
             except Exception as e:
                 self.log_test(f"Health check: {service_name}", "FAILED", str(e))
@@ -139,10 +158,15 @@ class ProductionValidator:
         # Test basic API availability
         try:
             response = requests.get(f"{self.base_url}/", timeout=10)
-            if response.status_code in [200, 404]:  # 404 is OK, means server is responding
+            if response.status_code in [
+                200,
+                404,
+            ]:  # 404 is OK, means server is responding
                 self.log_test("API Server Response", "PASSED")
             else:
-                self.log_test("API Server Response", "FAILED", f"HTTP {response.status_code}")
+                self.log_test(
+                    "API Server Response", "FAILED", f"HTTP {response.status_code}"
+                )
                 return False
         except Exception as e:
             self.log_test("API Server Response", "FAILED", str(e))
@@ -183,10 +207,11 @@ class ProductionValidator:
             try:
                 # Check if file exists
                 import os
+
                 if os.path.exists(file_path):
                     # Try to parse YAML if pyyaml is available
-                    if file_path.endswith('.yml') and EXTERNAL_DEPS_AVAILABLE:
-                        with open(file_path, 'r') as f:
+                    if file_path.endswith(".yml") and EXTERNAL_DEPS_AVAILABLE:
+                        with open(file_path, "r") as f:
                             yaml.safe_load(f)
 
                     self.log_test(description, "PASSED")
@@ -212,7 +237,9 @@ class ProductionValidator:
         print("-" * 30)
 
         if not EXTERNAL_DEPS_AVAILABLE:
-            self.log_test("Performance Tests", "SKIPPED", "requests library not available")
+            self.log_test(
+                "Performance Tests", "SKIPPED", "requests library not available"
+            )
             return False
 
         # Basic response time test
@@ -225,7 +252,9 @@ class ProductionValidator:
                 if response_time < 1000:  # Less than 1 second
                     self.log_test("Response Time", "PASSED", f"{response_time:.2f}ms")
                 else:
-                    self.log_test("Response Time", "FAILED", f"{response_time:.2f}ms (too slow)")
+                    self.log_test(
+                        "Response Time", "FAILED", f"{response_time:.2f}ms (too slow)"
+                    )
             else:
                 self.log_test("Response Time", "FAILED", f"HTTP {response.status_code}")
 
@@ -240,7 +269,9 @@ class ProductionValidator:
         print("-" * 30)
 
         if not EXTERNAL_DEPS_AVAILABLE:
-            self.log_test("Monitoring Stack", "SKIPPED", "requests library not available")
+            self.log_test(
+                "Monitoring Stack", "SKIPPED", "requests library not available"
+            )
             return False
 
         monitoring_services = {
@@ -254,8 +285,11 @@ class ProductionValidator:
                 if response.status_code == 200:
                     self.log_test(f"Monitoring: {service_name}", "PASSED")
                 else:
-                    self.log_test(f"Monitoring: {service_name}", "FAILED",
-                                f"HTTP {response.status_code}")
+                    self.log_test(
+                        f"Monitoring: {service_name}",
+                        "FAILED",
+                        f"HTTP {response.status_code}",
+                    )
             except Exception as e:
                 self.log_test(f"Monitoring: {service_name}", "FAILED", str(e))
 
@@ -282,8 +316,12 @@ class ProductionValidator:
 
     def generate_report(self) -> Dict[str, Any]:
         """Generate validation report"""
-        total_tests = self.results["passed"] + self.results["failed"] + self.results["skipped"]
-        success_rate = (self.results["passed"] / total_tests * 100) if total_tests > 0 else 0
+        total_tests = (
+            self.results["passed"] + self.results["failed"] + self.results["skipped"]
+        )
+        success_rate = (
+            (self.results["passed"] / total_tests * 100) if total_tests > 0 else 0
+        )
 
         report = {
             "validation_timestamp": datetime.now().isoformat(),
@@ -294,9 +332,9 @@ class ProductionValidator:
                 "passed": self.results["passed"],
                 "failed": self.results["failed"],
                 "skipped": self.results["skipped"],
-                "success_rate_percent": round(success_rate, 1)
+                "success_rate_percent": round(success_rate, 1),
             },
-            "tests": self.results["tests"]
+            "tests": self.results["tests"],
         }
 
         return report
@@ -338,28 +376,39 @@ class ProductionValidator:
 
         # Save report
         report_file = f"validation_report_{self.environment}_{int(time.time())}.json"
-        with open(report_file, 'w') as f:
+        with open(report_file, "w") as f:
             json.dump(report, f, indent=2)
         print(f"\nDetailed report saved to: {report_file}")
 
         # Determine overall success
-        if report['summary']['failed'] == 0:
-            print("\n🎉 All validation tests passed! Deployment is ready for production.")
+        if report["summary"]["failed"] == 0:
+            print(
+                "\n🎉 All validation tests passed! Deployment is ready for production."
+            )
             return True
         else:
-            print(f"\n⚠️  {report['summary']['failed']} validation tests failed. Review issues before production use.")
+            print(
+                f"\n⚠️  {report['summary']['failed']} validation tests failed. Review issues before production use."
+            )
             return False
 
 
 def main():
     """Main entry point"""
-    parser = argparse.ArgumentParser(description="LOGOS AGI v0.7-rc2 Production Validator")
-    parser.add_argument("--environment", default="production",
-                       help="Deployment environment (default: production)")
-    parser.add_argument("--skip-performance", action="store_true",
-                       help="Skip performance tests")
-    parser.add_argument("--verbose", "-v", action="store_true",
-                       help="Enable verbose logging")
+    parser = argparse.ArgumentParser(
+        description="LOGOS AGI v0.7-rc2 Production Validator"
+    )
+    parser.add_argument(
+        "--environment",
+        default="production",
+        help="Deployment environment (default: production)",
+    )
+    parser.add_argument(
+        "--skip-performance", action="store_true", help="Skip performance tests"
+    )
+    parser.add_argument(
+        "--verbose", "-v", action="store_true", help="Enable verbose logging"
+    )
 
     args = parser.parse_args()
 
@@ -368,8 +417,7 @@ def main():
 
     # Run validation
     validator = ProductionValidator(
-        environment=args.environment,
-        skip_performance=args.skip_performance
+        environment=args.environment, skip_performance=args.skip_performance
     )
 
     try:

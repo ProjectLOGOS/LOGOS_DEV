@@ -23,20 +23,21 @@ Safety Constraints:
 - Historical coherence preservation for rollback
 """
 
+import json
 import logging
 import math
 import statistics
-from typing import Dict, List, Set, Optional, Any, Tuple, NamedTuple
+from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from collections import defaultdict, deque
-import json
+from typing import Any, Dict, List, NamedTuple, Optional, Set, Tuple
 
 from ..unified_formalisms import UnifiedFormalismValidator
 
 
 class CoherenceVector(NamedTuple):
     """Represents coherence in three dimensions"""
+
     pxl_coherence: float
     iel_coherence: float
     runtime_coherence: float
@@ -49,12 +50,15 @@ class CoherenceVector(NamedTuple):
     def weighted_trinity_coherence(self, weights: Tuple[float, float, float]) -> float:
         """Compute Trinity-Coherence with custom weights"""
         α, β, γ = weights
-        return α * self.pxl_coherence + β * self.iel_coherence + γ * self.runtime_coherence
+        return (
+            α * self.pxl_coherence + β * self.iel_coherence + γ * self.runtime_coherence
+        )
 
 
 @dataclass
 class CoherenceSnapshot:
     """Snapshot of system coherence at a point in time"""
+
     timestamp: datetime
     coherence_vector: CoherenceVector
     trinity_coherence: float
@@ -68,13 +72,14 @@ class CoherenceSnapshot:
             "iel_coherence": self.coherence_vector.iel_coherence,
             "runtime_coherence": self.coherence_vector.runtime_coherence,
             "trinity_coherence": self.trinity_coherence,
-            "metadata": self.metadata
+            "metadata": self.metadata,
         }
 
 
 @dataclass
 class CoherenceAnalysis:
     """Analysis of coherence trends and patterns"""
+
     current_coherence: CoherenceVector
     trend_1h: float  # Coherence change over last hour
     trend_24h: float  # Coherence change over last 24 hours
@@ -87,6 +92,7 @@ class CoherenceAnalysis:
 @dataclass
 class CoherenceConfig:
     """Configuration for coherence computation"""
+
     history_retention_hours: int = 168  # 1 week
     snapshot_interval_minutes: int = 5
     trend_analysis_window_hours: int = 24
@@ -128,7 +134,7 @@ class CoherenceMetrics:
         if not logger.handlers:
             handler = logging.StreamHandler()
             formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
             )
             handler.setFormatter(formatter)
             logger.addHandler(handler)
@@ -156,17 +162,21 @@ class CoherenceMetrics:
             coherence_vector = CoherenceVector(
                 pxl_coherence=pxl_coherence,
                 iel_coherence=iel_coherence,
-                runtime_coherence=runtime_coherence
+                runtime_coherence=runtime_coherence,
             )
 
-            self.logger.debug(f"Computed coherence: PXL={pxl_coherence:.3f}, IEL={iel_coherence:.3f}, Runtime={runtime_coherence:.3f}")
+            self.logger.debug(
+                f"Computed coherence: PXL={pxl_coherence:.3f}, IEL={iel_coherence:.3f}, Runtime={runtime_coherence:.3f}"
+            )
 
             return coherence_vector
 
         except Exception as e:
             self.logger.error(f"Coherence computation failed: {e}")
             # Return safe default values
-            return CoherenceVector(pxl_coherence=0.5, iel_coherence=0.5, runtime_coherence=0.5)
+            return CoherenceVector(
+                pxl_coherence=0.5, iel_coherence=0.5, runtime_coherence=0.5
+            )
 
     def take_coherence_snapshot(self) -> CoherenceSnapshot:
         """
@@ -194,8 +204,8 @@ class CoherenceMetrics:
                 trinity_coherence=trinity_coherence,
                 metadata={
                     "weights": weights,
-                    "adaptive_weights_enabled": self.config.enable_adaptive_weights
-                }
+                    "adaptive_weights_enabled": self.config.enable_adaptive_weights,
+                },
             )
 
             # Add to history
@@ -213,7 +223,7 @@ class CoherenceMetrics:
             return CoherenceSnapshot(
                 timestamp=datetime.now(),
                 coherence_vector=CoherenceVector(0.5, 0.5, 0.5),
-                trinity_coherence=0.5
+                trinity_coherence=0.5,
             )
 
     def analyze_coherence_trends(self) -> CoherenceAnalysis:
@@ -251,7 +261,7 @@ class CoherenceMetrics:
                 volatility=volatility,
                 stability_score=stability_score,
                 anomaly_score=anomaly_score,
-                recommendations=recommendations
+                recommendations=recommendations,
             )
 
         except Exception as e:
@@ -262,7 +272,7 @@ class CoherenceMetrics:
                 trend_24h=0.0,
                 volatility=0.0,
                 stability_score=0.5,
-                anomaly_score=0.0
+                anomaly_score=0.0,
             )
 
     def get_coherence_history(self, hours: int = 24) -> List[CoherenceSnapshot]:
@@ -276,7 +286,11 @@ class CoherenceMetrics:
             List[CoherenceSnapshot]: Historical coherence snapshots
         """
         cutoff_time = datetime.now() - timedelta(hours=hours)
-        return [snapshot for snapshot in self._coherence_history if snapshot.timestamp >= cutoff_time]
+        return [
+            snapshot
+            for snapshot in self._coherence_history
+            if snapshot.timestamp >= cutoff_time
+        ]
 
     def is_coherence_degraded(self) -> bool:
         """Check if coherence has degraded below threshold"""
@@ -292,9 +306,14 @@ class CoherenceMetrics:
 
     def _get_max_history_size(self) -> int:
         """Calculate maximum history size based on retention and interval"""
-        return int((self.config.history_retention_hours * 60) / self.config.snapshot_interval_minutes)
+        return int(
+            (self.config.history_retention_hours * 60)
+            / self.config.snapshot_interval_minutes
+        )
 
-    def _compute_adaptive_weights(self, coherence_vector: CoherenceVector) -> Tuple[float, float, float]:
+    def _compute_adaptive_weights(
+        self, coherence_vector: CoherenceVector
+    ) -> Tuple[float, float, float]:
         """Compute adaptive weights based on current coherence state"""
         # Start with base weights
         α, β, γ = self.config.coherence_weights
@@ -310,7 +329,11 @@ class CoherenceMetrics:
             # Normalize to sum to 1
             total_weight = α_adj + β_adj + γ_adj
             if total_weight > 0:
-                return (α_adj / total_weight, β_adj / total_weight, γ_adj / total_weight)
+                return (
+                    α_adj / total_weight,
+                    β_adj / total_weight,
+                    γ_adj / total_weight,
+                )
 
         return self.config.coherence_weights
 
@@ -373,28 +396,43 @@ class CoherenceMetrics:
 
         return anomaly_score
 
-    def _generate_coherence_recommendations(self, current_coherence: CoherenceVector,
-                                          trend_1h: float, trend_24h: float,
-                                          volatility: float, anomaly_score: float) -> List[str]:
+    def _generate_coherence_recommendations(
+        self,
+        current_coherence: CoherenceVector,
+        trend_1h: float,
+        trend_24h: float,
+        volatility: float,
+        anomaly_score: float,
+    ) -> List[str]:
         """Generate recommendations based on coherence analysis"""
         recommendations = []
 
         # Check individual dimension coherence
         if current_coherence.pxl_coherence < 0.7:
-            recommendations.append("PXL coherence below threshold - review formal verification coverage")
+            recommendations.append(
+                "PXL coherence below threshold - review formal verification coverage"
+            )
 
         if current_coherence.iel_coherence < 0.7:
-            recommendations.append("IEL coherence below threshold - validate inference rule consistency")
+            recommendations.append(
+                "IEL coherence below threshold - validate inference rule consistency"
+            )
 
         if current_coherence.runtime_coherence < 0.7:
-            recommendations.append("Runtime coherence below threshold - check operational alignment")
+            recommendations.append(
+                "Runtime coherence below threshold - check operational alignment"
+            )
 
         # Check trends
         if trend_24h < -0.1:
-            recommendations.append("Coherence declining over 24h - investigate system changes")
+            recommendations.append(
+                "Coherence declining over 24h - investigate system changes"
+            )
 
         if trend_1h < -0.05:
-            recommendations.append("Rapid coherence decline detected - immediate attention required")
+            recommendations.append(
+                "Rapid coherence decline detected - immediate attention required"
+            )
 
         # Check volatility
         if volatility > 0.2:
@@ -402,12 +440,16 @@ class CoherenceMetrics:
 
         # Check anomalies
         if anomaly_score > 0.5:
-            recommendations.append("Coherence anomaly detected - unusual system behavior")
+            recommendations.append(
+                "Coherence anomaly detected - unusual system behavior"
+            )
 
         # Overall recommendations
         trinity_coherence = current_coherence.trinity_coherence
         if trinity_coherence < self.config.min_coherence_threshold:
-            recommendations.append("Trinity-Coherence below minimum threshold - emergency review required")
+            recommendations.append(
+                "Trinity-Coherence below minimum threshold - emergency review required"
+            )
 
         if not recommendations:
             recommendations.append("Coherence metrics within normal ranges")
@@ -428,12 +470,15 @@ class CoherenceMetrics:
             variance = 0.0
         else:
             old_variance = self._coherence_statistics["std"] ** 2
-            variance = ((count - 2) * old_variance + (new_coherence - mean) * (new_coherence - new_mean)) / (count - 1)
+            variance = (
+                (count - 2) * old_variance
+                + (new_coherence - mean) * (new_coherence - new_mean)
+            ) / (count - 1)
 
         self._coherence_statistics = {
             "count": count,
             "mean": new_mean,
-            "std": math.sqrt(max(0.0, variance))
+            "std": math.sqrt(max(0.0, variance)),
         }
 
 
@@ -454,6 +499,7 @@ class PXLCoherenceAnalyzer:
 
             # Add some variance based on system state
             import time
+
             variance = 0.1 * math.sin(time.time() / 100)  # Simulate temporal variance
 
             return max(0.0, min(1.0, base_coherence + variance))
@@ -479,6 +525,7 @@ class IELCoherenceAnalyzer:
 
             # Add some variance
             import time
+
             variance = 0.05 * math.cos(time.time() / 80)
 
             return max(0.0, min(1.0, base_coherence + variance))
@@ -504,6 +551,7 @@ class RuntimeCoherenceAnalyzer:
 
             # Add some variance
             import time
+
             variance = 0.08 * math.sin(time.time() / 120)
 
             return max(0.0, min(1.0, base_coherence + variance))
@@ -541,11 +589,11 @@ class TrinityCoherence:
                 "trend_24h": analysis.trend_24h,
                 "volatility": analysis.volatility,
                 "stability_score": analysis.stability_score,
-                "anomaly_score": analysis.anomaly_score
+                "anomaly_score": analysis.anomaly_score,
             },
             "recommendations": analysis.recommendations,
             "is_degraded": self.coherence_metrics.is_coherence_degraded(),
-            "statistics": self.coherence_metrics.get_coherence_statistics()
+            "statistics": self.coherence_metrics.get_coherence_statistics(),
         }
 
 
@@ -555,7 +603,7 @@ class CoherenceCalculator:
     def calculate_coherence(self, iel_content: str) -> float:
         """Calculate coherence score for IEL content"""
         try:
-            lines = iel_content.split('\n')
+            lines = iel_content.split("\n")
             non_empty_lines = [l for l in lines if l.strip()]
 
             # Basic heuristics for coherence

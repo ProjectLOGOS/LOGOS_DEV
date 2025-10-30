@@ -7,12 +7,17 @@ from torch import Tensor
 
 from sentence_transformers.SentenceTransformer import SentenceTransformer
 
-from .BatchHardTripletLoss import BatchHardTripletLoss, BatchHardTripletLossDistanceFunction
+from .BatchHardTripletLoss import (
+    BatchHardTripletLoss,
+    BatchHardTripletLossDistanceFunction,
+)
 
 
 class BatchHardSoftMarginTripletLoss(BatchHardTripletLoss):
     def __init__(
-        self, model: SentenceTransformer, distance_metric=BatchHardTripletLossDistanceFunction.eucledian_distance
+        self,
+        model: SentenceTransformer,
+        distance_metric=BatchHardTripletLossDistanceFunction.eucledian_distance,
     ) -> None:
         """
         BatchHardSoftMarginTripletLoss takes a batch with (sentence, label) pairs and computes the loss for all possible, valid
@@ -89,13 +94,17 @@ class BatchHardSoftMarginTripletLoss(BatchHardTripletLoss):
         self.sentence_embedder = model
         self.distance_metric = distance_metric
 
-    def forward(self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor) -> Tensor:
+    def forward(
+        self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor
+    ) -> Tensor:
         rep = self.sentence_embedder(sentence_features[0])["sentence_embedding"]
         return self.batch_hard_triplet_soft_margin_loss(labels, rep)
 
     # Hard Triplet Loss with Soft Margin
     # Paper: In Defense of the Triplet Loss for Person Re-Identification, https://arxiv.org/abs/1703.07737
-    def batch_hard_triplet_soft_margin_loss(self, labels: Tensor, embeddings: Tensor) -> Tensor:
+    def batch_hard_triplet_soft_margin_loss(
+        self, labels: Tensor, embeddings: Tensor
+    ) -> Tensor:
         """Build the triplet loss over a batch of embeddings.
         For each anchor, we get the hardest positive and hardest negative to form a triplet.
         Args:
@@ -111,7 +120,9 @@ class BatchHardSoftMarginTripletLoss(BatchHardTripletLoss):
 
         # For each anchor, get the hardest positive
         # First, we need to get a mask for every valid positive (they should have same label)
-        mask_anchor_positive = BatchHardTripletLoss.get_anchor_positive_triplet_mask(labels).float()
+        mask_anchor_positive = BatchHardTripletLoss.get_anchor_positive_triplet_mask(
+            labels
+        ).float()
 
         # We put to 0 any element where (a, p) is not valid (valid if a != p and label(a) == label(p))
         anchor_positive_dist = mask_anchor_positive * pairwise_dist
@@ -121,11 +132,15 @@ class BatchHardSoftMarginTripletLoss(BatchHardTripletLoss):
 
         # For each anchor, get the hardest negative
         # First, we need to get a mask for every valid negative (they should have different labels)
-        mask_anchor_negative = BatchHardTripletLoss.get_anchor_negative_triplet_mask(labels).float()
+        mask_anchor_negative = BatchHardTripletLoss.get_anchor_negative_triplet_mask(
+            labels
+        ).float()
 
         # We add the maximum value in each row to the invalid negatives (label(a) == label(n))
         max_anchor_negative_dist, _ = pairwise_dist.max(1, keepdim=True)
-        anchor_negative_dist = pairwise_dist + max_anchor_negative_dist * (1.0 - mask_anchor_negative)
+        anchor_negative_dist = pairwise_dist + max_anchor_negative_dist * (
+            1.0 - mask_anchor_negative
+        )
 
         # shape (batch_size,)
         hardest_negative_dist, _ = anchor_negative_dist.min(1, keepdim=True)

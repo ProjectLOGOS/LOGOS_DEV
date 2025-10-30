@@ -9,7 +9,7 @@ This domain focuses on the praxis of actions, resources, and ergonomics:
 """
 
 from .action_system import ActionSystem
-from .resource_manager import ResourceManager
 from .ergonomic_optimizer import ErgonomicOptimizer
+from .resource_manager import ResourceManager
 
-__all__ = ['ActionSystem', 'ResourceManager', 'ErgonomicOptimizer']
+__all__ = ["ActionSystem", "ResourceManager", "ErgonomicOptimizer"]

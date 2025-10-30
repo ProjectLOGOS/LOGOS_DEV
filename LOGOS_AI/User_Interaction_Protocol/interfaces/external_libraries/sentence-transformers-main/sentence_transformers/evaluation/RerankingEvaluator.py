@@ -104,7 +104,9 @@ class RerankingEvaluator(SentenceEvaluator):
         self.name = name
 
         if mrr_at_k is not None:
-            logger.warning(f"The `mrr_at_k` parameter has been deprecated; please use `at_k={mrr_at_k}` instead.")
+            logger.warning(
+                f"The `mrr_at_k` parameter has been deprecated; please use `at_k={mrr_at_k}` instead."
+            )
             self.at_k = mrr_at_k
         else:
             self.at_k = at_k
@@ -120,10 +122,16 @@ class RerankingEvaluator(SentenceEvaluator):
 
         ### Remove sample with empty positive / negative set
         self.samples = [
-            sample for sample in self.samples if len(sample["positive"]) > 0 and len(sample["negative"]) > 0
+            sample
+            for sample in self.samples
+            if len(sample["positive"]) > 0 and len(sample["negative"]) > 0
         ]
 
-        self.csv_file = "RerankingEvaluator" + ("_" + name if name else "") + f"_results_@{self.at_k}.csv"
+        self.csv_file = (
+            "RerankingEvaluator"
+            + ("_" + name if name else "")
+            + f"_results_@{self.at_k}.csv"
+        )
         self.csv_headers = [
             "epoch",
             "steps",
@@ -135,7 +143,11 @@ class RerankingEvaluator(SentenceEvaluator):
         self.primary_metric = f"ndcg@{self.at_k}"
 
     def __call__(
-        self, model: SentenceTransformer, output_path: str | None = None, epoch: int = -1, steps: int = -1
+        self,
+        model: SentenceTransformer,
+        output_path: str | None = None,
+        epoch: int = -1,
+        steps: int = -1,
     ) -> dict[str, float]:
         """
         Evaluates the model on the dataset and returns the evaluation metrics.
@@ -159,7 +171,9 @@ class RerankingEvaluator(SentenceEvaluator):
         if self.truncate_dim is not None:
             out_txt += f" (truncated to {self.truncate_dim})"
 
-        logger.info(f"RerankingEvaluator: Evaluating the model on the {self.name} dataset{out_txt}:")
+        logger.info(
+            f"RerankingEvaluator: Evaluating the model on the {self.name} dataset{out_txt}:"
+        )
 
         scores = self.compute_metrices(model)
         mean_ap = scores["map"]
@@ -181,7 +195,12 @@ class RerankingEvaluator(SentenceEvaluator):
         if output_path is not None and self.write_csv:
             csv_path = os.path.join(output_path, self.csv_file)
             output_file_exists = os.path.isfile(csv_path)
-            with open(csv_path, newline="", mode="a" if output_file_exists else "w", encoding="utf-8") as f:
+            with open(
+                csv_path,
+                newline="",
+                mode="a" if output_file_exists else "w",
+                encoding="utf-8",
+            ) as f:
                 writer = csv.writer(f)
                 if not output_file_exists:
                     writer.writerow(self.csv_headers)
@@ -241,7 +260,10 @@ class RerankingEvaluator(SentenceEvaluator):
             all_docs.extend(sample["negative"])
 
         all_docs_embs = self.embed_inputs(
-            model, all_docs, encode_fn_name="document", show_progress_bar=self.show_progress_bar
+            model,
+            all_docs,
+            encode_fn_name="document",
+            show_progress_bar=self.show_progress_bar,
         )
 
         # Compute scores
@@ -262,7 +284,9 @@ class RerankingEvaluator(SentenceEvaluator):
             if len(pred_scores.shape) > 1:
                 pred_scores = pred_scores[0]
 
-            pred_scores_argsort = torch.argsort(-pred_scores)  # Sort in decreasing order
+            pred_scores_argsort = torch.argsort(
+                -pred_scores
+            )  # Sort in decreasing order
             pred_scores = pred_scores.cpu().tolist()
 
             # Compute MRR score
@@ -275,7 +299,9 @@ class RerankingEvaluator(SentenceEvaluator):
             all_mrr_scores.append(mrr_score)
 
             # Compute NDCG score
-            all_ndcg_scores.append(ndcg_score([is_relevant], [pred_scores], k=self.at_k))
+            all_ndcg_scores.append(
+                ndcg_score([is_relevant], [pred_scores], k=self.at_k)
+            )
 
             # Compute AP
             all_ap_scores.append(average_precision_score(is_relevant, pred_scores))
@@ -300,7 +326,9 @@ class RerankingEvaluator(SentenceEvaluator):
         all_ndcg_scores = []
         all_ap_scores = []
 
-        for instance in tqdm.tqdm(self.samples, disable=not self.show_progress_bar, desc="Samples"):
+        for instance in tqdm.tqdm(
+            self.samples, disable=not self.show_progress_bar, desc="Samples"
+        ):
             query = instance["query"]
             positive = list(instance["positive"])
             negative = list(instance["negative"])
@@ -311,14 +339,20 @@ class RerankingEvaluator(SentenceEvaluator):
             docs = positive + negative
             is_relevant = [1] * len(positive) + [0] * len(negative)
 
-            query_emb = self.embed_inputs(model, [query], encode_fn_name="query", show_progress_bar=False)
-            docs_emb = self.embed_inputs(model, docs, encode_fn_name="document", show_progress_bar=False)
+            query_emb = self.embed_inputs(
+                model, [query], encode_fn_name="query", show_progress_bar=False
+            )
+            docs_emb = self.embed_inputs(
+                model, docs, encode_fn_name="document", show_progress_bar=False
+            )
 
             pred_scores = self.similarity_fct(query_emb, docs_emb)
             if len(pred_scores.shape) > 1:
                 pred_scores = pred_scores[0]
 
-            pred_scores_argsort = torch.argsort(-pred_scores)  # Sort in decreasing order
+            pred_scores_argsort = torch.argsort(
+                -pred_scores
+            )  # Sort in decreasing order
             pred_scores = pred_scores.cpu().tolist()
 
             # Compute MRR score
@@ -330,7 +364,9 @@ class RerankingEvaluator(SentenceEvaluator):
             all_mrr_scores.append(mrr_score)
 
             # Compute NDCG score
-            all_ndcg_scores.append(ndcg_score([is_relevant], [pred_scores], k=self.at_k))
+            all_ndcg_scores.append(
+                ndcg_score([is_relevant], [pred_scores], k=self.at_k)
+            )
 
             # Compute AP
             all_ap_scores.append(average_precision_score(is_relevant, pred_scores))

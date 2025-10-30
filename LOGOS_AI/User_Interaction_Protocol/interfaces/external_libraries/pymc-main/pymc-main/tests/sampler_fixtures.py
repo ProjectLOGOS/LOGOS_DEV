@@ -113,7 +113,9 @@ class LKJCholeskyCovFixture(KnownCDF):
         # The entries of the correlation matrix should follow
         # beta(eta - 1 + d/2, eta - 1 + d/2) on (-1, 1).
         # See https://arxiv.org/abs/1309.7268
-        "corr_entries_unit": [stats.beta(3 - 1 + 2.5, 3 - 1 + 2.5).cdf for _ in range(10)],
+        "corr_entries_unit": [
+            stats.beta(3 - 1 + 2.5, 3 - 1 + 2.5).cdf for _ in range(10)
+        ],
     }
 
     @classmethod

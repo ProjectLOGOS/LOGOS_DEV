@@ -5,10 +5,11 @@ Simple launcher script for the LOGOS AGI demonstration interface
 """
 
 import os
-import sys
 import subprocess
+import sys
 import time
 from pathlib import Path
+
 
 def launch_demo_gui():
     """Launch the LOGOS demo GUI with automatic browser opening"""
@@ -24,7 +25,9 @@ def launch_demo_gui():
     os.chdir(script_dir)
 
     # Check if we're in a codespace environment
-    is_codespace = os.environ.get('CODESPACES', '').lower() == 'true' or 'github.dev' in os.environ.get('GITHUB_SERVER_URL', '')
+    is_codespace = os.environ.get(
+        "CODESPACES", ""
+    ).lower() == "true" or "github.dev" in os.environ.get("GITHUB_SERVER_URL", "")
 
     try:
         # Launch the demo GUI
@@ -38,9 +41,7 @@ def launch_demo_gui():
         print()
 
         # Run the demo GUI
-        subprocess.run([
-            sys.executable, "demo_gui.py"
-        ], check=True)
+        subprocess.run([sys.executable, "demo_gui.py"], check=True)
 
     except KeyboardInterrupt:
         print("\n👋 Demo interface stopped by user")
@@ -52,6 +53,7 @@ def launch_demo_gui():
         return 1
 
     return 0
+
 
 if __name__ == "__main__":
     exit(launch_demo_gui())

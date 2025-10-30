@@ -27,7 +27,9 @@ if not is_training_available():
     )
 
 
-def test_trainer_multi_dataset_errors(reranker_bert_tiny_model: CrossEncoder, stsb_dataset_dict: DatasetDict) -> None:
+def test_trainer_multi_dataset_errors(
+    reranker_bert_tiny_model: CrossEncoder, stsb_dataset_dict: DatasetDict
+) -> None:
     train_dataset = stsb_dataset_dict["train"]
     loss = {
         "multi_nli": losses.BinaryCrossEntropyLoss(model=reranker_bert_tiny_model),
@@ -35,9 +37,12 @@ def test_trainer_multi_dataset_errors(reranker_bert_tiny_model: CrossEncoder, st
         "stsb": losses.BinaryCrossEntropyLoss(model=reranker_bert_tiny_model),
     }
     with pytest.raises(
-        ValueError, match="If the provided `loss` is a dict, then the `train_dataset` must be a `DatasetDict`."
+        ValueError,
+        match="If the provided `loss` is a dict, then the `train_dataset` must be a `DatasetDict`.",
     ):
-        CrossEncoderTrainer(model=reranker_bert_tiny_model, train_dataset=train_dataset, loss=loss)
+        CrossEncoderTrainer(
+            model=reranker_bert_tiny_model, train_dataset=train_dataset, loss=loss
+        )
 
     train_dataset = DatasetDict(
         {
@@ -52,7 +57,9 @@ def test_trainer_multi_dataset_errors(reranker_bert_tiny_model: CrossEncoder, st
         match="If the provided `loss` is a dict, then all keys from the `train_dataset` dictionary must occur in `loss` also. "
         r"Currently, \['stsb-extra'\] occurs in `train_dataset` but not in `loss`.",
     ):
-        CrossEncoderTrainer(model=reranker_bert_tiny_model, train_dataset=train_dataset, loss=loss)
+        CrossEncoderTrainer(
+            model=reranker_bert_tiny_model, train_dataset=train_dataset, loss=loss
+        )
 
     train_dataset = DatasetDict(
         {
@@ -62,7 +69,8 @@ def test_trainer_multi_dataset_errors(reranker_bert_tiny_model: CrossEncoder, st
         }
     )
     with pytest.raises(
-        ValueError, match="If the provided `loss` is a dict, then the `eval_dataset` must be a `DatasetDict`."
+        ValueError,
+        match="If the provided `loss` is a dict, then the `eval_dataset` must be a `DatasetDict`.",
     ):
         CrossEncoderTrainer(
             model=reranker_bert_tiny_model,
@@ -86,7 +94,10 @@ def test_trainer_multi_dataset_errors(reranker_bert_tiny_model: CrossEncoder, st
         r"Currently, \['stsb-extra-1', 'stsb-extra-2'\] occur in `eval_dataset` but not in `loss`.",
     ):
         CrossEncoderTrainer(
-            model=reranker_bert_tiny_model, train_dataset=train_dataset, eval_dataset=eval_dataset, loss=loss
+            model=reranker_bert_tiny_model,
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            loss=loss,
         )
 
 
@@ -147,11 +158,13 @@ def test_trainer(
         )
     elif loss_dict and not train_dict:
         context = pytest.raises(
-            ValueError, match="If the provided `loss` is a dict, then the `train_dataset` must be a `DatasetDict`."
+            ValueError,
+            match="If the provided `loss` is a dict, then the `train_dataset` must be a `DatasetDict`.",
         )
     elif loss_dict and not eval_dict:
         context = pytest.raises(
-            ValueError, match="If the provided `loss` is a dict, then the `eval_dataset` must be a `DatasetDict`."
+            ValueError,
+            match="If the provided `loss` is a dict, then the `eval_dataset` must be a `DatasetDict`.",
         )
     elif streaming and train_dict:
         context = pytest.raises(
@@ -198,6 +211,8 @@ def test_trainer(
             trainer.train()
 
     if isinstance(context, nullcontext):
-        original_scores = original_model.predict("The cat is on the mat.", convert_to_tensor=True)
+        original_scores = original_model.predict(
+            "The cat is on the mat.", convert_to_tensor=True
+        )
         new_scores = model.predict("The cat is on the the mat.", convert_to_tensor=True)
         assert not torch.equal(original_scores, new_scores)

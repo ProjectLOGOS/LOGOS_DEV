@@ -6,7 +6,10 @@ from torch import Tensor, nn
 
 from sentence_transformers.SentenceTransformer import SentenceTransformer
 
-from .BatchHardTripletLoss import BatchHardTripletLoss, BatchHardTripletLossDistanceFunction
+from .BatchHardTripletLoss import (
+    BatchHardTripletLoss,
+    BatchHardTripletLossDistanceFunction,
+)
 
 
 class BatchAllTripletLoss(nn.Module):
@@ -89,7 +92,9 @@ class BatchAllTripletLoss(nn.Module):
         self.triplet_margin = margin
         self.distance_metric = distance_metric
 
-    def forward(self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor) -> Tensor:
+    def forward(
+        self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor
+    ) -> Tensor:
         rep = self.sentence_embedder(sentence_features[0])["sentence_embedding"]
         return self.batch_all_triplet_loss(labels, rep)
 

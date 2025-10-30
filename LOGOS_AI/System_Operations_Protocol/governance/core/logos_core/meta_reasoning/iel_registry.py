@@ -23,13 +23,13 @@ Safety Constraints:
 import hashlib
 import json
 import logging
-from typing import Dict, List, Set, Optional, Any, Tuple
-from dataclasses import dataclass, field, asdict
-from datetime import datetime
-from pathlib import Path
-from collections import defaultdict
 import sqlite3
 import threading
+from collections import defaultdict
+from dataclasses import asdict, dataclass, field
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from .iel_generator import IELCandidate
 
@@ -37,6 +37,7 @@ from .iel_generator import IELCandidate
 @dataclass
 class IELRegistryEntry:
     """Represents a registered IEL rule with verification metadata"""
+
     id: str
     domain: str
     rule_name: str
@@ -64,7 +65,7 @@ class IELRegistryEntry:
         return data
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'IELRegistryEntry':
+    def from_dict(cls, data: Dict[str, Any]) -> "IELRegistryEntry":
         """Create from dictionary"""
         data["created_at"] = datetime.fromisoformat(data["created_at"])
         if data.get("verified_at"):
@@ -77,6 +78,7 @@ class IELRegistryEntry:
 @dataclass
 class RegistryConfig:
     """Configuration for IEL Registry"""
+
     database_path: str = "data/iel_registry.db"
     backup_path: str = "data/iel_registry_backups/"
     hash_algorithm: str = "sha256"
@@ -89,6 +91,7 @@ class RegistryConfig:
 @dataclass
 class RegistryStats:
     """Registry statistics"""
+
     total_iels: int = 0
     pending_iels: int = 0
     verified_iels: int = 0
@@ -134,7 +137,7 @@ class IELRegistry:
         if not logger.handlers:
             handler = logging.StreamHandler()
             formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
             )
             handler.setFormatter(formatter)
             logger.addHandler(handler)
@@ -173,11 +176,15 @@ class IELRegistry:
                 self._cache[entry.id] = entry
 
                 # Log registration
-                self._log_audit_event(entry.id, "registered", {
-                    "domain": entry.domain,
-                    "rule_name": entry.rule_name,
-                    "content_hash": entry.content_hash
-                })
+                self._log_audit_event(
+                    entry.id,
+                    "registered",
+                    {
+                        "domain": entry.domain,
+                        "rule_name": entry.rule_name,
+                        "content_hash": entry.content_hash,
+                    },
+                )
 
                 self.logger.info(f"Registered IEL candidate: {entry.id}")
                 return True
@@ -206,7 +213,9 @@ class IELRegistry:
                     return False
 
                 if entry.status != "pending":
-                    self.logger.warning(f"IEL {iel_id} not in pending status: {entry.status}")
+                    self.logger.warning(
+                        f"IEL {iel_id} not in pending status: {entry.status}"
+                    )
                     return False
 
                 # Verify signature if enabled
@@ -228,10 +237,14 @@ class IELRegistry:
                 self._cache[iel_id] = entry
 
                 # Log verification
-                self._log_audit_event(iel_id, "verified", {
-                    "verifier_signature": verifier_signature,
-                    "proof_hash": proof_hash
-                })
+                self._log_audit_event(
+                    iel_id,
+                    "verified",
+                    {
+                        "verifier_signature": verifier_signature,
+                        "proof_hash": proof_hash,
+                    },
+                )
 
                 self.logger.info(f"Verified IEL: {iel_id}")
                 return True
@@ -320,10 +333,9 @@ class IELRegistry:
                 self._cache[iel_id] = entry
 
                 # Log revocation
-                self._log_audit_event(iel_id, "revoked", {
-                    "previous_status": old_status,
-                    "reason": reason
-                })
+                self._log_audit_event(
+                    iel_id, "revoked", {"previous_status": old_status, "reason": reason}
+                )
 
                 self.logger.warning(f"Revoked IEL: {iel_id} - Reason: {reason}")
                 return True
@@ -350,7 +362,9 @@ class IELRegistry:
             self.logger.error(f"Failed to get IEL {iel_id}: {e}")
             return None
 
-    def list_iels(self, status: Optional[str] = None, domain: Optional[str] = None) -> List[IELRegistryEntry]:
+    def list_iels(
+        self, status: Optional[str] = None, domain: Optional[str] = None
+    ) -> List[IELRegistryEntry]:
         """
         List IELs with optional filtering
 
@@ -409,7 +423,7 @@ class IELRegistry:
                 "missing_proofs": 0,
                 "invalid_signatures": 0,
                 "dependency_violations": 0,
-                "integrity_score": 0.0
+                "integrity_score": 0.0,
             }
 
             with self._db_lock:
@@ -426,21 +440,32 @@ class IELRegistry:
                         results["missing_proofs"] += 1
 
                     # Verify signatures if enabled
-                    if (self.config.enable_signature_verification and
-                        entry.verifier_signature and
-                        not self._verify_signature(entry, entry.verifier_signature)):
+                    if (
+                        self.config.enable_signature_verification
+                        and entry.verifier_signature
+                        and not self._verify_signature(entry, entry.verifier_signature)
+                    ):
                         results["invalid_signatures"] += 1
 
                     # Check dependencies
-                    if self.config.enable_dependency_checking and not self._check_dependencies(entry):
+                    if (
+                        self.config.enable_dependency_checking
+                        and not self._check_dependencies(entry)
+                    ):
                         results["dependency_violations"] += 1
 
                 # Calculate integrity score
-                total_issues = (results["hash_mismatches"] + results["missing_proofs"] +
-                              results["invalid_signatures"] + results["dependency_violations"])
+                total_issues = (
+                    results["hash_mismatches"]
+                    + results["missing_proofs"]
+                    + results["invalid_signatures"]
+                    + results["dependency_violations"]
+                )
 
                 if results["total_entries"] > 0:
-                    results["integrity_score"] = 1.0 - (total_issues / results["total_entries"])
+                    results["integrity_score"] = 1.0 - (
+                        total_issues / results["total_entries"]
+                    )
                 else:
                     results["integrity_score"] = 1.0
 
@@ -458,6 +483,7 @@ class IELRegistry:
 
             # Copy database file
             import shutil
+
             shutil.copy2(self._db_path, backup_file)
 
             self._last_backup = datetime.now()
@@ -471,7 +497,8 @@ class IELRegistry:
     def _init_database(self) -> None:
         """Initialize SQLite database"""
         with sqlite3.connect(self._db_path) as conn:
-            conn.execute("""
+            conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS iel_entries (
                     id TEXT PRIMARY KEY,
                     domain TEXT NOT NULL,
@@ -489,15 +516,20 @@ class IELRegistry:
                     dependents TEXT,
                     audit_trail TEXT
                 )
-            """)
+            """
+            )
 
-            conn.execute("""
+            conn.execute(
+                """
                 CREATE INDEX IF NOT EXISTS idx_status ON iel_entries (status)
-            """)
+            """
+            )
 
-            conn.execute("""
+            conn.execute(
+                """
                 CREATE INDEX IF NOT EXISTS idx_domain ON iel_entries (domain)
-            """)
+            """
+            )
 
     def _is_registered(self, iel_id: str) -> bool:
         """Check if IEL is already registered"""
@@ -508,16 +540,20 @@ class IELRegistry:
     def _count_pending(self) -> int:
         """Count pending IELs"""
         with sqlite3.connect(self._db_path) as conn:
-            cursor = conn.execute("SELECT COUNT(*) FROM iel_entries WHERE status = 'pending'")
+            cursor = conn.execute(
+                "SELECT COUNT(*) FROM iel_entries WHERE status = 'pending'"
+            )
             return cursor.fetchone()[0]
 
     def _create_registry_entry(self, candidate: IELCandidate) -> IELRegistryEntry:
         """Create registry entry from candidate"""
-        rule_content = json.dumps({
-            "premises": candidate.premises,
-            "conclusion": candidate.conclusion,
-            "rule_template": candidate.rule_template
-        })
+        rule_content = json.dumps(
+            {
+                "premises": candidate.premises,
+                "conclusion": candidate.conclusion,
+                "rule_template": candidate.rule_template,
+            }
+        )
 
         content_hash = self._compute_hash(rule_content)
 
@@ -529,7 +565,7 @@ class IELRegistry:
             content_hash=content_hash,
             version=1,
             status="pending",
-            created_at=datetime.now()
+            created_at=datetime.now(),
         )
 
     def _compute_hash(self, content: str) -> str:
@@ -537,43 +573,60 @@ class IELRegistry:
         if self.config.hash_algorithm == "sha256":
             return hashlib.sha256(content.encode()).hexdigest()
         else:
-            raise ValueError(f"Unsupported hash algorithm: {self.config.hash_algorithm}")
+            raise ValueError(
+                f"Unsupported hash algorithm: {self.config.hash_algorithm}"
+            )
 
     def _store_entry(self, entry: IELRegistryEntry) -> None:
         """Store entry in database"""
         with sqlite3.connect(self._db_path) as conn:
-            conn.execute("""
+            conn.execute(
+                """
                 INSERT INTO iel_entries (
                     id, domain, rule_name, rule_content, content_hash, version,
                     status, created_at, verified_at, activated_at, verifier_signature,
                     proof_hash, dependencies, dependents, audit_trail
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                entry.id, entry.domain, entry.rule_name, entry.rule_content,
-                entry.content_hash, entry.version, entry.status,
-                entry.created_at.isoformat(),
-                entry.verified_at.isoformat() if entry.verified_at else None,
-                entry.activated_at.isoformat() if entry.activated_at else None,
-                entry.verifier_signature, entry.proof_hash,
-                json.dumps(entry.dependencies), json.dumps(entry.dependents),
-                json.dumps(entry.audit_trail)
-            ))
+            """,
+                (
+                    entry.id,
+                    entry.domain,
+                    entry.rule_name,
+                    entry.rule_content,
+                    entry.content_hash,
+                    entry.version,
+                    entry.status,
+                    entry.created_at.isoformat(),
+                    entry.verified_at.isoformat() if entry.verified_at else None,
+                    entry.activated_at.isoformat() if entry.activated_at else None,
+                    entry.verifier_signature,
+                    entry.proof_hash,
+                    json.dumps(entry.dependencies),
+                    json.dumps(entry.dependents),
+                    json.dumps(entry.audit_trail),
+                ),
+            )
 
     def _update_entry(self, entry: IELRegistryEntry) -> None:
         """Update entry in database"""
         with sqlite3.connect(self._db_path) as conn:
-            conn.execute("""
+            conn.execute(
+                """
                 UPDATE iel_entries SET
                     status = ?, verified_at = ?, activated_at = ?,
                     verifier_signature = ?, proof_hash = ?, audit_trail = ?
                 WHERE id = ?
-            """, (
-                entry.status,
-                entry.verified_at.isoformat() if entry.verified_at else None,
-                entry.activated_at.isoformat() if entry.activated_at else None,
-                entry.verifier_signature, entry.proof_hash,
-                json.dumps(entry.audit_trail), entry.id
-            ))
+            """,
+                (
+                    entry.status,
+                    entry.verified_at.isoformat() if entry.verified_at else None,
+                    entry.activated_at.isoformat() if entry.activated_at else None,
+                    entry.verifier_signature,
+                    entry.proof_hash,
+                    json.dumps(entry.audit_trail),
+                    entry.id,
+                ),
+            )
 
     def _query_entry(self, iel_id: str) -> Optional[IELRegistryEntry]:
         """Query single entry from database"""
@@ -586,7 +639,9 @@ class IELRegistry:
                 return self._row_to_entry(row)
             return None
 
-    def _query_entries(self, status: Optional[str] = None, domain: Optional[str] = None) -> List[IELRegistryEntry]:
+    def _query_entries(
+        self, status: Optional[str] = None, domain: Optional[str] = None
+    ) -> List[IELRegistryEntry]:
         """Query multiple entries from database"""
         query = "SELECT * FROM iel_entries"
         params = []
@@ -619,20 +674,30 @@ class IELRegistry:
             version=row["version"],
             status=row["status"],
             created_at=datetime.fromisoformat(row["created_at"]),
-            verified_at=datetime.fromisoformat(row["verified_at"]) if row["verified_at"] else None,
-            activated_at=datetime.fromisoformat(row["activated_at"]) if row["activated_at"] else None,
+            verified_at=(
+                datetime.fromisoformat(row["verified_at"])
+                if row["verified_at"]
+                else None
+            ),
+            activated_at=(
+                datetime.fromisoformat(row["activated_at"])
+                if row["activated_at"]
+                else None
+            ),
             verifier_signature=row["verifier_signature"],
             proof_hash=row["proof_hash"],
             dependencies=json.loads(row["dependencies"]) if row["dependencies"] else [],
             dependents=json.loads(row["dependents"]) if row["dependents"] else [],
-            audit_trail=json.loads(row["audit_trail"]) if row["audit_trail"] else []
+            audit_trail=json.loads(row["audit_trail"]) if row["audit_trail"] else [],
         )
 
     def _count_by_status(self) -> Dict[str, int]:
         """Count entries by status"""
         counts = {}
         with sqlite3.connect(self._db_path) as conn:
-            cursor = conn.execute("SELECT status, COUNT(*) FROM iel_entries GROUP BY status")
+            cursor = conn.execute(
+                "SELECT status, COUNT(*) FROM iel_entries GROUP BY status"
+            )
             for row in cursor.fetchall():
                 counts[row[0]] = row[1]
         return counts
@@ -661,14 +726,16 @@ class IELRegistry:
                 return False
         return True
 
-    def _log_audit_event(self, iel_id: str, event_type: str, details: Dict[str, Any]) -> None:
+    def _log_audit_event(
+        self, iel_id: str, event_type: str, details: Dict[str, Any]
+    ) -> None:
         """Log audit event"""
         entry = self.get_iel(iel_id)
         if entry:
             audit_event = {
                 "timestamp": datetime.now().isoformat(),
                 "event_type": event_type,
-                "details": details
+                "details": details,
             }
             entry.audit_trail.append(audit_event)
             self._update_entry(entry)
@@ -677,18 +744,29 @@ class IELRegistry:
 def main():
     """Main entry point for IEL registry command-line interface"""
     import argparse
-    import sys
     import os
+    import sys
 
-    parser = argparse.ArgumentParser(description='LOGOS IEL Registry')
-    parser.add_argument('--add', help='Add IEL file to registry')
-    parser.add_argument('--sig', help='Signature file for IEL')
-    parser.add_argument('--registry', default='registry/iel_registry.json', help='Registry file path')
-    parser.add_argument('--reload', action='store_true', help='Reload runtime with new IELs')
-    parser.add_argument('--list', action='store_true', help='List registered IELs')
-    parser.add_argument('--verify', help='Verify specific IEL by ID')
-    parser.add_argument('--prune', action='store_true', help='Prune underperforming IELs')
-    parser.add_argument('--below', type=float, default=0.85, help='Quality threshold for pruning (default: 0.85)')
+    parser = argparse.ArgumentParser(description="LOGOS IEL Registry")
+    parser.add_argument("--add", help="Add IEL file to registry")
+    parser.add_argument("--sig", help="Signature file for IEL")
+    parser.add_argument(
+        "--registry", default="registry/iel_registry.json", help="Registry file path"
+    )
+    parser.add_argument(
+        "--reload", action="store_true", help="Reload runtime with new IELs"
+    )
+    parser.add_argument("--list", action="store_true", help="List registered IELs")
+    parser.add_argument("--verify", help="Verify specific IEL by ID")
+    parser.add_argument(
+        "--prune", action="store_true", help="Prune underperforming IELs"
+    )
+    parser.add_argument(
+        "--below",
+        type=float,
+        default=0.85,
+        help="Quality threshold for pruning (default: 0.85)",
+    )
 
     args = parser.parse_args()
 
@@ -698,30 +776,35 @@ def main():
 
         # Create registry config
         config = RegistryConfig()
-        config.database_path = args.registry.replace('.json', '.db')
+        config.database_path = args.registry.replace(".json", ".db")
 
         registry = IELRegistry(config)
 
         if args.add and args.sig:
             # Add IEL to registry
-            with open(args.add, 'r') as f:
+            with open(args.add, "r") as f:
                 iel_content = f.read()
 
-            with open(args.sig, 'r') as f:
+            with open(args.sig, "r") as f:
                 sig_data = json.load(f)
 
             # Extract rule name from IEL content
             import re
-            rule_match = re.search(r'Lemma\s+(\w+)', iel_content)
+
+            rule_match = re.search(r"Lemma\s+(\w+)", iel_content)
             rule_name = rule_match.group(1) if rule_match else "unknown_rule"
 
             # Extract premises and conclusion from IEL content
-            premise_match = re.search(r'.*?->\s*(.*)', iel_content.replace('\n', ' '))
-            conclusion = premise_match.group(1) if premise_match else "auto_generated_conclusion"
+            premise_match = re.search(r".*?->\s*(.*)", iel_content.replace("\n", " "))
+            conclusion = (
+                premise_match.group(1) if premise_match else "auto_generated_conclusion"
+            )
 
             # Create IEL candidate
             candidate = IELCandidate(
-                id=hashlib.sha256(f"{rule_name}_{datetime.now().isoformat()}".encode()).hexdigest()[:12],
+                id=hashlib.sha256(
+                    f"{rule_name}_{datetime.now().isoformat()}".encode()
+                ).hexdigest()[:12],
                 domain="auto_detected",
                 rule_name=rule_name,
                 premises=["auto_generated_premise"],
@@ -732,7 +815,7 @@ def main():
                 verification_status="verified",
                 proof_obligations=[],
                 consistency_score=0.9,
-                safety_score=0.95
+                safety_score=0.95,
             )
 
             # Register the candidate
@@ -780,19 +863,26 @@ def main():
                 print(f"Pruning IELs below quality threshold: {args.below}")
 
                 # Get evaluator and run evaluation
-                evaluator = IELEvaluator(args.registry.replace('.json', '.db'))
+                evaluator = IELEvaluator(args.registry.replace(".json", ".db"))
                 evaluation_results = evaluator.evaluate_all_iels()
 
                 pruned_count = 0
                 for iel_id, evaluation in evaluation_results.items():
-                    if evaluation['overall_score'] < args.below:
+                    if evaluation["overall_score"] < args.below:
                         # Revoke underperforming IEL
-                        success = registry.revoke_iel(iel_id, f"Quality score {evaluation['overall_score']} below threshold {args.below}")
+                        success = registry.revoke_iel(
+                            iel_id,
+                            f"Quality score {evaluation['overall_score']} below threshold {args.below}",
+                        )
                         if success:
                             pruned_count += 1
-                            print(f"  Pruned: {iel_id} (score: {evaluation['overall_score']})")
+                            print(
+                                f"  Pruned: {iel_id} (score: {evaluation['overall_score']})"
+                            )
 
-                print(f"Pruning complete: {pruned_count} IELs removed from active registry")
+                print(
+                    f"Pruning complete: {pruned_count} IELs removed from active registry"
+                )
 
             except ImportError as e:
                 print(f"Error: IEL evaluator not available: {e}")
@@ -806,5 +896,5 @@ def main():
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

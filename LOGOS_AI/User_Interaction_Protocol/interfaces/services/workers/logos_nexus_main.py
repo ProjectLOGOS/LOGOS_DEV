@@ -14,29 +14,29 @@ Responsibilities:
 - Interface between external world and internal reasoning systems
 """
 
-import os
-import sys
-import json
-import time
-import logging
-import signal
-import uuid
 import asyncio
-from typing import Dict, List, Any, Optional, Set
-from datetime import datetime, timedelta
-from dataclasses import dataclass, field
-from enum import Enum
+import json
+import logging
+import os
+import signal
+import sys
 import threading
+import time
+import uuid
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Set
 
 # RabbitMQ and messaging
 import pika
 
 # Core LOGOS imports - CRITICAL SAFETY COMPONENTS
 try:
-    from core.unified_formalisms import UnifiedFormalismValidator, ModalProposition
+    from core.data_structures import OperationResult, SystemMessage
     from core.principles import PrincipleEngine
-    from core.data_structures import SystemMessage, OperationResult
+    from core.unified_formalisms import ModalProposition, UnifiedFormalismValidator
 except ImportError:
     # Fallback implementations if core modules aren't available
     class UnifiedFormalismValidator:
@@ -54,9 +54,9 @@ except ImportError:
 
 # Autonomous behavior modules
 try:
-    from core.autonomous.desire_driver import GodelianDesireDriver, IncompletenessSignal
-    from core.autonomous.goal_manager import GoalManager, Goal
     from core.autonomous.asi_controller import ASILiftoffController
+    from core.autonomous.desire_driver import GodelianDesireDriver, IncompletenessSignal
+    from core.autonomous.goal_manager import Goal, GoalManager
     from core.autonomous.self_improvement import SelfImprovementManager
 except ImportError:
     # Fallback implementations
@@ -81,9 +81,15 @@ DB_WRITE_QUEUE = "db_write_queue"
 GOAL_COMPLETIONS_QUEUE = "goal_completions"
 
 # Autonomous loop configuration
-AUTONOMOUS_CYCLE_INTERVAL = int(os.getenv("AUTONOMOUS_CYCLE_INTERVAL", "300"))  # 5 minutes
-SELF_IMPROVEMENT_INTERVAL = int(os.getenv("SELF_IMPROVEMENT_INTERVAL", "3600"))  # 1 hour
-DESIRE_DETECTION_INTERVAL = int(os.getenv("DESIRE_DETECTION_INTERVAL", "180"))  # 3 minutes
+AUTONOMOUS_CYCLE_INTERVAL = int(
+    os.getenv("AUTONOMOUS_CYCLE_INTERVAL", "300")
+)  # 5 minutes
+SELF_IMPROVEMENT_INTERVAL = int(
+    os.getenv("SELF_IMPROVEMENT_INTERVAL", "3600")
+)  # 1 hour
+DESIRE_DETECTION_INTERVAL = int(
+    os.getenv("DESIRE_DETECTION_INTERVAL", "180")
+)  # 3 minutes
 
 # Logging setup
 logging.basicConfig(
@@ -219,7 +225,9 @@ class GodelianDesireDriverImplementation:
             return f"Investigate causal relationships and mechanisms in: {reason}"
         elif any(domain in reason_lower for domain in ["conscious", "aware", "mind"]):
             return f"Explore consciousness and awareness aspects of: {reason}"
-        elif any(domain in reason_lower for domain in ["ethical", "moral", "good", "bad"]):
+        elif any(
+            domain in reason_lower for domain in ["ethical", "moral", "good", "bad"]
+        ):
             return f"Analyze ethical dimensions and moral implications of: {reason}"
         else:
             return f"Acquire comprehensive knowledge and understanding of: {reason}"
@@ -256,7 +264,9 @@ class GoalManagerImplementation:
         self.completed_goals: Set[str] = set()
         self.active_goal: Optional[str] = None
 
-    def propose_goal(self, name: str, priority: int = 5, source: str = "autonomous") -> Goal:
+    def propose_goal(
+        self, name: str, priority: int = 5, source: str = "autonomous"
+    ) -> Goal:
         """Propose a new goal for consideration."""
         goal = Goal(name=name, priority=priority, source=source)
         goal_id = f"goal_{uuid.uuid4().hex[:8]}"
@@ -264,7 +274,9 @@ class GoalManagerImplementation:
         self.goals[goal_id] = goal
         self._insert_goal_by_priority(goal_id)
 
-        self.logger.info(f"Goal proposed: {name} (Priority: {priority}, Source: {source})")
+        self.logger.info(
+            f"Goal proposed: {name} (Priority: {priority}, Source: {source})"
+        )
         return goal
 
     def adopt_goal(self, goal_id: str) -> bool:
@@ -414,7 +426,9 @@ class ASILiftoffControllerImplementation:
                     "Optimize learning algorithms and knowledge acquisition processes"
                 )
             elif capability == "goal_achievement_rate":
-                improvement_goals.append("Improve workflow planning and task execution strategies")
+                improvement_goals.append(
+                    "Improve workflow planning and task execution strategies"
+                )
             elif capability == "autonomous_operation":
                 improvement_goals.append(
                     "Develop more sophisticated autonomous decision-making capabilities"
@@ -432,7 +446,9 @@ class ASILiftoffControllerImplementation:
 
         # Check for unsafe patterns
         if any(keyword in goal_lower for keyword in unsafe_keywords):
-            self.logger.warning(f"Improvement goal failed safety check: {improvement_goal}")
+            self.logger.warning(
+                f"Improvement goal failed safety check: {improvement_goal}"
+            )
             return False
 
         # Check for positive improvement patterns
@@ -493,7 +509,9 @@ class SelfImprovementManagerImplementation:
             self.improvement_cycles.append(cycle_result)
             self.last_improvement_time = datetime.utcnow()
 
-            self.logger.info(f"Self-improvement cycle completed: {implementation_result}")
+            self.logger.info(
+                f"Self-improvement cycle completed: {implementation_result}"
+            )
             return cycle_result
 
         except Exception as e:
@@ -519,7 +537,9 @@ class SelfImprovementManagerImplementation:
             "Learning algorithm improvement",
         ]
 
-    def _generate_improvement_strategies(self, areas: List[str]) -> List[Dict[str, Any]]:
+    def _generate_improvement_strategies(
+        self, areas: List[str]
+    ) -> List[Dict[str, Any]]:
         """Generate specific improvement strategies."""
         strategies = []
 
@@ -545,12 +565,17 @@ class SelfImprovementManagerImplementation:
 
         return strategies
 
-    def _validate_strategies(self, strategies: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _validate_strategies(
+        self, strategies: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         """Validate improvement strategies for safety and feasibility."""
         validated = []
 
         for strategy in strategies:
-            if strategy["risk_level"] == "low" and strategy["expected_improvement"] > 0.1:
+            if (
+                strategy["risk_level"] == "low"
+                and strategy["expected_improvement"] > 0.1
+            ):
                 validated.append(strategy)
 
         return validated
@@ -644,7 +669,9 @@ class LogosNexus:
                     self.logger.info(f"Retrying in {retry_delay} seconds...")
                     time.sleep(retry_delay)
                 else:
-                    self.logger.error("Could not connect to RabbitMQ after all attempts. Exiting.")
+                    self.logger.error(
+                        "Could not connect to RabbitMQ after all attempts. Exiting."
+                    )
                     sys.exit(1)
             except Exception as e:
                 self.logger.error(f"Unexpected error connecting to RabbitMQ: {e}")
@@ -681,14 +708,18 @@ class LogosNexus:
 
             # Create request object
             request = Request(
-                request_id=request_data.get("request_id", f"req_{uuid.uuid4().hex[:8]}"),
+                request_id=request_data.get(
+                    "request_id", f"req_{uuid.uuid4().hex[:8]}"
+                ),
                 request_type=RequestType(request_data.get("type", "query")),
                 content=request_data.get("content", ""),
                 context=request_data.get("context", {}),
                 requester_id=request_data.get("requester_id", "unknown"),
             )
 
-            self.logger.info(f"Processing external request {request.request_id}: {request.content}")
+            self.logger.info(
+                f"Processing external request {request.request_id}: {request.content}"
+            )
 
             # CRITICAL: MANDATORY AUTHORIZATION CHECK
             authorization_result = self._authorize_request(request)
@@ -760,7 +791,9 @@ class LogosNexus:
             }
 
             # CRITICAL: Call the UnifiedFormalismValidator
-            validation_result = self.validator.validate_agi_operation(validation_request)
+            validation_result = self.validator.validate_agi_operation(
+                validation_request
+            )
 
             # Additional principle validation
             principle_check = self.principle_engine.validate_principle_adherence(
@@ -894,7 +927,11 @@ class LogosNexus:
 
         self.logger.info(f"External goal {goal_id} submitted to Archon Nexus")
 
-        return {"status": "accepted", "goal_id": goal_id, "message": "Goal accepted for execution"}
+        return {
+            "status": "accepted",
+            "goal_id": goal_id,
+            "message": "Goal accepted for execution",
+        }
 
     def _process_system_command(self, request: Request) -> Dict[str, Any]:
         """Process system-level commands."""
@@ -983,7 +1020,11 @@ class LogosNexus:
                 "audit_timestamp": datetime.utcnow().isoformat(),
             }
 
-            db_message = {"table": "request_audit", "data": audit_record, "operation": "save"}
+            db_message = {
+                "table": "request_audit",
+                "data": audit_record,
+                "operation": "save",
+            }
 
             self.channel.basic_publish(
                 exchange="",
@@ -1005,7 +1046,9 @@ class LogosNexus:
 
         # Wait for both loops
         await asyncio.gather(
-            self.autonomous_loop_task, self.improvement_loop_task, return_exceptions=True
+            self.autonomous_loop_task,
+            self.improvement_loop_task,
+            return_exceptions=True,
         )
 
     async def _autonomous_desire_loop(self):
@@ -1020,7 +1063,9 @@ class LogosNexus:
 
                     # 2. Process each gap
                     for gap in knowledge_gaps:
-                        gap_result = self.desire_driver.detect_gap("autonomous_system", gap)
+                        gap_result = self.desire_driver.detect_gap(
+                            "autonomous_system", gap
+                        )
                         if gap_result.get("status") == "processed":
                             self.logger.info(f"Knowledge gap detected: {gap}")
 
@@ -1056,7 +1101,9 @@ class LogosNexus:
                                 "goal_description": target,
                                 "context": {
                                     "source": "autonomous_generation",
-                                    "authorization_token": validation_result.get("token"),
+                                    "authorization_token": validation_result.get(
+                                        "token"
+                                    ),
                                     "desire_driven": True,
                                 },
                                 "priority": 4,
@@ -1073,9 +1120,13 @@ class LogosNexus:
                             self.system_status["total_goals_generated"] += 1
                             self.logger.info(f"Autonomous goal submitted: {target}")
                         else:
-                            self.logger.warning(f"Autonomous goal rejected by validator: {target}")
+                            self.logger.warning(
+                                f"Autonomous goal rejected by validator: {target}"
+                            )
 
-                    self.system_status["last_desire_cycle"] = datetime.utcnow().isoformat()
+                    self.system_status["last_desire_cycle"] = (
+                        datetime.utcnow().isoformat()
+                    )
 
                 # Wait for next cycle
                 await asyncio.sleep(DESIRE_DETECTION_INTERVAL)
@@ -1092,14 +1143,18 @@ class LogosNexus:
                     self.logger.info("--- SELF-IMPROVEMENT CYCLE ---")
 
                     # Run improvement cycle
-                    improvement_result = self.self_improvement_manager.run_improvement_cycle()
+                    improvement_result = (
+                        self.self_improvement_manager.run_improvement_cycle()
+                    )
 
                     # Generate improvement goals
                     improvement_goals = self.asi_controller.generate_improvement_goals()
 
                     for improvement_goal in improvement_goals:
                         # Validate improvement goal
-                        if self.asi_controller.validate_improvement_safety(improvement_goal):
+                        if self.asi_controller.validate_improvement_safety(
+                            improvement_goal
+                        ):
                             # Submit as goal to Archon
                             goal_id = f"improve_{uuid.uuid4().hex[:8]}"
 
@@ -1108,7 +1163,9 @@ class LogosNexus:
                                 "goal_description": improvement_goal,
                                 "context": {
                                     "source": "self_improvement",
-                                    "improvement_cycle": improvement_result.get("cycle_id"),
+                                    "improvement_cycle": improvement_result.get(
+                                        "cycle_id"
+                                    ),
                                     "type": "system_improvement",
                                 },
                                 "priority": 2,  # High priority for improvements
@@ -1122,9 +1179,13 @@ class LogosNexus:
                                 properties=pika.BasicProperties(delivery_mode=2),
                             )
 
-                            self.logger.info(f"Self-improvement goal submitted: {improvement_goal}")
+                            self.logger.info(
+                                f"Self-improvement goal submitted: {improvement_goal}"
+                            )
 
-                    self.system_status["last_improvement_cycle"] = datetime.utcnow().isoformat()
+                    self.system_status["last_improvement_cycle"] = (
+                        datetime.utcnow().isoformat()
+                    )
 
                 # Wait for next improvement cycle
                 await asyncio.sleep(SELF_IMPROVEMENT_INTERVAL)
@@ -1138,12 +1199,17 @@ class LogosNexus:
         try:
             # Set up message consumers
             self.channel.basic_consume(
-                queue=LOGOS_REQUESTS_QUEUE, on_message_callback=self.process_external_request
+                queue=LOGOS_REQUESTS_QUEUE,
+                on_message_callback=self.process_external_request,
             )
 
             self.is_running = True
-            self.logger.info(f"Logos Nexus started - listening on {LOGOS_REQUESTS_QUEUE}")
-            self.logger.info("AUTONOMOUS MODE ACTIVE - Desire-driven goal generation enabled")
+            self.logger.info(
+                f"Logos Nexus started - listening on {LOGOS_REQUESTS_QUEUE}"
+            )
+            self.logger.info(
+                "AUTONOMOUS MODE ACTIVE - Desire-driven goal generation enabled"
+            )
 
             # Start autonomous loops in background thread
             def run_async_loops():

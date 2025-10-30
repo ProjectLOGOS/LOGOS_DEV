@@ -104,7 +104,9 @@ class Plate:
         if not isinstance(other, Plate):
             return False
 
-        return self.dim_info == other.dim_info and set(self.variables) == set(other.variables)
+        return self.dim_info == other.dim_info and set(self.variables) == set(
+            other.variables
+        )
 
 
 GraphvizNodeKwargs = dict[str, Any]
@@ -199,7 +201,9 @@ DEFAULT_NODE_FORMATTERS: NodeTypeFormatterMapping = {
 }
 
 
-def update_node_formatters(node_formatters: NodeTypeFormatterMapping) -> NodeTypeFormatterMapping:
+def update_node_formatters(
+    node_formatters: NodeTypeFormatterMapping,
+) -> NodeTypeFormatterMapping:
     node_formatters = {**DEFAULT_NODE_FORMATTERS, **node_formatters}
 
     unknown_keys = set(node_formatters.keys()) - set(NodeType)
@@ -237,7 +241,9 @@ def _make_node(
 class ModelGraph:
     def __init__(self, model):
         self.model = model
-        self._all_var_names = get_default_varnames(self.model.named_vars, include_transformed=False)
+        self._all_var_names = get_default_varnames(
+            self.model.named_vars, include_transformed=False
+        )
         self._all_vars = {model[var_name] for var_name in self._all_var_names}
         self.var_list = self.model.named_vars.values()
 
@@ -344,7 +350,8 @@ class ModelGraph:
         #       This should help find discrepancies, and
         #       avoids unnecessary function compiles for determining labels.
         dim_lengths: dict[str, int] = {
-            dim_name: fast_eval(value).item() for dim_name, value in self.model.dim_lengths.items()
+            dim_name: fast_eval(value).item()
+            for dim_name, value in self.model.dim_lengths.items()
         }
         var_shapes: dict[str, tuple[int, ...]] = {
             var_name: tuple(map(int, fast_eval(self.model[var_name].shape)))
@@ -464,7 +471,9 @@ def make_graph(
                         add_node=sub.node,
                     )
                 # plate label goes bottom right
-                sub.attr(label=plate_label, labeljust="r", labelloc="b", style="rounded")
+                sub.attr(
+                    label=plate_label, labeljust="r", labelloc="b", style="rounded"
+                )
         else:
             for var in plate.variables:
                 _make_node(
@@ -541,7 +550,9 @@ def make_networkx(
                     {sgn: {"labeljust": "r", "labelloc": "b", "style": "rounded"}},
                 )
             node_data = {
-                e[0]: e[1] for e in graphnetwork.nodes(data=True) & subgraphnetwork.nodes(data=True)
+                e[0]: e[1]
+                for e in graphnetwork.nodes(data=True)
+                & subgraphnetwork.nodes(data=True)
             }
 
             graphnetwork = networkx.compose(graphnetwork, subgraphnetwork)
@@ -633,7 +644,9 @@ def model_to_networkx(
 
     """
     if "plain" not in formatting:
-        raise ValueError(f"Unsupported formatting for graph nodes: '{formatting}'. See docstring.")
+        raise ValueError(
+            f"Unsupported formatting for graph nodes: '{formatting}'. See docstring."
+        )
 
     if formatting != "plain":
         warnings.warn(
@@ -650,9 +663,11 @@ def model_to_networkx(
         edges=graph.edges(var_names=var_names),
         formatting=formatting,
         node_formatters=node_formatters,
-        create_plate_label=create_plate_label_with_dim_length
-        if include_dim_lengths
-        else create_plate_label_without_dim_length,
+        create_plate_label=(
+            create_plate_label_with_dim_length
+            if include_dim_lengths
+            else create_plate_label_without_dim_length
+        ),
     )
 
 
@@ -749,7 +764,9 @@ def model_to_graphviz(
         model_to_graphviz(schools, node_formatters=node_formatters)
     """
     if "plain" not in formatting:
-        raise ValueError(f"Unsupported formatting for graph nodes: '{formatting}'. See docstring.")
+        raise ValueError(
+            f"Unsupported formatting for graph nodes: '{formatting}'. See docstring."
+        )
     if formatting != "plain":
         warnings.warn(
             "Formattings other than 'plain' are currently not supported.",
@@ -769,9 +786,11 @@ def model_to_graphviz(
         dpi=dpi,
         graph_attr=graph_attr,
         node_formatters=node_formatters,
-        create_plate_label=create_plate_label_with_dim_length
-        if include_dim_lengths
-        else create_plate_label_without_dim_length,
+        create_plate_label=(
+            create_plate_label_with_dim_length
+            if include_dim_lengths
+            else create_plate_label_without_dim_length
+        ),
     )
 
 
@@ -855,7 +874,9 @@ def _build_mermaid_plates(plates, include_dim_lengths) -> list[str]:
     return plate_lines
 
 
-def model_to_mermaid(model=None, *, var_names=None, include_dim_lengths: bool = True) -> str:
+def model_to_mermaid(
+    model=None, *, var_names=None, include_dim_lengths: bool = True
+) -> str:
     """Produce a Mermaid diagram string from a PyMC model.
 
     Parameters
@@ -892,9 +913,13 @@ def model_to_mermaid(model=None, *, var_names=None, include_dim_lengths: bool = 
     """
     model = modelcontext(model)
     graph = ModelGraph(model)
-    plates = sorted(graph.get_plates(var_names=var_names), key=lambda plate: hash(plate.dim_info))
+    plates = sorted(
+        graph.get_plates(var_names=var_names), key=lambda plate: hash(plate.dim_info)
+    )
     edges = sorted(graph.edges(var_names=var_names))
-    nodes = sorted(graph.nodes(plates=plates), key=lambda node: cast(str, node.var.name))
+    nodes = sorted(
+        graph.nodes(plates=plates), key=lambda node: cast(str, node.var.name)
+    )
 
     return "\n".join(
         [

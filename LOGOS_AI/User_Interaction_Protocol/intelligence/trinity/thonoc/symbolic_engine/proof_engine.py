@@ -1,6 +1,8 @@
 import logging
-from typing import Dict, List, Any
-from core.unified_formalisms import UnifiedFormalismValidator, ModalProposition
+from typing import Any, Dict, List
+
+from core.unified_formalisms import ModalProposition, UnifiedFormalismValidator
+
 from .thonoc_lambda_engine import LambdaEngine, LogosExpr, Value, Variable
 
 
@@ -15,14 +17,18 @@ class LogicalDomain:
 
 
 class AxiomaticProofEngine:
-    def __init__(self, lambda_engine: LambdaEngine, validator: UnifiedFormalismValidator):
+    def __init__(
+        self, lambda_engine: LambdaEngine, validator: UnifiedFormalismValidator
+    ):
         self.logger = logging.getLogger("ProofEngine")
         self.lambda_engine = lambda_engine
         self.validator = validator
         self.transcendental_domain = TranscendentalDomain()
         self.logical_domain = LogicalDomain()
 
-    def construct_proof(self, primary_claim: str, counter_claims: List[str]) -> Dict[str, Any]:
+    def construct_proof(
+        self, primary_claim: str, counter_claims: List[str]
+    ) -> Dict[str, Any]:
         self.logger.info(f"Attempting to construct proof for: '{primary_claim}'")
 
         primary_expr, correspondence_map = self._formalize_claim(primary_claim)
@@ -39,7 +45,11 @@ class AxiomaticProofEngine:
             validation = self._validate_coherence(claim, expr)
             disproven = not validation["is_coherent"]
             counter_claim_results.append(
-                {"claim": claim, "is_disproven": disproven, "reason": validation.get("reasoning")}
+                {
+                    "claim": claim,
+                    "is_disproven": disproven,
+                    "reason": validation.get("reasoning"),
+                }
             )
             if not disproven:
                 all_counters_disproven = False
@@ -69,7 +79,9 @@ class AxiomaticProofEngine:
             expr = Variable(claim.replace(" ", "_"), "PROP")
         return expr, mapping
 
-    def _validate_coherence(self, claim_text: str, claim_expr: LogosExpr) -> Dict[str, Any]:
+    def _validate_coherence(
+        self, claim_text: str, claim_expr: LogosExpr
+    ) -> Dict[str, Any]:
         validation_request = {
             "entity": "metaphysical_claim",
             "proposition": ModalProposition(claim_text),

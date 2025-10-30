@@ -65,7 +65,12 @@ def test_pd_dataframe_as_tensor_variable(np_array: np.ndarray) -> None:
 
 @pytest.mark.parametrize(
     argnames="np_array",
-    argvalues=[np.array([1.0, 2.0, -1.0]), np.ones(shape=4), np.zeros(shape=10), [1, 2, 3, 4]],
+    argvalues=[
+        np.array([1.0, 2.0, -1.0]),
+        np.ones(shape=4),
+        np.zeros(shape=10),
+        [1, 2, 3, 4],
+    ],
 )
 def test_pd_series_as_tensor_variable(np_array: np.ndarray) -> None:
     df = pd.Series(np_array)
@@ -77,7 +82,9 @@ def test_pd_as_tensor_variable_multiindex() -> None:
 
     index = pd.MultiIndex.from_tuples(tuples, names=["Id1", "Id2"])
 
-    df = pd.DataFrame({"A": [12.0, 80.0, 30.0, 20.0], "B": [120.0, 700.0, 30.0, 20.0]}, index=index)
+    df = pd.DataFrame(
+        {"A": [12.0, 80.0, 30.0, 20.0], "B": [120.0, 700.0, 30.0, 20.0]}, index=index
+    )
     np_array = np.array([[12.0, 80.0, 30.0, 20.0], [120.0, 700.0, 30.0, 20.0]]).T
     assert isinstance(df.index, pd.MultiIndex)
     np.testing.assert_array_equal(pt.as_tensor_variable(df).eval(), np_array)
@@ -108,7 +115,9 @@ class TestBroadcasting:
 
             step = pm.Metropolis()
             # TODO FIXME: Assert whatever it is we're testing
-            pm.sample(tune=5, draws=7, cores=1, step=step, compute_convergence_checks=False)
+            pm.sample(
+                tune=5, draws=7, cores=1, step=step, compute_convergence_checks=False
+            )
 
 
 def _make_along_axis_idx(arr_shape, indices, axis):
@@ -225,7 +234,9 @@ def test_convert_data(input_dtype):
     pandas_input = pd.DataFrame(dense_input)
 
     # All the even numbers are replaced with NaN
-    missing_numpy_input = np.array([[np.nan, 1, np.nan], [3, np.nan, 5], [np.nan, 7, np.nan]])
+    missing_numpy_input = np.array(
+        [[np.nan, 1, np.nan], [3, np.nan, 5], [np.nan, 7, np.nan]]
+    )
     missing_pandas_input = pd.DataFrame(missing_numpy_input)
     masked_array_input = ma.array(dense_input, mask=(np.mod(dense_input, 2) == 0))
 
@@ -312,7 +323,9 @@ class TestCompile:
         np.testing.assert_array_equal(fn(expr=[1, 2, 3]), [1, 2, 3])
         np.testing.assert_array_equal(fn(expr=[-1, 2, 3]), [-np.inf, -np.inf, -np.inf])
 
-        final_expr = check_parameters(expr, cond, msg="test", can_be_replaced_by_ninf=False)
+        final_expr = check_parameters(
+            expr, cond, msg="test", can_be_replaced_by_ninf=False
+        )
         fn = compile([expr], final_expr)
         np.testing.assert_array_equal(fn(expr=[1, 2, 3]), [1, 2, 3])
         with pytest.raises(ParameterValueError, match="test"):
@@ -511,8 +524,13 @@ class TestCompile:
         res = collect_default_updates(inputs=[nonshared_rng], outputs=[x, y])
         assert res == {shared_rng: next_rng_of_shared}
 
-        res = collect_default_updates(inputs=[nonshared_rng], outputs=[x, y], must_be_shared=False)
-        assert res == {shared_rng: next_rng_of_shared, nonshared_rng: next_rng_of_nonshared}
+        res = collect_default_updates(
+            inputs=[nonshared_rng], outputs=[x, y], must_be_shared=False
+        )
+        assert res == {
+            shared_rng: next_rng_of_shared,
+            nonshared_rng: next_rng_of_nonshared,
+        }
 
     def test_scan_updates(self):
         def step_with_update(x, rng):
@@ -604,7 +622,9 @@ def test_replace_rng_nodes():
     assert new_x_rng is not x_rng
 
     # All other inputs are the same as before
-    for non_rng_inputs, new_non_rng_inputs in zip(x_non_rng_inputs, new_x_non_rng_inputs):
+    for non_rng_inputs, new_non_rng_inputs in zip(
+        x_non_rng_inputs, new_x_non_rng_inputs
+    ):
         assert non_rng_inputs is new_non_rng_inputs
 
 
@@ -620,7 +640,9 @@ def test_reseed_rngs():
 
     seed = 543
 
-    bit_generators = [default_rng(sub_seed) for sub_seed in np.random.SeedSequence(seed).spawn(2)]
+    bit_generators = [
+        default_rng(sub_seed) for sub_seed in np.random.SeedSequence(seed).spawn(2)
+    ]
 
     rngs = [pytensor.shared(np.random.Generator(default_rng())) for _ in range(2)]
     for rng, bit_generator in zip(rngs, bit_generators):
@@ -662,7 +684,9 @@ class TestConstantFold:
     def test_constant_fold_alloc(self):
         # By default, Alloc outputs cannot be constant folded
         x = pt.alloc(pt.arange(5), 2, 5)
-        np.testing.assert_allclose(constant_fold([x])[0], np.broadcast_to(np.arange(5), (2, 5)))
+        np.testing.assert_allclose(
+            constant_fold([x])[0], np.broadcast_to(np.arange(5), (2, 5))
+        )
 
 
 def test_replace_vars_in_graphs():

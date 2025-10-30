@@ -10,16 +10,17 @@ Integrates with: Modal validators, ontological validators, Trinity processors, P
 Dependencies: V2 framework protocols, modal logic systems, knowledge graphs, reasoning engines
 """
 
-from protocols.shared.system_imports import *
-from typing import Dict, List, Set, Tuple, Optional, Any, Union, Callable, Protocol
+import itertools
+from abc import ABC, abstractmethod
+from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from abc import ABC, abstractmethod
+from functools import lru_cache
+from typing import Any, Callable, Dict, List, Optional, Protocol, Set, Tuple, Union
+
 import networkx as nx
 import numpy as np
-from collections import defaultdict, Counter
-import itertools
-from functools import lru_cache
+from protocols.shared.system_imports import *
 
 
 class DomainType(Enum):

@@ -4,7 +4,11 @@ from copy import deepcopy
 
 import pytest
 
-from sentence_transformers import SentenceTransformer, SentenceTransformerTrainer, losses
+from sentence_transformers import (
+    SentenceTransformer,
+    SentenceTransformerTrainer,
+    losses,
+)
 from sentence_transformers.model_card import generate_model_card
 from sentence_transformers.util import is_datasets_available, is_training_available
 
@@ -114,11 +118,15 @@ def test_model_card_base(
 
     train_dataset = dummy_dataset
     if num_datasets:
-        train_dataset = DatasetDict({f"train_{i}": train_dataset for i in range(num_datasets)})
+        train_dataset = DatasetDict(
+            {f"train_{i}": train_dataset for i in range(num_datasets)}
+        )
 
     # This adds data to model.model_card_data
     guide_loss = deepcopy(stsb_bert_tiny_model)
-    guide_loss.trust_remote_code = True  # Let's test if we can see this again in the model card
+    guide_loss.trust_remote_code = (
+        True  # Let's test if we can see this again in the model card
+    )
     loss = losses.GISTEmbedLoss(
         model,
         guide=guide_loss,

@@ -52,7 +52,12 @@ class SaveModelCallback(TrainerCallback):
         We save after the model has been trained.
     """
 
-    def __init__(self, output_dir: str, evaluator: SentenceEvaluator | None, save_best_model: bool) -> None:
+    def __init__(
+        self,
+        output_dir: str,
+        evaluator: SentenceEvaluator | None,
+        save_best_model: bool,
+    ) -> None:
         super().__init__()
         self.output_dir = output_dir
         self.evaluator = evaluator
@@ -100,7 +105,9 @@ class EvaluatorCallback(TrainerCallback):
     The `.trainer` must be provided after the trainer has been created.
     """
 
-    def __init__(self, evaluator: SentenceEvaluator, output_path: str | None = None) -> None:
+    def __init__(
+        self, evaluator: SentenceEvaluator, output_path: str | None = None
+    ) -> None:
         super().__init__()
         self.evaluator = evaluator
         self.output_path = output_path
@@ -120,7 +127,10 @@ class EvaluatorCallback(TrainerCallback):
         **kwargs,
     ) -> None:
         evaluator_metrics = self.evaluator(
-            model, output_path=self.output_path, epoch=state.epoch, steps=state.global_step
+            model,
+            output_path=self.output_path,
+            epoch=state.epoch,
+            steps=state.global_step,
         )
         if not isinstance(evaluator_metrics, dict):
             evaluator_metrics = {"evaluator": evaluator_metrics}
@@ -128,10 +138,14 @@ class EvaluatorCallback(TrainerCallback):
         # Prefix all keys with metric_key_prefix + '_'
         for key in list(evaluator_metrics.keys()):
             if not key.startswith(f"{self.metric_key_prefix}_"):
-                evaluator_metrics[f"{self.metric_key_prefix}_{key}"] = evaluator_metrics.pop(key)
+                evaluator_metrics[f"{self.metric_key_prefix}_{key}"] = (
+                    evaluator_metrics.pop(key)
+                )
 
         if self.trainer is not None:
-            self.trainer.callback_handler.on_evaluate(args, state, control, metrics=evaluator_metrics)
+            self.trainer.callback_handler.on_evaluate(
+                args, state, control, metrics=evaluator_metrics
+            )
 
 
 class OriginalCallback(TrainerCallback):
@@ -140,7 +154,9 @@ class OriginalCallback(TrainerCallback):
     This callback has the following signature: `(score: float, epoch: int, steps: int) -> None`
     """
 
-    def __init__(self, callback: Callable[[float, int, int], None], evaluator: SentenceEvaluator) -> None:
+    def __init__(
+        self, callback: Callable[[float, int, int], None], evaluator: SentenceEvaluator
+    ) -> None:
         super().__init__()
         self.callback = callback
         self.evaluator = evaluator
@@ -243,7 +259,9 @@ class FitMixin:
                 to continue training from.
         """
         if not is_datasets_available():
-            raise ImportError("Please install `datasets` to use this function: `pip install datasets`.")
+            raise ImportError(
+                "Please install `datasets` to use this function: `pip install datasets`."
+            )
 
         # Delayed import to counter the SentenceTransformers -> FitMixin -> SentenceTransformerTrainer -> SentenceTransformers circular import
         from sentence_transformers.trainer import SentenceTransformerTrainer
@@ -265,17 +283,23 @@ class FitMixin:
         for loader_idx, data_loader in enumerate(data_loaders, start=1):
             if isinstance(data_loader, NoDuplicatesDataLoader):
                 batch_sampler = BatchSamplers.NO_DUPLICATES
-            elif hasattr(data_loader, "dataset") and isinstance(data_loader.dataset, SentenceLabelDataset):
+            elif hasattr(data_loader, "dataset") and isinstance(
+                data_loader.dataset, SentenceLabelDataset
+            ):
                 batch_sampler = BatchSamplers.GROUP_BY_LABEL
 
             batch_size = getattr(data_loader, "batch_size", batch_size)
             texts = []
             labels = []
             for batch in data_loader:
-                batch_texts, batch_labels = zip(*[(example.texts, example.label) for example in batch])
+                batch_texts, batch_labels = zip(
+                    *[(example.texts, example.label) for example in batch]
+                )
                 texts += batch_texts
                 labels += batch_labels
-            dataset = Dataset.from_dict({f"sentence_{idx}": text for idx, text in enumerate(zip(*texts))})
+            dataset = Dataset.from_dict(
+                {f"sentence_{idx}": text for idx, text in enumerate(zip(*texts))}
+            )
             # Add label column, unless all labels are 0 (the default value for `labels` in InputExample)
             add_label_column = True
             try:
@@ -298,7 +322,9 @@ class FitMixin:
             return dir_name
 
         # Convert loss_fns into a dict with `dataset_{idx}` keys
-        loss_fn_dict = {f"_dataset_{idx}": loss_fn for idx, loss_fn in enumerate(loss_fns, start=1)}
+        loss_fn_dict = {
+            f"_dataset_{idx}": loss_fn for idx, loss_fn in enumerate(loss_fns, start=1)
+        }
 
         # Use steps_per_epoch to perhaps set max_steps
         max_steps = -1
@@ -327,7 +353,11 @@ class FitMixin:
             num_train_epochs=epochs,
             max_steps=max_steps,
             **{
-                eval_strategy_key: "steps" if evaluation_steps is not None and evaluation_steps > 0 else "no",
+                eval_strategy_key: (
+                    "steps"
+                    if evaluation_steps is not None and evaluation_steps > 0
+                    else "no"
+                ),
             },
             eval_steps=evaluation_steps,
             max_grad_norm=max_grad_norm,
@@ -339,7 +369,12 @@ class FitMixin:
         )
 
         if steps_per_epoch is None or steps_per_epoch == 0:
-            steps_per_epoch = min([len(train_dataset) // batch_size for train_dataset in train_dataset_dict.values()])
+            steps_per_epoch = min(
+                [
+                    len(train_dataset) // batch_size
+                    for train_dataset in train_dataset_dict.values()
+                ]
+            )
         num_train_steps = int(steps_per_epoch * epochs)
 
         # Prepare optimizer & scheduler
@@ -348,15 +383,25 @@ class FitMixin:
         no_decay = ["bias", "LayerNorm.bias", "LayerNorm.weight"]
         optimizer_grouped_parameters = [
             {
-                "params": [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)],
+                "params": [
+                    p for n, p in param_optimizer if not any(nd in n for nd in no_decay)
+                ],
                 "weight_decay": weight_decay,
             },
-            {"params": [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], "weight_decay": 0.0},
+            {
+                "params": [
+                    p for n, p in param_optimizer if any(nd in n for nd in no_decay)
+                ],
+                "weight_decay": 0.0,
+            },
         ]
 
         optimizer = optimizer_class(optimizer_grouped_parameters, **optimizer_params)
         scheduler_obj = self._get_scheduler(
-            optimizer, scheduler=scheduler, warmup_steps=warmup_steps, t_total=num_train_steps
+            optimizer,
+            scheduler=scheduler,
+            warmup_steps=warmup_steps,
+            t_total=num_train_steps,
         )
 
         # Create callbacks
@@ -382,7 +427,9 @@ class FitMixin:
                 callback.trainer = trainer
 
         if output_path is not None:
-            trainer.add_callback(SaveModelCallback(output_path, evaluator, save_best_model))
+            trainer.add_callback(
+                SaveModelCallback(output_path, evaluator, save_best_model)
+            )
 
         if checkpoint_path is not None and resume_from_checkpoint:
             if os.path.exists(checkpoint_path) and os.path.isdir(checkpoint_path):
@@ -391,24 +438,37 @@ class FitMixin:
                 all_checkpoints = [
                     checkpoint
                     for checkpoint in os.listdir(checkpoint_path)
-                    if checkpoint.startswith("checkpoint-") and checkpoint.split("-")[-1].isdigit()
+                    if checkpoint.startswith("checkpoint-")
+                    and checkpoint.split("-")[-1].isdigit()
                 ]
 
                 if all_checkpoints:
-                    latest_checkpoint = max(all_checkpoints, key=lambda x: int(x.split("-")[-1]))
-                    resume_from_checkpoint = os.path.join(checkpoint_path, latest_checkpoint)
-                    logger.info(f"Resuming from latest checkpoint: {resume_from_checkpoint}")
+                    latest_checkpoint = max(
+                        all_checkpoints, key=lambda x: int(x.split("-")[-1])
+                    )
+                    resume_from_checkpoint = os.path.join(
+                        checkpoint_path, latest_checkpoint
+                    )
+                    logger.info(
+                        f"Resuming from latest checkpoint: {resume_from_checkpoint}"
+                    )
                 else:
-                    logger.warning(f"No checkpoints found in checkpoint directory: {checkpoint_path}")
+                    logger.warning(
+                        f"No checkpoints found in checkpoint directory: {checkpoint_path}"
+                    )
                     resume_from_checkpoint = None
             else:
-                logger.warning(f"Checkpoint directory does not exist or is not a directory: {checkpoint_path}")
+                logger.warning(
+                    f"Checkpoint directory does not exist or is not a directory: {checkpoint_path}"
+                )
                 resume_from_checkpoint = None
 
         trainer.train(resume_from_checkpoint=resume_from_checkpoint)
 
     @staticmethod
-    def _get_scheduler(optimizer, scheduler: str, warmup_steps: int, t_total: int) -> LambdaLR:
+    def _get_scheduler(
+        optimizer, scheduler: str, warmup_steps: int, t_total: int
+    ) -> LambdaLR:
         """
         Returns the correct learning rate scheduler. Available scheduler:
 
@@ -422,7 +482,9 @@ class FitMixin:
         if scheduler == "constantlr":
             return transformers.get_constant_schedule(optimizer)
         elif scheduler == "warmupconstant":
-            return transformers.get_constant_schedule_with_warmup(optimizer, num_warmup_steps=warmup_steps)
+            return transformers.get_constant_schedule_with_warmup(
+                optimizer, num_warmup_steps=warmup_steps
+            )
         elif scheduler == "warmuplinear":
             return transformers.get_linear_schedule_with_warmup(
                 optimizer, num_warmup_steps=warmup_steps, num_training_steps=t_total
@@ -438,7 +500,9 @@ class FitMixin:
         else:
             raise ValueError(f"Unknown scheduler {scheduler}")
 
-    def smart_batching_collate(self, batch: list[InputExample]) -> tuple[list[dict[str, Tensor]], Tensor]:
+    def smart_batching_collate(
+        self, batch: list[InputExample]
+    ) -> tuple[list[dict[str, Tensor]], Tensor]:
         """
         Transforms a batch from a SmartBatchingDataset to a batch of tensors for the model
         Here, batch is a list of InputExample instances: [InputExample(...), ...]
@@ -542,7 +606,9 @@ class FitMixin:
         # info_loss_functions = "\n".join(["- {} with {} training examples".format(str(loss), len(dataloader)) for dataloader, loss in train_objectives])
         info_loss_functions = []
         for dataloader, loss in train_objectives:
-            info_loss_functions.extend(ModelCardTemplate.get_train_objective_info(dataloader, loss))
+            info_loss_functions.extend(
+                ModelCardTemplate.get_train_objective_info(dataloader, loss)
+            )
         info_loss_functions = "\n\n".join([text for text in info_loss_functions])
 
         info_fit_parameters = json.dumps(
@@ -562,9 +628,11 @@ class FitMixin:
             sort_keys=True,
         )
         self._model_card_text = None
-        self._model_card_vars["{TRAINING_SECTION}"] = ModelCardTemplate.__TRAINING_SECTION__.replace(
-            "{LOSS_FUNCTIONS}", info_loss_functions
-        ).replace("{FIT_PARAMETERS}", info_fit_parameters)
+        self._model_card_vars["{TRAINING_SECTION}"] = (
+            ModelCardTemplate.__TRAINING_SECTION__.replace(
+                "{LOSS_FUNCTIONS}", info_loss_functions
+            ).replace("{FIT_PARAMETERS}", info_fit_parameters)
+        )
 
         if use_amp:
             from torch.cuda.amp import autocast
@@ -599,15 +667,29 @@ class FitMixin:
             no_decay = ["bias", "LayerNorm.bias", "LayerNorm.weight"]
             optimizer_grouped_parameters = [
                 {
-                    "params": [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)],
+                    "params": [
+                        p
+                        for n, p in param_optimizer
+                        if not any(nd in n for nd in no_decay)
+                    ],
                     "weight_decay": weight_decay,
                 },
-                {"params": [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], "weight_decay": 0.0},
+                {
+                    "params": [
+                        p for n, p in param_optimizer if any(nd in n for nd in no_decay)
+                    ],
+                    "weight_decay": 0.0,
+                },
             ]
 
-            optimizer = optimizer_class(optimizer_grouped_parameters, **optimizer_params)
+            optimizer = optimizer_class(
+                optimizer_grouped_parameters, **optimizer_params
+            )
             scheduler_obj = self._get_scheduler(
-                optimizer, scheduler=scheduler, warmup_steps=warmup_steps, t_total=num_train_steps
+                optimizer,
+                scheduler=scheduler,
+                warmup_steps=warmup_steps,
+                t_total=num_train_steps,
             )
 
             optimizers.append(optimizer)
@@ -626,7 +708,12 @@ class FitMixin:
                 loss_model.zero_grad()
                 loss_model.train()
 
-            for _ in trange(steps_per_epoch, desc="Iteration", smoothing=0.05, disable=not show_progress_bar):
+            for _ in trange(
+                steps_per_epoch,
+                desc="Iteration",
+                smoothing=0.05,
+                disable=not show_progress_bar,
+            ):
                 for train_idx in range(num_train_objectives):
                     loss_model = loss_models[train_idx]
                     optimizer = optimizers[train_idx]
@@ -642,7 +729,9 @@ class FitMixin:
 
                     features, labels = data
                     labels = labels.to(self.device)
-                    features = list(map(lambda batch: batch_to_device(batch, self.device), features))
+                    features = list(
+                        map(lambda batch: batch_to_device(batch, self.device), features)
+                    )
 
                     if use_amp:
                         with autocast():
@@ -651,7 +740,9 @@ class FitMixin:
                         scale_before_step = scaler.get_scale()
                         scaler.scale(loss_value).backward()
                         scaler.unscale_(optimizer)
-                        torch.nn.utils.clip_grad_norm_(loss_model.parameters(), max_grad_norm)
+                        torch.nn.utils.clip_grad_norm_(
+                            loss_model.parameters(), max_grad_norm
+                        )
                         scaler.step(optimizer)
                         scaler.update()
 
@@ -659,7 +750,9 @@ class FitMixin:
                     else:
                         loss_value = loss_model(features, labels)
                         loss_value.backward()
-                        torch.nn.utils.clip_grad_norm_(loss_model.parameters(), max_grad_norm)
+                        torch.nn.utils.clip_grad_norm_(
+                            loss_model.parameters(), max_grad_norm
+                        )
                         optimizer.step()
 
                     optimizer.zero_grad()
@@ -672,7 +765,12 @@ class FitMixin:
 
                 if evaluation_steps > 0 and training_steps % evaluation_steps == 0:
                     self._eval_during_training(
-                        evaluator, output_path, save_best_model, epoch, training_steps, callback
+                        evaluator,
+                        output_path,
+                        save_best_model,
+                        epoch,
+                        training_steps,
+                        callback,
                     )
 
                     for loss_model in loss_models:
@@ -685,17 +783,27 @@ class FitMixin:
                     and checkpoint_save_steps > 0
                     and global_step % checkpoint_save_steps == 0
                 ):
-                    self._save_checkpoint(checkpoint_path, checkpoint_save_total_limit, global_step)
+                    self._save_checkpoint(
+                        checkpoint_path, checkpoint_save_total_limit, global_step
+                    )
 
-            self._eval_during_training(evaluator, output_path, save_best_model, epoch, -1, callback)
+            self._eval_during_training(
+                evaluator, output_path, save_best_model, epoch, -1, callback
+            )
 
-        if evaluator is None and output_path is not None:  # No evaluator, but output path: save final model version
+        if (
+            evaluator is None and output_path is not None
+        ):  # No evaluator, but output path: save final model version
             self.save(output_path)
 
         if checkpoint_path is not None:
-            self._save_checkpoint(checkpoint_path, checkpoint_save_total_limit, global_step)
+            self._save_checkpoint(
+                checkpoint_path, checkpoint_save_total_limit, global_step
+            )
 
-    def _eval_during_training(self, evaluator, output_path, save_best_model, epoch, steps, callback) -> None:
+    def _eval_during_training(
+        self, evaluator, output_path, save_best_model, epoch, steps, callback
+    ) -> None:
         """Runs evaluation during the training"""
         eval_path = output_path
         if output_path is not None:
@@ -712,7 +820,9 @@ class FitMixin:
                 if save_best_model:
                     self.save(output_path)
 
-    def _save_checkpoint(self, checkpoint_path, checkpoint_save_total_limit, step) -> None:
+    def _save_checkpoint(
+        self, checkpoint_path, checkpoint_save_total_limit, step
+    ) -> None:
         # Store new checkpoint
         self.save(os.path.join(checkpoint_path, str(step)))
 
@@ -721,7 +831,12 @@ class FitMixin:
             old_checkpoints = []
             for subdir in os.listdir(checkpoint_path):
                 if subdir.isdigit():
-                    old_checkpoints.append({"step": int(subdir), "path": os.path.join(checkpoint_path, subdir)})
+                    old_checkpoints.append(
+                        {
+                            "step": int(subdir),
+                            "path": os.path.join(checkpoint_path, subdir),
+                        }
+                    )
 
             if len(old_checkpoints) > checkpoint_save_total_limit:
                 old_checkpoints = sorted(old_checkpoints, key=lambda x: x["step"])

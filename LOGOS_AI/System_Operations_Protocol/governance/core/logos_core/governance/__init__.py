@@ -9,4 +9,4 @@ formal verification guarantees.
 from .iel_signer import IELSigner
 from .policy import PolicyManager
 
-__all__ = ['IELSigner', 'PolicyManager']
+__all__ = ["IELSigner", "PolicyManager"]

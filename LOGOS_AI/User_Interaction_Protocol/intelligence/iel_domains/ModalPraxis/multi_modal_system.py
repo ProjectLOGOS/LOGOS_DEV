@@ -4,9 +4,11 @@ Multi-Modal System Framework
 Provides support for multiple modal operators and hybrid modal logics.
 """
 
-from typing import Dict, List, Any, Optional, Set, Tuple, Callable
-from .modal_logic import ModalLogic, ModalOperator, ModalSystem
 from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+
+from .modal_logic import ModalLogic, ModalOperator, ModalSystem
+
 
 class MultiModalSystem:
     """
@@ -40,7 +42,9 @@ class MultiModalSystem:
                 modality_results = {}
                 for world in self.modalities[modality_name].worlds:
                     try:
-                        result = self.modalities[modality_name].evaluate_formula(modal_formula, world)
+                        result = self.modalities[modality_name].evaluate_formula(
+                            modal_formula, world
+                        )
                         modality_results[world] = result
                     except Exception as e:
                         modality_results[world] = f"Error: {e}"
@@ -63,10 +67,12 @@ class MultiModalSystem:
         return {
             "consistent": len(issues) == 0,
             "issues": issues,
-            "constraints_checked": len(self.cross_modal_constraints)
+            "constraints_checked": len(self.cross_modal_constraints),
         }
 
-    def translate_between_modalities(self, formula: Any, from_mod: str, to_mod: str) -> Any:
+    def translate_between_modalities(
+        self, formula: Any, from_mod: str, to_mod: str
+    ) -> Any:
         """Translate formula between modalities."""
         # Simplified translation - in practice would need semantic mappings
         if from_mod == "epistemic" and to_mod == "deontic":
@@ -86,24 +92,26 @@ class MultiModalSystem:
                 "system": modality.system.value,
                 "worlds": len(modality.worlds),
                 "consistent": modality.check_consistency(),
-                "axioms": modality.axioms
+                "axioms": modality.axioms,
             }
 
         return {
             "modalities": modality_info,
             "cross_modal_constraints": len(self.cross_modal_constraints),
             "hybrid_formulas": len(self.hybrid_formulas),
-            "overall_consistent": self.check_cross_modal_consistency()["consistent"]
+            "overall_consistent": self.check_cross_modal_consistency()["consistent"],
         }
 
-    def create_common_knowledge_logic(self) -> 'CommonKnowledgeLogic':
+    def create_common_knowledge_logic(self) -> "CommonKnowledgeLogic":
         """Create a common knowledge logic from epistemic modalities."""
         epistemic_modalities = {
-            name: mod for name, mod in self.modalities.items()
+            name: mod
+            for name, mod in self.modalities.items()
             if "epistemic" in name.lower() or "knowledge" in name.lower()
         }
 
         return CommonKnowledgeLogic(epistemic_modalities)
+
 
 class CommonKnowledgeLogic:
     """
@@ -135,13 +143,13 @@ class CommonKnowledgeLogic:
                 return {
                     "is_common_knowledge": False,
                     "depth_reached": depth,
-                    "knowledge_chain": knowledge_chain[:depth+1]
+                    "knowledge_chain": knowledge_chain[: depth + 1],
                 }
 
         return {
             "is_common_knowledge": True,
             "max_depth": len(self.agents),
-            "knowledge_chain": knowledge_chain
+            "knowledge_chain": knowledge_chain,
         }
 
     def _agent_knows(self, agent: str, formula: str) -> bool:
@@ -156,7 +164,7 @@ class CommonKnowledgeLogic:
         gaps = []
 
         for i, agent1 in enumerate(self.agents):
-            for agent2 in self.agents[i+1:]:
+            for agent2 in self.agents[i + 1 :]:
                 # Check what agent1 knows that agent2 doesn't
                 agent1_knowledge = self._get_agent_knowledge_scope(agent1)
                 agent2_knowledge = self._get_agent_knowledge_scope(agent2)
@@ -165,12 +173,14 @@ class CommonKnowledgeLogic:
                 gaps2 = agent2_knowledge - agent1_knowledge
 
                 if gaps1:
-                    gaps.append({
-                        "type": "asymmetric_knowledge",
-                        "agent1": agent1,
-                        "agent2": agent2,
-                        "agent1_exclusive": list(gaps1)
-                    })
+                    gaps.append(
+                        {
+                            "type": "asymmetric_knowledge",
+                            "agent1": agent1,
+                            "agent2": agent2,
+                            "agent1_exclusive": list(gaps1),
+                        }
+                    )
 
         return gaps
 

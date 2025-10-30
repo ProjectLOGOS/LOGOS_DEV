@@ -5,9 +5,10 @@ Provides probabilistic graphical models for belief representation,
 inference, and belief propagation.
 """
 
-from typing import Dict, List, Any, Optional, Set, Tuple
-from collections import defaultdict
 import math
+from collections import defaultdict
+from typing import Any, Dict, List, Optional, Set, Tuple
+
 
 class BeliefNode:
     """Represents a node in the belief network."""
@@ -16,11 +17,11 @@ class BeliefNode:
         self.name = name
         self.states = states
         self.cpt = cpt or {}  # Conditional Probability Table
-        self.parents: List['BeliefNode'] = []
-        self.children: List['BeliefNode'] = []
+        self.parents: List["BeliefNode"] = []
+        self.children: List["BeliefNode"] = []
         self.beliefs = {state: 1.0 / len(states) for state in states}  # Uniform prior
 
-    def add_parent(self, parent: 'BeliefNode'):
+    def add_parent(self, parent: "BeliefNode"):
         """Add a parent node."""
         if parent not in self.parents:
             self.parents.append(parent)
@@ -43,6 +44,7 @@ class BeliefNode:
             if total > 0:
                 for state in self.beliefs:
                     self.beliefs[state] /= total
+
 
 class BeliefNetwork:
     """
@@ -96,7 +98,9 @@ class BeliefNetwork:
         if node_name not in self.nodes:
             return None
         node = self.nodes[node_name]
-        return max(node.beliefs.items(), key=lambda x: x[1])[0] if node.beliefs else None
+        return (
+            max(node.beliefs.items(), key=lambda x: x[1])[0] if node.beliefs else None
+        )
 
     def calculate_joint_probability(self, states: Dict[str, str]) -> float:
         """Calculate joint probability of a set of states."""
@@ -104,7 +108,9 @@ class BeliefNetwork:
 
         # Process nodes in topological order
         processed = set()
-        to_process = [name for name in self.nodes.keys() if not self.nodes[name].parents]
+        to_process = [
+            name for name in self.nodes.keys() if not self.nodes[name].parents
+        ]
 
         while to_process:
             current_name = to_process.pop()
@@ -161,7 +167,9 @@ class BeliefNetwork:
                     if score > 0.1:  # Arbitrary threshold
                         self.add_edge(node1, node2)
 
-    def _calculate_edge_score(self, node1: str, node2: str, data: List[Dict[str, str]]) -> float:
+    def _calculate_edge_score(
+        self, node1: str, node2: str, data: List[Dict[str, str]]
+    ) -> float:
         """Calculate score for adding an edge."""
         # Simplified scoring based on mutual information
         count_matrix = defaultdict(lambda: defaultdict(int))
@@ -207,7 +215,7 @@ class BeliefNetwork:
             "issues": issues,
             "nodes": len(self.nodes),
             "edges": len(self.edges),
-            "components": len(components)
+            "components": len(components),
         }
 
     def _has_cycles(self) -> bool:
@@ -270,8 +278,10 @@ class BeliefNetwork:
         return {
             "nodes": len(self.nodes),
             "edges": len(self.edges),
-            "average_degree": sum(node_degrees.values()) / len(node_degrees) if node_degrees else 0,
+            "average_degree": (
+                sum(node_degrees.values()) / len(node_degrees) if node_degrees else 0
+            ),
             "max_degree": max(node_degrees.values()) if node_degrees else 0,
             "components": len(self._find_components()),
-            "has_cycles": self._has_cycles()
+            "has_cycles": self._has_cycles(),
         }

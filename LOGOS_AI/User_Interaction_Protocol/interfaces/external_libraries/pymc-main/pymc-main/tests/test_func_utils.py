@@ -66,7 +66,8 @@ def test_find_constrained_prior_error_too_large(
     distribution, lower, upper, init_guess, fixed_params
 ):
     with pytest.raises(
-        ValueError, match="Optimization of parameters failed.\nOptimization termination details:\n"
+        ValueError,
+        match="Optimization of parameters failed.\nOptimization termination details:\n",
     ):
         pm.find_constrained_prior(
             distribution,
@@ -112,7 +113,9 @@ def test_find_constrained_prior_input_errors():
         )
 
     # non-scalar params
-    with pytest.raises(NotImplementedError, match="does not work with non-scalar parameters yet"):
+    with pytest.raises(
+        NotImplementedError, match="does not work with non-scalar parameters yet"
+    ):
         pm.find_constrained_prior(
             pm.MvNormal,
             lower=0,

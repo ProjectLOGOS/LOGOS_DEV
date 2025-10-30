@@ -20,20 +20,23 @@ Safety Constraints:
 - Audit trail for all generated content
 """
 
-import logging
 import hashlib
 import json
-from typing import Dict, List, Set, Optional, Any, Tuple
+import logging
+from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from collections import defaultdict
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 try:
     from ..unified_formalisms import UnifiedFormalismValidator as UnifiedFormalisms
 except ImportError:
+
     class UnifiedFormalisms:
-        def __init__(self): pass
+        def __init__(self):
+            pass
+
 
 try:
     from ..autonomous_learning import ReasoningGap
@@ -54,6 +57,7 @@ except ImportError:
 @dataclass
 class IELCandidate:
     """Represents a candidate IEL rule"""
+
     id: str
     domain: str
     rule_name: str
@@ -88,13 +92,14 @@ class IELCandidate:
             "proof_obligations": self.proof_obligations,
             "consistency_score": self.consistency_score,
             "safety_score": self.safety_score,
-            "hash": self.hash
+            "hash": self.hash,
         }
 
 
 @dataclass
 class GenerationConfig:
     """Configuration for IEL generation"""
+
     max_candidates_per_gap: int = 3
     min_confidence_threshold: float = 0.4
     enable_domain_bridging: bool = True
@@ -136,7 +141,7 @@ class IELGenerator:
         if not logger.handlers:
             handler = logging.StreamHandler()
             formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
             )
             handler.setFormatter(formatter)
             logger.addHandler(handler)
@@ -157,7 +162,9 @@ class IELGenerator:
             self.logger.warning("Generation rate limit exceeded")
             return []
 
-        self.logger.info(f"Generating IEL candidates for gap: {gap.domain}:{gap.gap_type}")
+        self.logger.info(
+            f"Generating IEL candidates for gap: {gap.domain}:{gap.gap_type}"
+        )
 
         try:
             candidates = []
@@ -183,14 +190,18 @@ class IELGenerator:
             self._generation_count_hourly += len(validated_candidates)
             self._generation_history.extend(validated_candidates)
 
-            self.logger.info(f"Generated {len(validated_candidates)} validated candidates for gap")
-            return validated_candidates[:self.config.max_candidates_per_gap]
+            self.logger.info(
+                f"Generated {len(validated_candidates)} validated candidates for gap"
+            )
+            return validated_candidates[: self.config.max_candidates_per_gap]
 
         except Exception as e:
             self.logger.error(f"Candidate generation failed: {e}")
             return []
 
-    def generate_candidates_for_domain(self, domain: str, requirements: List[str]) -> List[IELCandidate]:
+    def generate_candidates_for_domain(
+        self, domain: str, requirements: List[str]
+    ) -> List[IELCandidate]:
         """
         Generate IEL candidates for a new domain
 
@@ -219,14 +230,16 @@ class IELGenerator:
                     severity=0.6,
                     required_premises=[f"domain_{domain}"],
                     expected_conclusion=requirement,
-                    confidence=0.7
+                    confidence=0.7,
                 )
 
                 # Generate candidates for synthetic gap
                 requirement_candidates = self.generate_candidates_for_gap(synthetic_gap)
                 candidates.extend(requirement_candidates)
 
-            self.logger.info(f"Generated {len(candidates)} candidates for domain {domain}")
+            self.logger.info(
+                f"Generated {len(candidates)} candidates for domain {domain}"
+            )
             return candidates
 
         except Exception as e:
@@ -258,10 +271,10 @@ class IELGenerator:
 
             # Overall quality score
             overall_score = (
-                consistency_score * 0.3 +
-                safety_score * 0.3 +
-                completeness_score * 0.2 +
-                soundness_score * 0.2
+                consistency_score * 0.3
+                + safety_score * 0.3
+                + completeness_score * 0.2
+                + soundness_score * 0.2
             )
 
             return {
@@ -269,7 +282,7 @@ class IELGenerator:
                 "safety": safety_score,
                 "completeness": completeness_score,
                 "soundness": soundness_score,
-                "overall": overall_score
+                "overall": overall_score,
             }
 
         except Exception as e:
@@ -291,21 +304,27 @@ class IELGenerator:
         candidates = []
 
         # Basic template for demonstration
-        candidate_id = hashlib.sha256(f"{gap.gap_type}_{gap.domain}_{datetime.now().isoformat()}".encode()).hexdigest()[:8]
+        candidate_id = hashlib.sha256(
+            f"{gap.gap_type}_{gap.domain}_{datetime.now().isoformat()}".encode()
+        ).hexdigest()[:8]
 
         candidate = IELCandidate(
             id=candidate_id,
             domain=gap.domain,
             rule_name=f"gap_fill_{gap.gap_type}",
             premises=gap.required_premises if gap.required_premises else ["H1", "H2"],
-            conclusion=gap.expected_conclusion if gap.expected_conclusion else "conclusion",
+            conclusion=(
+                gap.expected_conclusion if gap.expected_conclusion else "conclusion"
+            ),
             rule_template=f"auto_generated_{gap.gap_type}",
-            confidence=min(gap.confidence + 0.1, 0.8),  # Boost confidence slightly but cap at 0.8
+            confidence=min(
+                gap.confidence + 0.1, 0.8
+            ),  # Boost confidence slightly but cap at 0.8
             proof_obligations=[
                 f"Prove consistency with existing {gap.domain} rules",
                 f"Verify soundness for {gap.gap_type} inference",
-                "Check for potential contradictions"
-            ]
+                "Check for potential contradictions",
+            ],
         )
 
         candidates.append(candidate)
@@ -331,7 +350,7 @@ class IELGenerator:
                     premises=pattern["premises"],
                     conclusion=pattern["conclusion"],
                     rule_template=pattern["template"],
-                    confidence=pattern.get("confidence", 0.5)
+                    confidence=pattern.get("confidence", 0.5),
                 )
                 candidates.append(candidate)
 
@@ -355,7 +374,9 @@ class IELGenerator:
 
         return candidates
 
-    def _validate_candidates(self, candidates: List[IELCandidate], gap: ReasoningGap) -> List[IELCandidate]:
+    def _validate_candidates(
+        self, candidates: List[IELCandidate], gap: ReasoningGap
+    ) -> List[IELCandidate]:
         """Validate and filter candidates"""
         validated = []
 
@@ -374,10 +395,14 @@ class IELGenerator:
 
             # Generate proof obligations if required
             if self.config.require_proof_obligations:
-                candidate.proof_obligations = self._generate_proof_obligations(candidate)
+                candidate.proof_obligations = self._generate_proof_obligations(
+                    candidate
+                )
 
             # Update scores
-            candidate.consistency_score = self._consistency_checker.check_consistency(candidate)
+            candidate.consistency_score = self._consistency_checker.check_consistency(
+                candidate
+            )
             candidate.safety_score = self._safety_checker.check_safety(candidate)
 
             validated.append(candidate)
@@ -391,20 +416,20 @@ class IELGenerator:
                 "template": "□P → P",
                 "premises": ["necessity(P)"],
                 "conclusion": "P",
-                "domains": ["modal_logic", "alethic_modality"]
+                "domains": ["modal_logic", "alethic_modality"],
             },
             "temporal_always": {
                 "template": "□t P → P@t",
                 "premises": ["always(P)", "time(t)"],
                 "conclusion": "holds_at(P, t)",
-                "domains": ["temporal_logic"]
+                "domains": ["temporal_logic"],
             },
             "epistemic_knowledge": {
                 "template": "K(agent, P) ∧ K(agent, P→Q) → K(agent, Q)",
                 "premises": ["knows(agent, P)", "knows(agent, implies(P, Q))"],
                 "conclusion": "knows(agent, Q)",
-                "domains": ["epistemic_logic"]
-            }
+                "domains": ["epistemic_logic"],
+            },
         }
 
     def _load_domain_patterns(self) -> Dict[str, List[Dict[str, Any]]]:
@@ -415,7 +440,7 @@ class IELGenerator:
                     "name": "possibility_from_consistency",
                     "premises": ["consistent(P)"],
                     "conclusion": "possible(P)",
-                    "confidence": 0.8
+                    "confidence": 0.8,
                 }
             ],
             "temporal_logic": [
@@ -423,9 +448,9 @@ class IELGenerator:
                     "name": "eventually_from_always_eventually",
                     "premises": ["always(eventually(P))"],
                     "conclusion": "eventually(P)",
-                    "confidence": 0.9
+                    "confidence": 0.9,
                 }
-            ]
+            ],
         }
 
     def _find_applicable_templates(self, gap: ReasoningGap) -> List[Dict[str, Any]]:
@@ -438,7 +463,9 @@ class IELGenerator:
 
         return applicable
 
-    def _instantiate_template(self, template: Dict[str, Any], gap: ReasoningGap) -> Optional[IELCandidate]:
+    def _instantiate_template(
+        self, template: Dict[str, Any], gap: ReasoningGap
+    ) -> Optional[IELCandidate]:
         """Instantiate a template for a specific gap"""
         try:
             candidate = IELCandidate(
@@ -448,7 +475,7 @@ class IELGenerator:
                 premises=template["premises"],
                 conclusion=template["conclusion"],
                 rule_template=template["template"],
-                confidence=0.6  # Template-based confidence
+                confidence=0.6,  # Template-based confidence
             )
             return candidate
         except Exception:
@@ -459,10 +486,13 @@ class IELGenerator:
         return [
             {
                 "name": f"{source}_to_{target}",
-                "premises": [f"{source}_property(P)", f"bridge_condition({source}, {target})"],
+                "premises": [
+                    f"{source}_property(P)",
+                    f"bridge_condition({source}, {target})",
+                ],
                 "conclusion": f"{target}_property(P)",
                 "template": f"{source}(P) ∧ Bridge({source},{target}) → {target}(P)",
-                "confidence": 0.5
+                "confidence": 0.5,
             }
         ]
 
@@ -472,16 +502,22 @@ class IELGenerator:
         similarity_map = {
             "modal_logic": ["alethic_modality", "epistemic_logic"],
             "temporal_logic": ["process_logic", "interval_logic"],
-            "epistemic_logic": ["modal_logic", "doxastic_logic"]
+            "epistemic_logic": ["modal_logic", "doxastic_logic"],
         }
         return similarity_map.get(domain, [])
 
-    def _adapt_pattern_to_domain(self, pattern: Dict[str, Any], gap: ReasoningGap) -> Optional[IELCandidate]:
+    def _adapt_pattern_to_domain(
+        self, pattern: Dict[str, Any], gap: ReasoningGap
+    ) -> Optional[IELCandidate]:
         """Adapt a pattern from similar domain to target domain"""
         try:
             # Simple domain substitution
-            adapted_premises = [p.replace("similar_domain", gap.domain) for p in pattern["premises"]]
-            adapted_conclusion = pattern["conclusion"].replace("similar_domain", gap.domain)
+            adapted_premises = [
+                p.replace("similar_domain", gap.domain) for p in pattern["premises"]
+            ]
+            adapted_conclusion = pattern["conclusion"].replace(
+                "similar_domain", gap.domain
+            )
 
             candidate = IELCandidate(
                 id=f"adapted_{gap.domain}_{len(self._generation_history)}",
@@ -490,7 +526,8 @@ class IELGenerator:
                 premises=adapted_premises,
                 conclusion=adapted_conclusion,
                 rule_template=f"adapted pattern: {pattern['name']}",
-                confidence=pattern.get("confidence", 0.4) * 0.8  # Reduce confidence for adaptation
+                confidence=pattern.get("confidence", 0.4)
+                * 0.8,  # Reduce confidence for adaptation
             )
             return candidate
         except Exception:
@@ -550,17 +587,19 @@ class ConsistencyChecker:
         # Placeholder: implement detailed consistency scoring
         return 0.9
 
-    def _generate_refined_candidate(self, iel_id: str, original_content: str, evaluation_data: Dict[str, Any]) -> IELCandidate:
+    def _generate_refined_candidate(
+        self, iel_id: str, original_content: str, evaluation_data: Dict[str, Any]
+    ) -> IELCandidate:
         """Generate refined IEL candidate from evaluation feedback"""
         # Analyze weaknesses from evaluation
-        proof_metrics = evaluation_data.get('proof_metrics', {})
-        coherence_metrics = evaluation_data.get('coherence_metrics', {})
-        performance_metrics = evaluation_data.get('performance_metrics', {})
+        proof_metrics = evaluation_data.get("proof_metrics", {})
+        coherence_metrics = evaluation_data.get("coherence_metrics", {})
+        performance_metrics = evaluation_data.get("performance_metrics", {})
 
         # Extract original rule name
         rule_name = f"refined_{iel_id}"
-        for line in original_content.split('\n'):
-            if line.strip().startswith(('Lemma', 'Theorem', 'Definition')):
+        for line in original_content.split("\n"):
+            if line.strip().startswith(("Lemma", "Theorem", "Definition")):
                 parts = line.split()
                 if len(parts) > 1:
                     rule_name = f"refined_{parts[1].rstrip(':')}"
@@ -572,11 +611,11 @@ class ConsistencyChecker:
 
         # Calculate improved confidence
         base_confidence = 0.7
-        if proof_metrics.get('syntax_score', 0) < 0.5:
+        if proof_metrics.get("syntax_score", 0) < 0.5:
             base_confidence += 0.1  # Syntax improvements
-        if coherence_metrics.get('overall_coherence', 0) < 0.7:
+        if coherence_metrics.get("overall_coherence", 0) < 0.7:
             base_confidence += 0.15  # Coherence improvements
-        if performance_metrics.get('complexity_score', 0) < 0.6:
+        if performance_metrics.get("complexity_score", 0) < 0.6:
             base_confidence += 0.05  # Performance improvements
 
         refined_candidate = IELCandidate(
@@ -590,39 +629,40 @@ class ConsistencyChecker:
             proof_obligations=[
                 "Verify refined structure maintains soundness",
                 "Ensure backward compatibility with existing proofs",
-                "Validate improved coherence metrics"
-            ]
+                "Validate improved coherence metrics",
+            ],
         )
 
         return refined_candidate
 
-    def _improve_premises(self, original_content: str, proof_metrics: Dict[str, Any]) -> List[str]:
+    def _improve_premises(
+        self, original_content: str, proof_metrics: Dict[str, Any]
+    ) -> List[str]:
         """Generate improved premises based on proof weaknesses"""
         premises = ["improved_premise_1", "improved_premise_2"]
 
         # Add more structure if syntax score is low
-        if proof_metrics.get('syntax_score', 1.0) < 0.7:
-            premises.extend([
-                "well_formed_hypothesis",
-                "structured_context"
-            ])
+        if proof_metrics.get("syntax_score", 1.0) < 0.7:
+            premises.extend(["well_formed_hypothesis", "structured_context"])
 
         # Add completeness if needed
-        if proof_metrics.get('completeness_score', 1.0) < 0.8:
+        if proof_metrics.get("completeness_score", 1.0) < 0.8:
             premises.append("completeness_condition")
 
         return premises
 
-    def _improve_conclusion(self, original_content: str, coherence_metrics: Dict[str, Any]) -> str:
+    def _improve_conclusion(
+        self, original_content: str, coherence_metrics: Dict[str, Any]
+    ) -> str:
         """Generate improved conclusion based on coherence weaknesses"""
         base_conclusion = "refined_conclusion"
 
         # Improve naming if coherence is low
-        if coherence_metrics.get('naming_coherence', 1.0) < 0.7:
+        if coherence_metrics.get("naming_coherence", 1.0) < 0.7:
             base_conclusion = "logos_" + base_conclusion
 
         # Add framework alignment
-        if coherence_metrics.get('framework_coherence', 1.0) < 0.8:
+        if coherence_metrics.get("framework_coherence", 1.0) < 0.8:
             base_conclusion += "_with_framework_alignment"
 
         return base_conclusion
@@ -663,14 +703,14 @@ def main():
     import argparse
     import sys
 
-    parser = argparse.ArgumentParser(description='LOGOS IEL Generator')
-    parser.add_argument('--from-log', help='Generate from gap detection log')
-    parser.add_argument('--out', help='Output file for generated IEL')
-    parser.add_argument('--verify', help='Verify existing IEL candidate')
-    parser.add_argument('--serapi', help='SerAPI endpoint for verification')
-    parser.add_argument('--strict', action='store_true', help='Use strict verification')
-    parser.add_argument('--refine', help='Refine IELs from quality report JSON')
-    parser.add_argument('--out-dir', help='Output directory for refined IEL candidates')
+    parser = argparse.ArgumentParser(description="LOGOS IEL Generator")
+    parser.add_argument("--from-log", help="Generate from gap detection log")
+    parser.add_argument("--out", help="Output file for generated IEL")
+    parser.add_argument("--verify", help="Verify existing IEL candidate")
+    parser.add_argument("--serapi", help="SerAPI endpoint for verification")
+    parser.add_argument("--strict", action="store_true", help="Use strict verification")
+    parser.add_argument("--refine", help="Refine IELs from quality report JSON")
+    parser.add_argument("--out-dir", help="Output directory for refined IEL candidates")
 
     args = parser.parse_args()
 
@@ -682,20 +722,29 @@ def main():
             # Parse gaps from log
             gaps = []
             try:
-                with open(args.from_log, 'r') as f:
+                with open(args.from_log, "r") as f:
                     for line in f:
                         record = json.loads(line)
-                        if record.get('event_type') == 'gap_detected':
-                            gap_data = record.get('data', {})
-                            gaps.append(ReasoningGap(
-                                gap_type=gap_data.get('type', 'unknown'),
-                                domain='auto_detected',
-                                description=gap_data.get('description', f"Auto-detected gap at {gap_data.get('location', 'unknown')}"),
-                                severity=0.5 if gap_data.get('severity') == 'medium' else 0.3,
-                                required_premises=['P1', 'P2'],  # Mock premises
-                                expected_conclusion='C1',  # Mock conclusion
-                                confidence=0.5
-                            ))
+                        if record.get("event_type") == "gap_detected":
+                            gap_data = record.get("data", {})
+                            gaps.append(
+                                ReasoningGap(
+                                    gap_type=gap_data.get("type", "unknown"),
+                                    domain="auto_detected",
+                                    description=gap_data.get(
+                                        "description",
+                                        f"Auto-detected gap at {gap_data.get('location', 'unknown')}",
+                                    ),
+                                    severity=(
+                                        0.5
+                                        if gap_data.get("severity") == "medium"
+                                        else 0.3
+                                    ),
+                                    required_premises=["P1", "P2"],  # Mock premises
+                                    expected_conclusion="C1",  # Mock conclusion
+                                    confidence=0.5,
+                                )
+                            )
             except Exception as e:
                 print(f"Error reading log: {e}")
                 sys.exit(1)
@@ -710,7 +759,7 @@ def main():
             if candidates:
                 candidate = candidates[0]
                 # Convert to Coq/IEL format
-                iel_content = f'''(* Generated IEL Candidate *)
+                iel_content = f"""(* Generated IEL Candidate *)
 (* ID: {candidate.id} *)
 (* Domain: {candidate.domain} *)
 (* Generated: {candidate.generated_at.isoformat()} *)
@@ -723,8 +772,8 @@ Proof.
   {chr(10).join(f"  (* - {obligation} *)" for obligation in candidate.proof_obligations)}
   (* Auto-generated - requires manual verification *)
   Admitted.
-'''
-                with open(args.out, 'w') as f:
+"""
+                with open(args.out, "w") as f:
                     f.write(iel_content)
                 print(f"Generated candidate IEL: {args.out}")
                 print(f"Rule: {candidate.rule_name}")
@@ -736,11 +785,11 @@ Proof.
         elif args.verify:
             # Verify existing IEL candidate
             try:
-                with open(args.verify, 'r') as f:
+                with open(args.verify, "r") as f:
                     content = f.read()
 
                 # Simple verification - in practice would use SerAPI
-                if 'Admitted' in content:
+                if "Admitted" in content:
                     print("WARNING: IEL contains admitted proofs")
 
                 if args.strict:
@@ -761,13 +810,15 @@ Proof.
                 print(f"Refining IELs from quality report: {args.refine}")
 
                 # Load quality report
-                with open(args.refine, 'r') as f:
+                with open(args.refine, "r") as f:
                     report_data = json.load(f)
 
                 # Find low-quality IELs that need refinement
-                ranked_iels = report_data.get('ranked_iels', [])
-                rejected_iels = report_data.get('rejected_iels', [])
-                low_quality_iels = [iel for iel in ranked_iels if iel['overall_score'] < 0.8]
+                ranked_iels = report_data.get("ranked_iels", [])
+                rejected_iels = report_data.get("rejected_iels", [])
+                low_quality_iels = [
+                    iel for iel in ranked_iels if iel["overall_score"] < 0.8
+                ]
                 low_quality_iels.extend(rejected_iels)
 
                 if not low_quality_iels:
@@ -782,15 +833,15 @@ Proof.
                 refined_count = 0
 
                 for iel_data in low_quality_iels:
-                    iel_id = iel_data['iel_id']
-                    file_path = iel_data['file_path']
-                    score = iel_data['overall_score']
+                    iel_id = iel_data["iel_id"]
+                    file_path = iel_data["file_path"]
+                    score = iel_data["overall_score"]
 
                     print(f"Refining {iel_id} (score: {score:.3f})...")
 
                     try:
                         # Read original IEL
-                        with open(file_path, 'r') as f:
+                        with open(file_path, "r") as f:
                             original_content = f.read()
 
                         # Generate refined candidate based on weaknesses
@@ -800,9 +851,11 @@ Proof.
 
                         # Write refined IEL
                         refined_file = output_dir / f"refined_{iel_id}.v"
-                        refined_content = generator._format_iel_candidate(refined_candidate)
+                        refined_content = generator._format_iel_candidate(
+                            refined_candidate
+                        )
 
-                        with open(refined_file, 'w') as f:
+                        with open(refined_file, "w") as f:
                             f.write(refined_content)
 
                         refined_count += 1
@@ -811,7 +864,9 @@ Proof.
                     except Exception as e:
                         print(f"  Failed to refine {iel_id}: {e}")
 
-                print(f"Refinement complete: {refined_count} candidates generated in {args.out_dir}")
+                print(
+                    f"Refinement complete: {refined_count} candidates generated in {args.out_dir}"
+                )
 
             except Exception as e:
                 print(f"Refinement failed: {e}")
@@ -824,5 +879,5 @@ Proof.
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

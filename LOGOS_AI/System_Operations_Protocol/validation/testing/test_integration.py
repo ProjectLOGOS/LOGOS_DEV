@@ -8,9 +8,9 @@ with proof-gated validation and trinity vector coherence.
 
 import asyncio
 import logging
-import sys
 import os
-from typing import Dict, Any
+import sys
+from typing import Any, Dict
 
 # Add LOGOS v7 to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -22,13 +22,15 @@ def test_imports():
 
     try:
         from LOGOS_AGI.v7.adaptive_reasoning.bayesian_inference import (
-            UnifiedBayesianInferencer,
             TrinityVector,
+            UnifiedBayesianInferencer,
         )
 
         print("  ✓ Bayesian inference components")
 
-        from LOGOS_AGI.v7.adaptive_reasoning.semantic_transformers import UnifiedSemanticTransformer
+        from LOGOS_AGI.v7.adaptive_reasoning.semantic_transformers import (
+            UnifiedSemanticTransformer,
+        )
 
         print("  ✓ Semantic transformer components")
 
@@ -36,15 +38,18 @@ def test_imports():
 
         print("  ✓ Torch adapter components")
 
-        from LOGOS_AGI.v7.runtime_services.core_service import UnifiedRuntimeService, RequestType
+        from LOGOS_AGI.v7.runtime_services.core_service import (
+            RequestType,
+            UnifiedRuntimeService,
+        )
 
         print("  ✓ Runtime service components")
 
         from LOGOS_AGI.v7.integration.adaptive_interface import (
             LOGOSv7UnifiedInterface,
-            create_logos_v7_interface,
-            UnifiedRequest,
             OperationMode,
+            UnifiedRequest,
+            create_logos_v7_interface,
         )
 
         print("  ✓ Unified interface components")
@@ -62,8 +67,12 @@ def test_component_initialization():
 
     try:
         # Import with fallback handling
-        from LOGOS_AGI.v7.adaptive_reasoning.bayesian_inference import UnifiedBayesianInferencer
-        from LOGOS_AGI.v7.adaptive_reasoning.semantic_transformers import UnifiedSemanticTransformer
+        from LOGOS_AGI.v7.adaptive_reasoning.bayesian_inference import (
+            UnifiedBayesianInferencer,
+        )
+        from LOGOS_AGI.v7.adaptive_reasoning.semantic_transformers import (
+            UnifiedSemanticTransformer,
+        )
         from LOGOS_AGI.v7.adaptive_reasoning.torch_adapters import UnifiedTorchAdapter
         from LOGOS_AGI.v7.runtime_services.core_service import UnifiedRuntimeService
 
@@ -95,7 +104,9 @@ def test_trinity_vector_creation():
         from LOGOS_AGI.v7.adaptive_reasoning.bayesian_inference import TrinityVector
 
         # Create trinity vector
-        trinity = TrinityVector(e_identity=0.4, g_experience=0.3, t_logos=0.3, confidence=0.8)
+        trinity = TrinityVector(
+            e_identity=0.4, g_experience=0.3, t_logos=0.3, confidence=0.8
+        )
 
         print(
             f"  ✓ Trinity vector created: E={trinity.e_identity}, G={trinity.g_experience}, T={trinity.t_logos}"
@@ -115,9 +126,9 @@ async def test_unified_interface():
 
     try:
         from LOGOS_AGI.v7.integration.adaptive_interface import (
-            create_logos_v7_interface,
-            UnifiedRequest,
             OperationMode,
+            UnifiedRequest,
+            create_logos_v7_interface,
         )
 
         # Create interface
@@ -167,7 +178,9 @@ async def test_unified_interface():
             mode=OperationMode.BALANCED,
         )
 
-        transformation_response = await interface.process_unified_request(transformation_request)
+        transformation_response = await interface.process_unified_request(
+            transformation_request
+        )
         print(f"  ✓ Transformation processed: {transformation_response.result.value}")
 
         # Check system status
@@ -191,12 +204,12 @@ def test_proof_gate_validation():
     print("\nTesting proof gate validation...")
 
     try:
+        from LOGOS_AGI.v7.adaptive_reasoning.bayesian_inference import TrinityVector
         from LOGOS_AGI.v7.integration.adaptive_interface import (
+            OperationMode,
             ProofGateInterface,
             UnifiedRequest,
-            OperationMode,
         )
-        from LOGOS_AGI.v7.adaptive_reasoning.bayesian_inference import TrinityVector
 
         # Create proof gate
         proof_gate = ProofGateInterface(verification_threshold=0.7)

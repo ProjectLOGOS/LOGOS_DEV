@@ -30,10 +30,16 @@ from packaging import version
 from torch import Tensor, device, nn
 from tqdm.autonotebook import trange
 from transformers import PreTrainedModel, is_torch_npu_available
-from transformers.dynamic_module_utils import get_class_from_dynamic_module, get_relative_import_files
+from transformers.dynamic_module_utils import (
+    get_class_from_dynamic_module,
+    get_relative_import_files,
+)
 from typing_extensions import deprecated
 
-from sentence_transformers.model_card import SentenceTransformerModelCardData, generate_model_card
+from sentence_transformers.model_card import (
+    SentenceTransformerModelCardData,
+    generate_model_card,
+)
 from sentence_transformers.models import Router
 from sentence_transformers.models.Module import Module
 from sentence_transformers.similarity_functions import SimilarityFunction
@@ -193,7 +199,9 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
         self.similarity_fn_name = similarity_fn_name
         self.trust_remote_code = trust_remote_code
         self.truncate_dim = truncate_dim
-        self.model_card_data = model_card_data or self.model_card_data_class(local_files_only=local_files_only)
+        self.model_card_data = model_card_data or self.model_card_data_class(
+            local_files_only=local_files_only
+        )
         self.module_kwargs = None
         self._model_card_vars = {}
         self._model_card_text = None
@@ -219,12 +227,16 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
             logger.info(f"Use pytorch device_name: {device}")
 
         if device == "hpu" and importlib.util.find_spec("optimum") is not None:
-            from optimum.habana.transformers.modeling_utils import adapt_transformers_to_gaudi
+            from optimum.habana.transformers.modeling_utils import (
+                adapt_transformers_to_gaudi,
+            )
 
             adapt_transformers_to_gaudi()
 
         if model_name_or_path is not None and model_name_or_path != "":
-            logger.info(f"Load pretrained {self.__class__.__name__}: {model_name_or_path}")
+            logger.info(
+                f"Load pretrained {self.__class__.__name__}: {model_name_or_path}"
+            )
 
             # Old models that don't belong to any organization
             basic_transformer_models = [
@@ -303,9 +315,14 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
                 if "\\" in model_name_or_path or model_name_or_path.count("/") > 1:
                     raise FileNotFoundError(f"Path {model_name_or_path} not found")
 
-                if "/" not in model_name_or_path and model_name_or_path.lower() not in basic_transformer_models:
+                if (
+                    "/" not in model_name_or_path
+                    and model_name_or_path.lower() not in basic_transformer_models
+                ):
                     # A model from sentence-transformers
-                    model_name_or_path = __MODEL_HUB_ORGANIZATION__ + "/" + model_name_or_path
+                    model_name_or_path = (
+                        __MODEL_HUB_ORGANIZATION__ + "/" + model_name_or_path
+                    )
             has_modules = is_sentence_transformer_model(
                 model_name_or_path,
                 token,
@@ -350,7 +367,9 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
                 )
 
         if modules is not None and not isinstance(modules, OrderedDict):
-            modules = OrderedDict([(str(idx), module) for idx, module in enumerate(modules)])
+            modules = OrderedDict(
+                [(str(idx), module) for idx, module in enumerate(modules)]
+            )
 
         super().__init__(modules)
 
@@ -367,17 +386,24 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
         self.to(device)
         self.is_hpu_graph_enabled = False
 
-        if self.default_prompt_name is not None and self.default_prompt_name not in self.prompts:
+        if (
+            self.default_prompt_name is not None
+            and self.default_prompt_name not in self.prompts
+        ):
             raise ValueError(
                 f"Default prompt name '{self.default_prompt_name}' not found in the configured prompts "
                 f"dictionary with keys {list(self.prompts.keys())!r}."
             )
 
-        if self.prompts and (non_empty_keys := [k for k, v in self.prompts.items() if v != ""]):
+        if self.prompts and (
+            non_empty_keys := [k for k, v in self.prompts.items() if v != ""]
+        ):
             if len(non_empty_keys) == 1:
                 logger.info(f"1 prompt is loaded, with the key: {non_empty_keys[0]}")
             else:
-                logger.info(f"{len(non_empty_keys)} prompts are loaded, with the keys: {non_empty_keys}")
+                logger.info(
+                    f"{len(non_empty_keys)} prompts are loaded, with the keys: {non_empty_keys}"
+                )
         if self.default_prompt_name:
             logger.warning(
                 f"Default prompt name is set to '{self.default_prompt_name}'. "
@@ -389,14 +415,24 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
         # that would be a breaking change for users currently using the InstructorEmbedding project.
         # So, instead we hardcode setting it for the main INSTRUCTOR models, and otherwise give a warning if we
         # suspect the user is using an INSTRUCTOR model.
-        if model_name_or_path in ("hkunlp/instructor-base", "hkunlp/instructor-large", "hkunlp/instructor-xl"):
+        if model_name_or_path in (
+            "hkunlp/instructor-base",
+            "hkunlp/instructor-large",
+            "hkunlp/instructor-xl",
+        ):
             self.set_pooling_include_prompt(include_prompt=False)
         elif (
             model_name_or_path
             and "/" in model_name_or_path
             and "instructor" in model_name_or_path.split("/")[1].lower()
         ):
-            if any([module.include_prompt for module in self if isinstance(module, Pooling)]):
+            if any(
+                [
+                    module.include_prompt
+                    for module in self
+                    if isinstance(module, Pooling)
+                ]
+            ):
                 logger.warning(
                     "Instructor models require `include_prompt=False` in the pooling configuration. "
                     "Either update the model configuration or call `model.set_pooling_include_prompt(False)` after loading the model."
@@ -420,7 +456,9 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
         prompt: str | None = None,
         batch_size: int = 32,
         show_progress_bar: bool | None = None,
-        output_value: Literal["sentence_embedding", "token_embeddings"] | None = "sentence_embedding",
+        output_value: (
+            Literal["sentence_embedding", "token_embeddings"] | None
+        ) = "sentence_embedding",
         precision: Literal["float32", "int8", "uint8", "binary", "ubinary"] = "float32",
         convert_to_numpy: bool = True,
         convert_to_tensor: bool = False,
@@ -430,7 +468,9 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
         pool: dict[Literal["input", "output", "processes"], Any] | None = None,
         chunk_size: int | None = None,
         **kwargs,
-    ) -> list[Tensor] | np.ndarray | Tensor | dict[str, Tensor] | list[dict[str, Tensor]]:
+    ) -> (
+        list[Tensor] | np.ndarray | Tensor | dict[str, Tensor] | list[dict[str, Tensor]]
+    ):
         """
         Computes sentence embeddings specifically optimized for query representation.
 
@@ -549,7 +589,9 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
         prompt: str | None = None,
         batch_size: int = 32,
         show_progress_bar: bool | None = None,
-        output_value: Literal["sentence_embedding", "token_embeddings"] | None = "sentence_embedding",
+        output_value: (
+            Literal["sentence_embedding", "token_embeddings"] | None
+        ) = "sentence_embedding",
         precision: Literal["float32", "int8", "uint8", "binary", "ubinary"] = "float32",
         convert_to_numpy: bool = True,
         convert_to_tensor: bool = False,
@@ -559,7 +601,9 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
         pool: dict[Literal["input", "output", "processes"], Any] | None = None,
         chunk_size: int | None = None,
         **kwargs,
-    ) -> list[Tensor] | np.ndarray | Tensor | dict[str, Tensor] | list[dict[str, Tensor]]:
+    ) -> (
+        list[Tensor] | np.ndarray | Tensor | dict[str, Tensor] | list[dict[str, Tensor]]
+    ):
         """
         Computes sentence embeddings specifically optimized for document/passage representation.
 
@@ -831,7 +875,9 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
         prompt: str | None = None,
         batch_size: int = 32,
         show_progress_bar: bool | None = None,
-        output_value: Literal["sentence_embedding", "token_embeddings"] | None = "sentence_embedding",
+        output_value: (
+            Literal["sentence_embedding", "token_embeddings"] | None
+        ) = "sentence_embedding",
         precision: Literal["float32", "int8", "uint8", "binary", "ubinary"] = "float32",
         convert_to_numpy: bool = True,
         convert_to_tensor: bool = False,
@@ -841,7 +887,9 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
         pool: dict[Literal["input", "output", "processes"], Any] | None = None,
         chunk_size: int | None = None,
         **kwargs,
-    ) -> list[Tensor] | np.ndarray | Tensor | dict[str, Tensor] | list[dict[str, Tensor]]:
+    ) -> (
+        list[Tensor] | np.ndarray | Tensor | dict[str, Tensor] | list[dict[str, Tensor]]
+    ):
         """
         Computes sentence embeddings.
 
@@ -931,7 +979,10 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
 
         self.eval()
         if show_progress_bar is None:
-            show_progress_bar = logger.getEffectiveLevel() in (logging.INFO, logging.DEBUG)
+            show_progress_bar = logger.getEffectiveLevel() in (
+                logging.INFO,
+                logging.DEBUG,
+            )
 
         if convert_to_tensor:
             convert_to_numpy = False
@@ -1015,24 +1066,35 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
         length_sorted_idx = np.argsort([-self._text_length(sen) for sen in sentences])
         sentences_sorted = [sentences[int(idx)] for idx in length_sorted_idx]
 
-        for start_index in trange(0, len(sentences), batch_size, desc="Batches", disable=not show_progress_bar):
+        for start_index in trange(
+            0, len(sentences), batch_size, desc="Batches", disable=not show_progress_bar
+        ):
             sentences_batch = sentences_sorted[start_index : start_index + batch_size]
             features = self.tokenize(sentences_batch, **kwargs)
             if self.device.type == "hpu":
                 if "input_ids" in features:
                     curr_tokenize_len = features["input_ids"].shape
-                    additional_pad_len = 2 ** math.ceil(math.log2(curr_tokenize_len[1])) - curr_tokenize_len[1]
+                    additional_pad_len = (
+                        2 ** math.ceil(math.log2(curr_tokenize_len[1]))
+                        - curr_tokenize_len[1]
+                    )
                     features["input_ids"] = torch.cat(
                         (
                             features["input_ids"],
-                            torch.ones((curr_tokenize_len[0], additional_pad_len), dtype=torch.int8),
+                            torch.ones(
+                                (curr_tokenize_len[0], additional_pad_len),
+                                dtype=torch.int8,
+                            ),
                         ),
                         -1,
                     )
                     features["attention_mask"] = torch.cat(
                         (
                             features["attention_mask"],
-                            torch.zeros((curr_tokenize_len[0], additional_pad_len), dtype=torch.int8),
+                            torch.zeros(
+                                (curr_tokenize_len[0], additional_pad_len),
+                                dtype=torch.int8,
+                            ),
                         ),
                         -1,
                     )
@@ -1040,7 +1102,10 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
                         features["token_type_ids"] = torch.cat(
                             (
                                 features["token_type_ids"],
-                                torch.zeros((curr_tokenize_len[0], additional_pad_len), dtype=torch.int8),
+                                torch.zeros(
+                                    (curr_tokenize_len[0], additional_pad_len),
+                                    dtype=torch.int8,
+                                ),
                             ),
                             -1,
                         )
@@ -1060,7 +1125,9 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
 
                 if output_value == "token_embeddings":
                     embeddings = []
-                    for token_emb, attention in zip(out_features[output_value], out_features["attention_mask"]):
+                    for token_emb, attention in zip(
+                        out_features[output_value], out_features["attention_mask"]
+                    ):
                         last_mask_id = len(attention) - 1
                         while last_mask_id > 0 and attention[last_mask_id].item() == 0:
                             last_mask_id -= 1
@@ -1081,7 +1148,9 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
                     embeddings = out_features[output_value]
                     embeddings = embeddings.detach()
                     if normalize_embeddings:
-                        embeddings = torch.nn.functional.normalize(embeddings, p=2, dim=1)
+                        embeddings = torch.nn.functional.normalize(
+                            embeddings, p=2, dim=1
+                        )
 
                     # fixes for #522 and #487 to avoid oom problems on gpu with large datasets
                     if convert_to_numpy:
@@ -1105,11 +1174,15 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
         elif convert_to_numpy:
             if not isinstance(all_embeddings, np.ndarray):
                 if all_embeddings and all_embeddings[0].dtype == torch.bfloat16:
-                    all_embeddings = np.asarray([emb.float().numpy() for emb in all_embeddings])
+                    all_embeddings = np.asarray(
+                        [emb.float().numpy() for emb in all_embeddings]
+                    )
                 else:
                     all_embeddings = np.asarray([emb.numpy() for emb in all_embeddings])
         elif isinstance(all_embeddings, np.ndarray):
-            all_embeddings = [torch.from_numpy(embedding) for embedding in all_embeddings]
+            all_embeddings = [
+                torch.from_numpy(embedding) for embedding in all_embeddings
+            ]
 
         if input_was_string:
             all_embeddings = all_embeddings[0]
@@ -1128,7 +1201,11 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
                 module_kwargs = {
                     key: value
                     for key, value in kwargs.items()
-                    if key in module_kwarg_keys or (hasattr(module, "forward_kwargs") and key in module.forward_kwargs)
+                    if key in module_kwarg_keys
+                    or (
+                        hasattr(module, "forward_kwargs")
+                        and key in module.forward_kwargs
+                    )
                 }
             input = module(input, **module_kwargs)
         return input
@@ -1152,7 +1229,8 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
 
     @similarity_fn_name.setter
     def similarity_fn_name(
-        self, value: Literal["cosine", "dot", "euclidean", "manhattan"] | SimilarityFunction
+        self,
+        value: Literal["cosine", "dot", "euclidean", "manhattan"] | SimilarityFunction,
     ) -> None:
         if isinstance(value, SimilarityFunction):
             value = value.value
@@ -1160,16 +1238,24 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
 
         if value is not None:
             self._similarity = SimilarityFunction.to_similarity_fn(value)
-            self._similarity_pairwise = SimilarityFunction.to_similarity_pairwise_fn(value)
+            self._similarity_pairwise = SimilarityFunction.to_similarity_pairwise_fn(
+                value
+            )
 
     @overload
     def similarity(self, embeddings1: Tensor, embeddings2: Tensor) -> Tensor: ...
 
     @overload
-    def similarity(self, embeddings1: npt.NDArray[np.float32], embeddings2: npt.NDArray[np.float32]) -> Tensor: ...
+    def similarity(
+        self, embeddings1: npt.NDArray[np.float32], embeddings2: npt.NDArray[np.float32]
+    ) -> Tensor: ...
 
     @property
-    def similarity(self) -> Callable[[Tensor | npt.NDArray[np.float32], Tensor | npt.NDArray[np.float32]], Tensor]:
+    def similarity(
+        self,
+    ) -> Callable[
+        [Tensor | npt.NDArray[np.float32], Tensor | npt.NDArray[np.float32]], Tensor
+    ]:
         """
         Compute the similarity between two collections of embeddings. The output will be a matrix with the similarity
         scores between all embeddings from the first parameter and all embeddings from the second parameter. This
@@ -1213,7 +1299,9 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
         return self._similarity
 
     @overload
-    def similarity_pairwise(self, embeddings1: Tensor, embeddings2: Tensor) -> Tensor: ...
+    def similarity_pairwise(
+        self, embeddings1: Tensor, embeddings2: Tensor
+    ) -> Tensor: ...
 
     @overload
     def similarity_pairwise(
@@ -1223,7 +1311,9 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
     @property
     def similarity_pairwise(
         self,
-    ) -> Callable[[Tensor | npt.NDArray[np.float32], Tensor | npt.NDArray[np.float32]], Tensor]:
+    ) -> Callable[
+        [Tensor | npt.NDArray[np.float32], Tensor | npt.NDArray[np.float32]], Tensor
+    ]:
         """
         Compute the similarity between two collections of embeddings. The output will be a vector with the similarity
         scores between each pair of embeddings.
@@ -1288,7 +1378,11 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
                 logger.info("CUDA/NPU is not available. Starting 4 CPU workers")
                 target_devices = ["cpu"] * 4
 
-        logger.info("Start multi-process pool on devices: {}".format(", ".join(map(str, target_devices))))
+        logger.info(
+            "Start multi-process pool on devices: {}".format(
+                ", ".join(map(str, target_devices))
+            )
+        )
 
         self.to("cpu")
         self.share_memory()
@@ -1309,7 +1403,9 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
         return {"input": input_queue, "output": output_queue, "processes": processes}
 
     @staticmethod
-    def stop_multi_process_pool(pool: dict[Literal["input", "output", "processes"], Any]) -> None:
+    def stop_multi_process_pool(
+        pool: dict[Literal["input", "output", "processes"], Any],
+    ) -> None:
         """
         Stops all processes started with start_multi_process_pool.
 
@@ -1447,7 +1543,9 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
         try:
             # Determine chunk size if not provided. As a default, aim for 10 chunks per process, with a maximum of 5000 sentences per chunk.
             if chunk_size is None:
-                chunk_size = min(math.ceil(len(inputs) / len(pool["processes"]) / 10), 5000)
+                chunk_size = min(
+                    math.ceil(len(inputs) / len(pool["processes"]) / 10), 5000
+                )
                 chunk_size = max(chunk_size, 1)  # Ensure chunk_size is at least 1
 
             input_queue: torch.multiprocessing.Queue = pool["input"]
@@ -1461,7 +1559,12 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
 
             # Collect results from the output queue
             output_list = sorted(
-                [output_queue.get() for _ in trange(chunk_id + 1, desc="Chunks", disable=not show_progress_bar)],
+                [
+                    output_queue.get()
+                    for _ in trange(
+                        chunk_id + 1, desc="Chunks", disable=not show_progress_bar
+                    )
+                ],
                 key=lambda x: x[0],
             )
             if input_was_string:
@@ -1491,7 +1594,10 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
 
     @staticmethod
     def _encode_multi_process_worker(
-        target_device: str, model: SentenceTransformer, input_queue: Queue, results_queue: Queue
+        target_device: str,
+        model: SentenceTransformer,
+        input_queue: Queue,
+        results_queue: Queue,
     ) -> None:
         """
         Internal working process to encode sentences in multi-process setup
@@ -1538,7 +1644,10 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
         # If the tokenizer adds a special EOS token, we do not count it as part of the prompt length.
         # This is to ensure that the prompt length does not include the EOS token.
         last_token = tokenized_prompt["input_ids"][..., -1].item()
-        if hasattr(self.tokenizer, "all_special_ids") and last_token in self.tokenizer.all_special_ids:
+        if (
+            hasattr(self.tokenizer, "all_special_ids")
+            and last_token in self.tokenizer.all_special_ids
+        ):
             prompt_length -= 1
         self._prompt_length_mapping[(prompt, *kwargs.values())] = prompt_length
         return prompt_length
@@ -1555,7 +1664,9 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
 
         return None
 
-    def tokenize(self, texts: list[str] | list[dict] | list[tuple[str, str]], **kwargs) -> dict[str, Tensor]:
+    def tokenize(
+        self, texts: list[str] | list[dict] | list[tuple[str, str]], **kwargs
+    ) -> dict[str, Tensor]:
         """
         Tokenizes the texts.
 
@@ -1571,7 +1682,9 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
         except TypeError:
             return self[0].tokenize(texts)
 
-    def get_sentence_features(self, *features) -> dict[Literal["sentence_embedding"], Tensor]:
+    def get_sentence_features(
+        self, *features
+    ) -> dict[Literal["sentence_embedding"], Tensor]:
         return self._first_module().get_sentence_features(*features)
 
     def get_sentence_embedding_dimension(self) -> int | None:
@@ -1583,7 +1696,9 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
         """
         output_dim = None
         for mod in reversed(self._modules.values()):
-            sent_embedding_dim_method = getattr(mod, "get_sentence_embedding_dimension", None)
+            sent_embedding_dim_method = getattr(
+                mod, "get_sentence_embedding_dimension", None
+            )
             if callable(sent_embedding_dim_method):
                 output_dim = sent_embedding_dim_method()
                 break
@@ -1666,7 +1781,11 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
             "pytorch": torch.__version__,
         }
 
-        with open(os.path.join(path, "config_sentence_transformers.json"), "w", encoding="utf8") as fOut:
+        with open(
+            os.path.join(path, "config_sentence_transformers.json"),
+            "w",
+            encoding="utf8",
+        ) as fOut:
             config = self._model_config.copy()
             config["prompts"] = self.prompts
             config["default_prompt_name"] = self.default_prompt_name
@@ -1712,8 +1831,17 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
             elif not class_ref.startswith("sentence_transformers."):
                 class_ref = f"{class_ref}.{type(module).__name__}"
 
-            module_config = {"idx": idx, "name": name, "path": os.path.basename(model_path), "type": class_ref}
-            if self.module_kwargs and name in self.module_kwargs and (module_kwargs := self.module_kwargs[name]):
+            module_config = {
+                "idx": idx,
+                "name": name,
+                "path": os.path.basename(model_path),
+                "type": class_ref,
+            }
+            if (
+                self.module_kwargs
+                and name in self.module_kwargs
+                and (module_kwargs := self.module_kwargs[name])
+            ):
                 module_config["kwargs"] = module_kwargs
             modules_config.append(module_config)
 
@@ -1761,7 +1889,10 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
         return model_card
 
     def _create_model_card(
-        self, path: str, model_name: str | None = None, train_datasets: list[str] | None = "deprecated"
+        self,
+        path: str,
+        model_name: str | None = None,
+        train_datasets: list[str] | None = "deprecated",
     ) -> None:
         """
         Create an automatic model and stores it in the specified path. If no training was done and the loaded model
@@ -1782,7 +1913,10 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
 
         # If we loaded a Sentence Transformer model from the Hub, and no training was done, then
         # we don't generate a new model card, but reuse the old one instead.
-        if self._model_card_text and "generated_from_trainer" not in self.model_card_data.tags:
+        if (
+            self._model_card_text
+            and "generated_from_trainer" not in self.model_card_data.tags
+        ):
             model_card = self._model_card_text
             model_card = self._update_default_model_id(model_card)
         else:
@@ -1904,7 +2038,9 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
             repo_type=None,
             exist_ok=exist_ok or create_pr,
         )
-        repo_id = repo_url.repo_id  # Update the repo_id in case the old repo_id didn't contain a user or organization
+        repo_id = (
+            repo_url.repo_id
+        )  # Update the repo_id in case the old repo_id didn't contain a user or organization
         self.model_card_data.set_model_id(repo_id)
         if revision is not None:
             api.create_branch(repo_id=repo_id, branch=revision, exist_ok=True)
@@ -1914,7 +2050,9 @@ class SentenceTransformer(nn.Sequential, FitMixin, PeftAdapterMixin):
             if backend == "torch":
                 commit_message = f"Add new {self.__class__.__name__} model"
             else:
-                commit_message = f"Add new {self.__class__.__name__} model with an {backend} backend"
+                commit_message = (
+                    f"Add new {self.__class__.__name__} model with an {backend} backend"
+                )
 
         commit_description = ""
         if create_pr:
@@ -1961,7 +2099,9 @@ print(similarities)
             )
         else:
             with tempfile.TemporaryDirectory() as tmp_dir:
-                create_model_card = replace_model_card or not os.path.exists(os.path.join(tmp_dir, "README.md"))
+                create_model_card = replace_model_card or not os.path.exists(
+                    os.path.join(tmp_dir, "README.md")
+                )
                 self.save_pretrained(
                     tmp_dir,
                     model_name=repo_url.repo_id,
@@ -1998,7 +2138,9 @@ print(similarities)
         else:
             return sum([len(t) for t in text])  # Sum of length of individual strings
 
-    def evaluate(self, evaluator: SentenceEvaluator, output_path: str | None = None) -> dict[str, float] | float:
+    def evaluate(
+        self, evaluator: SentenceEvaluator, output_path: str | None = None
+    ) -> dict[str, float] | float:
         """
         Evaluate the model based on an evaluator
 
@@ -2054,9 +2196,19 @@ print(similarities)
             "revision": revision,
             "local_files_only": local_files_only,
         }
-        model_kwargs = shared_kwargs if model_kwargs is None else {**shared_kwargs, **model_kwargs}
-        tokenizer_kwargs = shared_kwargs if tokenizer_kwargs is None else {**shared_kwargs, **tokenizer_kwargs}
-        config_kwargs = shared_kwargs if config_kwargs is None else {**shared_kwargs, **config_kwargs}
+        model_kwargs = (
+            shared_kwargs if model_kwargs is None else {**shared_kwargs, **model_kwargs}
+        )
+        tokenizer_kwargs = (
+            shared_kwargs
+            if tokenizer_kwargs is None
+            else {**shared_kwargs, **tokenizer_kwargs}
+        )
+        config_kwargs = (
+            shared_kwargs
+            if config_kwargs is None
+            else {**shared_kwargs, **config_kwargs}
+        )
 
         transformer_model = Transformer(
             model_name_or_path,
@@ -2066,7 +2218,9 @@ print(similarities)
             config_args=config_kwargs,
             backend=self.backend,
         )
-        pooling_model = Pooling(transformer_model.get_word_embedding_dimension(), "mean")
+        pooling_model = Pooling(
+            transformer_model.get_word_embedding_dimension(), "mean"
+        )
         if not local_files_only:
             self.model_card_data.set_base_model(model_name_or_path, revision=revision)
         return [transformer_model, pooling_model]
@@ -2085,7 +2239,9 @@ print(similarities)
             return import_from_string(class_ref)
 
         if trust_remote_code or os.path.exists(model_name_or_path):
-            code_revision = model_kwargs.pop("code_revision", None) if model_kwargs else None
+            code_revision = (
+                model_kwargs.pop("code_revision", None) if model_kwargs else None
+            )
             try:
                 return get_class_from_dynamic_module(
                     class_ref,
@@ -2144,7 +2300,9 @@ print(similarities)
             if (
                 "__version__" in self._model_config
                 and "sentence_transformers" in self._model_config["__version__"]
-                and version.parse(self._model_config["__version__"]["sentence_transformers"])
+                and version.parse(
+                    self._model_config["__version__"]["sentence_transformers"]
+                )
                 > version.parse(__version__)
             ):
                 logger.warning(
@@ -2155,13 +2313,19 @@ print(similarities)
 
             # Set score functions & prompts if not already overridden by the __init__ calls
             if self._similarity_fn_name is None:
-                self.similarity_fn_name = self._model_config.get("similarity_fn_name", None)
+                self.similarity_fn_name = self._model_config.get(
+                    "similarity_fn_name", None
+                )
             # Only update prompts that aren't already set by the user or defaults
-            for prompt_name, prompt_text in self._model_config.get("prompts", {}).items():
+            for prompt_name, prompt_text in self._model_config.get(
+                "prompts", {}
+            ).items():
                 if prompt_name not in self.prompts or not self.prompts[prompt_name]:
                     self.prompts[prompt_name] = prompt_text
             if not self.default_prompt_name:
-                self.default_prompt_name = self._model_config.get("default_prompt_name", None)
+                self.default_prompt_name = self._model_config.get(
+                    "default_prompt_name", None
+                )
             if "model_type" not in self._model_config.keys():
                 self._model_config["model_type"] = self.__class__.__name__
 
@@ -2232,7 +2396,9 @@ print(similarities)
                         config_kwargs=config_kwargs,
                         backend=self.backend,
                     )
-                    module = module_class(model_name_or_path, **common_transformer_init_kwargs)
+                    module = module_class(
+                        model_name_or_path, **common_transformer_init_kwargs
+                    )
 
                 else:
                     # Old modules that don't support the new loading method and don't seem Transformer-based
@@ -2281,7 +2447,9 @@ print(similarities)
         return modules, module_kwargs
 
     @staticmethod
-    @deprecated("SentenceTransformer.load(...) is deprecated, use SentenceTransformer(...) instead.")
+    @deprecated(
+        "SentenceTransformer.load(...) is deprecated, use SentenceTransformer(...) instead."
+    )
     def load(input_path) -> SentenceTransformer:
         return SentenceTransformer(input_path)
 
@@ -2291,7 +2459,9 @@ print(similarities)
         Get torch.device from module, assuming that the whole module has one device.
         In case there are no PyTorch parameters, fall back to CPU.
         """
-        if (transformers_model := self.transformers_model) is not None and hasattr(transformers_model, "device"):
+        if (transformers_model := self.transformers_model) is not None and hasattr(
+            transformers_model, "device"
+        ):
             return transformers_model.device
 
         try:
@@ -2300,7 +2470,9 @@ print(similarities)
             # For nn.DataParallel compatibility in PyTorch 1.5
 
             def find_tensor_attributes(module: nn.Module) -> list[tuple[str, Tensor]]:
-                tuples = [(k, v) for k, v in module.__dict__.items() if torch.is_tensor(v)]
+                tuples = [
+                    (k, v) for k, v in module.__dict__.items() if torch.is_tensor(v)
+                ]
                 return tuples
 
             gen = self._named_members(get_members_fn=find_tensor_attributes)
@@ -2413,7 +2585,9 @@ print(similarities)
         # Propagate the gradient checkpointing to the transformer model
         for child in self.modules():
             if isinstance(child, PreTrainedModel):
-                return child.gradient_checkpointing_enable(gradient_checkpointing_kwargs)
+                return child.gradient_checkpointing_enable(
+                    gradient_checkpointing_kwargs
+                )
 
     def _get_model_type(
         self,
@@ -2457,4 +2631,6 @@ print(similarities)
 
         with open(config_sentence_transformers_json_path, encoding="utf8") as fIn:
             config = json.load(fIn)
-            return config.get("model_type", "SentenceTransformer")  # Default to "SentenceTransformer" if not specified
+            return config.get(
+                "model_type", "SentenceTransformer"
+            )  # Default to "SentenceTransformer" if not specified

@@ -8,8 +8,8 @@ This domain focuses on the praxis of knowledge, belief, and epistemology:
 - Knowledge acquisition and validation
 """
 
-from .knowledge_system import KnowledgeSystem
-from .epistemological_framework import EpistemologicalFramework
 from .belief_network import BeliefNetwork
+from .epistemological_framework import EpistemologicalFramework
+from .knowledge_system import KnowledgeSystem
 
-__all__ = ['KnowledgeSystem', 'EpistemologicalFramework', 'BeliefNetwork']
+__all__ = ["KnowledgeSystem", "EpistemologicalFramework", "BeliefNetwork"]

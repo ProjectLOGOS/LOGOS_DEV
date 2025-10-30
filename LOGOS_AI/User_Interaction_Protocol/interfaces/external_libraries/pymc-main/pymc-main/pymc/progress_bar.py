@@ -326,7 +326,10 @@ class ProgressBarManager:
                     sampling_speed=0,
                     speed_unit="draws/s",
                     failing=False,
-                    **{stat: value[chain_idx] for stat, value in self.progress_stats.items()},
+                    **{
+                        stat: value[chain_idx]
+                        for stat, value in self.progress_stats.items()
+                    },
                 )
                 for chain_idx in range(self.chains)
             ]
@@ -360,7 +363,9 @@ class ProgressBarManager:
 
         chain_progress_stats = [
             update_stats_fn(step_stats)
-            for update_stats_fn, step_stats in zip(self.update_stats_functions, stats, strict=True)
+            for update_stats_fn, step_stats in zip(
+                self.update_stats_functions, stats, strict=True
+            )
         ]
         for step_stats in chain_progress_stats:
             for key, val in step_stats.items():
@@ -397,7 +402,9 @@ class ProgressBarManager:
             )
 
     def create_progress_bar(self, step_columns, progressbar, progressbar_theme):
-        columns = [TextColumn("{task.fields[draws]}", table_column=Column("Draws", ratio=1))]
+        columns = [
+            TextColumn("{task.fields[draws]}", table_column=Column("Draws", ratio=1))
+        ]
 
         if self.full_stats:
             columns += step_columns

@@ -30,13 +30,19 @@ def demo_action_authorization():
         "properties": {"safe": True, "validated": True},
     }
 
-    provenance = {"user": "demo_user", "source": "main_demo", "timestamp": int(time.time())}
+    provenance = {
+        "user": "demo_user",
+        "source": "main_demo",
+        "timestamp": int(time.time()),
+    }
 
     try:
         result = nexus.handle_request("demo_action", request, provenance)
         if result["success"]:
             print(f"✓ Action authorized: {result['success']}")
-            print(f"  Proof token: {result['authorization']['proof_token']['proof_id'][:8]}...")
+            print(
+                f"  Proof token: {result['authorization']['proof_token']['proof_id'][:8]}..."
+            )
             return True
         else:
             print(f"✗ Action failed: {result.get('error', 'Unknown error')}")
@@ -57,7 +63,11 @@ def demo_plan_creation():
 
     goal = "Complete demo workflow"
     context = {"complexity": "low", "resources": "sufficient"}
-    provenance = {"planner": "archon", "source": "main_demo", "timestamp": int(time.time())}
+    provenance = {
+        "planner": "archon",
+        "source": "main_demo",
+        "timestamp": int(time.time()),
+    }
 
     try:
         plan_result = planner.create_plan(goal, context, provenance)
@@ -134,7 +144,11 @@ def demo_drift_reconciliation():
 
     harmonizer = IntegrationHarmonizer()
 
-    provenance = {"system_id": "demo_system", "source": "main_demo", "timestamp": int(time.time())}
+    provenance = {
+        "system_id": "demo_system",
+        "source": "main_demo",
+        "timestamp": int(time.time()),
+    }
 
     try:
         # Test low drift (should pass)
@@ -166,7 +180,11 @@ def demo_proof_failure():
     # Request that should be denied (contains DENY pattern)
     request = {"state": {"system": "DENY_active"}, "properties": {"safe": False}}
 
-    provenance = {"user": "demo_user", "source": "failure_demo", "timestamp": int(time.time())}
+    provenance = {
+        "user": "demo_user",
+        "source": "failure_demo",
+        "timestamp": int(time.time()),
+    }
 
     try:
         result = nexus.handle_request("DENY_action", request, provenance)
@@ -198,8 +216,8 @@ def demo_trinity_gui():
     print("  • Simplified interface (proof window removed)")
 
     import subprocess
-    import webbrowser
     import time
+    import webbrowser
 
     try:
         # Launch gui.py directly
@@ -210,7 +228,7 @@ def demo_trinity_gui():
             [sys.executable, gui_path],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            cwd=os.path.dirname(__file__)
+            cwd=os.path.dirname(__file__),
         )
 
         # Wait for server startup
@@ -306,7 +324,9 @@ def main():
         client = PXLClient("http://127.0.0.1:8088")
         health = client.health_check()
         if health.get("status") == "ok":
-            print(f"✓ PXL server running (kernel: {health.get('kernel_hash', 'unknown')})")
+            print(
+                f"✓ PXL server running (kernel: {health.get('kernel_hash', 'unknown')})"
+            )
         else:
             print("⚠ PXL server not responding - using stub behavior")
     except Exception as e:

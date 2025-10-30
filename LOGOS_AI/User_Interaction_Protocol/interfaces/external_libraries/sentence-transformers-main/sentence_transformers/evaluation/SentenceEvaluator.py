@@ -28,7 +28,11 @@ class SentenceEvaluator:
         self.primary_metric = None
 
     def __call__(
-        self, model: SentenceTransformer, output_path: str | None = None, epoch: int = -1, steps: int = -1
+        self,
+        model: SentenceTransformer,
+        output_path: str | None = None,
+        epoch: int = -1,
+        steps: int = -1,
     ) -> float | dict[str, float]:
         """
         This is called during training to evaluate the model.
@@ -54,7 +58,9 @@ class SentenceEvaluator:
         """
         pass
 
-    def prefix_name_to_metrics(self, metrics: dict[str, float], name: str) -> dict[str, float]:
+    def prefix_name_to_metrics(
+        self, metrics: dict[str, float], name: str
+    ) -> dict[str, float]:
         def maybe_to_float(value: Any) -> Any:
             try:
                 return float(value)
@@ -63,13 +69,21 @@ class SentenceEvaluator:
 
         if not name:
             return {key: maybe_to_float(value) for key, value in metrics.items()}
-        metrics = {name + "_" + key: maybe_to_float(value) for key, value in metrics.items()}
-        if hasattr(self, "primary_metric") and not self.primary_metric.startswith(name + "_"):
+        metrics = {
+            name + "_" + key: maybe_to_float(value) for key, value in metrics.items()
+        }
+        if hasattr(self, "primary_metric") and not self.primary_metric.startswith(
+            name + "_"
+        ):
             self.primary_metric = name + "_" + self.primary_metric
         return metrics
 
     def store_metrics_in_model_card_data(
-        self, model: SentenceTransformer, metrics: dict[str, Any], epoch: int = 0, step: int = 0
+        self,
+        model: SentenceTransformer,
+        metrics: dict[str, Any],
+        epoch: int = 0,
+        step: int = 0,
     ) -> None:
         model.model_card_data.set_evaluation_metrics(self, metrics, epoch, step)
 
@@ -106,7 +120,9 @@ class SentenceEvaluator:
         model: SentenceTransformer,
         sentences: str | list[str] | np.ndarray,
         **kwargs,
-    ) -> list[Tensor] | np.ndarray | Tensor | dict[str, Tensor] | list[dict[str, Tensor]]:
+    ) -> (
+        list[Tensor] | np.ndarray | Tensor | dict[str, Tensor] | list[dict[str, Tensor]]
+    ):
         """
         Call the encoder method of the model pass
 

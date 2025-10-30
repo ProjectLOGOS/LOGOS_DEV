@@ -139,7 +139,9 @@ def health():
     global sertop_process, sertop_available
 
     # Check if sertop is still alive
-    sertop_alive = sertop_process and sertop_process.poll() is None if sertop_available else False
+    sertop_alive = (
+        sertop_process and sertop_process.poll() is None if sertop_available else False
+    )
 
     return jsonify(
         {
@@ -196,7 +198,9 @@ def prove():
                 exec_result = send_sertop_command("(Exec 1)")
 
                 # Check if proof succeeded (simplified check)
-                if "error" not in exec_result and "Error" not in exec_result.get("response", ""):
+                if "error" not in exec_result and "Error" not in exec_result.get(
+                    "response", ""
+                ):
                     return jsonify(
                         {
                             "ok": True,
@@ -227,7 +231,14 @@ def prove():
     if goal.startswith("BOX(") and goal.endswith(")"):
         inner_goal = goal[4:-1]
         # Enhanced validation logic
-        valid_keywords = ["Good", "TrueP", "Coherent", "preserves", "consistency", "commutes"]
+        valid_keywords = [
+            "Good",
+            "TrueP",
+            "Coherent",
+            "preserves",
+            "consistency",
+            "commutes",
+        ]
         if any(keyword in inner_goal for keyword in valid_keywords):
             return jsonify(
                 {

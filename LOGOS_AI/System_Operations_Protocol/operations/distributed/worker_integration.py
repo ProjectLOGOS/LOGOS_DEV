@@ -10,51 +10,63 @@ This module enables seamless integration of worker capabilities into the main LO
 """
 
 import asyncio
-import aiohttp
 import json
 import logging
-from typing import Dict, List, Any, Optional, Union
+import time
 from dataclasses import dataclass
 from enum import Enum
-import time
+from typing import Any, Dict, List, Optional, Union
+
+import aiohttp
 
 logger = logging.getLogger(__name__)
 
+
 class WorkerType(Enum):
     """Types of reasoning workers"""
+
     TETRAGNOS = "tetragnos"
     TELOS = "telos"
     THONOC = "thonoc"
 
+
 @dataclass
 class WorkerConfig:
     """Configuration for a worker service"""
+
     name: str
     url: str
     timeout: int = 30
     retries: int = 3
 
+
 @dataclass
 class WorkerRequest:
     """Request to send to a worker"""
+
     worker_type: WorkerType
     task: str
     parameters: Dict[str, Any]
     priority: str = "normal"
     timeout: Optional[int] = None
 
+
 @dataclass
 class WorkerResponse:
     """Response from a worker"""
+
     success: bool
     result: Any
     worker_type: WorkerType
     execution_time: float
     error: Optional[str] = None
 
+
 class WorkerIntegrationError(Exception):
     """Error raised when worker integration fails"""
+
     pass
+
 
 class WorkerIntegrationSystem:
     """
@@ -67,20 +79,14 @@ class WorkerIntegrationSystem:
     def __init__(self):
         self.workers = {
             WorkerType.TETRAGNOS: WorkerConfig(
-                name="TETRAGNOS",
-                url="http://localhost:8065",
-                timeout=60
+                name="TETRAGNOS", url="http://localhost:8065", timeout=60
             ),
             WorkerType.TELOS: WorkerConfig(
-                name="TELOS",
-                url="http://localhost:8066",
-                timeout=120
+                name="TELOS", url="http://localhost:8066", timeout=120
             ),
             WorkerType.THONOC: WorkerConfig(
-                name="THONOC",
-                url="http://localhost:8067",
-                timeout=90
-            )
+                name="THONOC", url="http://localhost:8067", timeout=90
+            ),
         }
 
         self.session: Optional[aiohttp.ClientSession] = None
@@ -132,7 +138,7 @@ class WorkerIntegrationSystem:
         payload = {
             "task": request.task,
             "parameters": request.parameters,
-            "priority": request.priority
+            "priority": request.priority,
         }
 
         start_time = time.time()
@@ -140,9 +146,7 @@ class WorkerIntegrationSystem:
         for attempt in range(config.retries):
             try:
                 async with self.session.post(
-                    f"{config.url}/process",
-                    json=payload,
-                    timeout=timeout
+                    f"{config.url}/process", json=payload, timeout=timeout
                 ) as response:
 
                     if response.status == 200:
@@ -153,11 +157,13 @@ class WorkerIntegrationSystem:
                             success=True,
                             result=result,
                             worker_type=request.worker_type,
-                            execution_time=execution_time
+                            execution_time=execution_time,
                         )
                     else:
                         error_text = await response.text()
-                        logger.warning(f"Worker {config.name} returned status {response.status}: {error_text}")
+                        logger.warning(
+                            f"Worker {config.name} returned status {response.status}: {error_text}"
+                        )
 
             except asyncio.TimeoutError:
                 logger.warning(f"Timeout calling {config.name} (attempt {attempt + 1})")
@@ -174,7 +180,7 @@ class WorkerIntegrationSystem:
             result=None,
             worker_type=request.worker_type,
             execution_time=execution_time,
-            error=f"Failed to call {config.name} after {config.retries} attempts"
+            error=f"Failed to call {config.name} after {config.retries} attempts",
         )
 
     async def execute_task(self, request: WorkerRequest) -> WorkerResponse:
@@ -186,7 +192,7 @@ class WorkerIntegrationSystem:
                 result=None,
                 worker_type=request.worker_type,
                 execution_time=0.0,
-                error=f"Worker {request.worker_type.value} is not healthy"
+                error=f"Worker {request.worker_type.value} is not healthy",
             )
 
         return await self._call_worker(request)
@@ -196,16 +202,18 @@ class WorkerIntegrationSystem:
         request = WorkerRequest(
             worker_type=WorkerType.TETRAGNOS,
             task="pattern_recognition",
-            parameters={"data": data, **kwargs}
+            parameters={"data": data, **kwargs},
         )
         return await self.execute_task(request)
 
-    async def causal_reasoning(self, hypothesis: str, data: Any = None, **kwargs) -> WorkerResponse:
+    async def causal_reasoning(
+        self, hypothesis: str, data: Any = None, **kwargs
+    ) -> WorkerResponse:
         """Execute causal reasoning using TELOS"""
         request = WorkerRequest(
             worker_type=WorkerType.TELOS,
             task="causal_analysis",
-            parameters={"hypothesis": hypothesis, "data": data, **kwargs}
+            parameters={"hypothesis": hypothesis, "data": data, **kwargs},
         )
         return await self.execute_task(request)
 
@@ -214,7 +222,7 @@ class WorkerIntegrationSystem:
         request = WorkerRequest(
             worker_type=WorkerType.THONOC,
             task="symbolic_computation",
-            parameters={"formula": formula, **kwargs}
+            parameters={"formula": formula, **kwargs},
         )
         return await self.execute_task(request)
 
@@ -231,13 +239,15 @@ class WorkerIntegrationSystem:
                 "url": config.url,
                 "healthy": is_healthy,
                 "timeout": config.timeout,
-                "retries": config.retries
+                "retries": config.retries,
             }
 
         return status
 
+
 # Global instance
 _worker_integration = None
+
 
 def get_worker_integration() -> WorkerIntegrationSystem:
     """Get the global worker integration instance"""
@@ -245,6 +255,7 @@ def get_worker_integration() -> WorkerIntegrationSystem:
     if _worker_integration is None:
         _worker_integration = WorkerIntegrationSystem()
     return _worker_integration
+
 
 async def initialize_workers() -> bool:
     """Initialize and verify all worker systems"""
@@ -256,12 +267,16 @@ async def initialize_workers() -> bool:
         healthy_count = sum(1 for worker in status.values() if worker["healthy"])
         total_count = len(status)
 
-        logger.info(f"Worker initialization: {healthy_count}/{total_count} systems healthy")
+        logger.info(
+            f"Worker initialization: {healthy_count}/{total_count} systems healthy"
+        )
 
         for worker_name, worker_status in status.items():
             if worker_status["healthy"]:
                 logger.info(f"✓ {worker_name} ({worker_status['url']}) is operational")
             else:
-                logger.warning(f"✗ {worker_name} ({worker_status['url']}) is not responding")
+                logger.warning(
+                    f"✗ {worker_name} ({worker_status['url']}) is not responding"
+                )
 
         return healthy_count == total_count

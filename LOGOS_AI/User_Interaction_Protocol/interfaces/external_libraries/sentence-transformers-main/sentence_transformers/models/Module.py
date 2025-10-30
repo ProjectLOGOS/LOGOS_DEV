@@ -75,7 +75,9 @@ class Module(ABC, torch.nn.Module):
         super().__init__(*args, **kwargs)
 
     @abstractmethod
-    def forward(self, features: dict[str, torch.Tensor | Any], **kwargs) -> dict[str, torch.Tensor | Any]:
+    def forward(
+        self, features: dict[str, torch.Tensor | Any], **kwargs
+    ) -> dict[str, torch.Tensor | Any]:
         """
         Forward pass of the module. This method should be overridden by subclasses to implement the specific behavior of the module.
 
@@ -332,7 +334,9 @@ class Module(ABC, torch.nn.Module):
             "local_files_only": local_files_only,
         }
         # 1. Attempt to load a safetensors file from the local or remote directory
-        safetensors_path = cls.load_file_path(model_name_or_path, filename="model.safetensors", **hub_kwargs)
+        safetensors_path = cls.load_file_path(
+            model_name_or_path, filename="model.safetensors", **hub_kwargs
+        )
         if safetensors_path is not None:
             # Either load the weights into the model or return the weights
             if model is not None:
@@ -344,18 +348,26 @@ class Module(ABC, torch.nn.Module):
 
         # 2. If safetensors file is not found, attempt to load a pytorch model file
         # from the local or remote directory
-        pytorch_model_path = cls.load_file_path(model_name_or_path, filename="pytorch_model.bin", **hub_kwargs)
+        pytorch_model_path = cls.load_file_path(
+            model_name_or_path, filename="pytorch_model.bin", **hub_kwargs
+        )
         if pytorch_model_path is None:
-            raise ValueError(f"Could not find 'model.safetensors' or 'pytorch_model.bin' in {model_name_or_path}.")
+            raise ValueError(
+                f"Could not find 'model.safetensors' or 'pytorch_model.bin' in {model_name_or_path}."
+            )
 
-        weights = torch.load(pytorch_model_path, map_location=torch.device("cpu"), weights_only=True)
+        weights = torch.load(
+            pytorch_model_path, map_location=torch.device("cpu"), weights_only=True
+        )
         if model is not None:
             model.load_state_dict(weights)
             return model
         return weights
 
     @abstractmethod
-    def save(self, output_path: str, *args, safe_serialization: bool = True, **kwargs) -> None:
+    def save(
+        self, output_path: str, *args, safe_serialization: bool = True, **kwargs
+    ) -> None:
         """
         Save the module to disk. This method should be overridden by subclasses to implement the specific behavior of the module.
 
@@ -380,11 +392,15 @@ class Module(ABC, torch.nn.Module):
             None
         """
         config = self.get_config_dict()
-        config_output_path = os.path.join(output_path, filename or self.config_file_name)
+        config_output_path = os.path.join(
+            output_path, filename or self.config_file_name
+        )
         with open(config_output_path, "w", encoding="utf-8") as f:
             json.dump(config, f, indent=4)
 
-    def save_torch_weights(self, output_path: str, safe_serialization: bool = True) -> None:
+    def save_torch_weights(
+        self, output_path: str, safe_serialization: bool = True
+    ) -> None:
         """
         Save the PyTorch weights of the module to disk.
 
@@ -399,4 +415,6 @@ class Module(ABC, torch.nn.Module):
         if safe_serialization:
             save_safetensors_model(self, os.path.join(output_path, "model.safetensors"))
         else:
-            torch.save(self.state_dict(), os.path.join(output_path, "pytorch_model.bin"))
+            torch.save(
+                self.state_dict(), os.path.join(output_path, "pytorch_model.bin")
+            )

@@ -18,12 +18,16 @@ class IntegrationHarmonizer:
         if config_path is None:
             # Default to config in parent directory
             current_dir = os.path.dirname(os.path.abspath(__file__))
-            config_path = os.path.join(os.path.dirname(current_dir), "configs", "config.json")
+            config_path = os.path.join(
+                os.path.dirname(current_dir), "configs", "config.json"
+            )
         self.reference_monitor = ReferenceMonitor(config_path)
         self.drift_threshold = drift_threshold
         self.quarantined_systems = set()
 
-    def reconcile(self, drift_score: float, provenance: dict[str, Any]) -> dict[str, Any]:
+    def reconcile(
+        self, drift_score: float, provenance: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Reconcile semantic-axiom drift with proof-gated consistency check
 
@@ -48,8 +52,12 @@ class IntegrationHarmonizer:
 
         # High drift - require consistency proof
         try:
-            obligation = f"BOX(consistency(semantics,axioms) and coherent_system({system_id}))"
-            proof_token = self.reference_monitor.require_proof_token(obligation, provenance)
+            obligation = (
+                f"BOX(consistency(semantics,axioms) and coherent_system({system_id}))"
+            )
+            proof_token = self.reference_monitor.require_proof_token(
+                obligation, provenance
+            )
 
             # Consistency proven - allow continued operation
             if system_id in self.quarantined_systems:
@@ -95,12 +103,20 @@ class IntegrationHarmonizer:
         Attempt to release a system from quarantine by proving consistency
         """
         if system_id not in self.quarantined_systems:
-            return {"released": False, "system_id": system_id, "error": "System is not quarantined"}
+            return {
+                "released": False,
+                "system_id": system_id,
+                "error": "System is not quarantined",
+            }
 
         try:
             # Require fresh consistency proof for release
-            obligation = f"BOX(consistency(semantics,axioms) and rehabilitated({system_id}))"
-            proof_token = self.reference_monitor.require_proof_token(obligation, provenance)
+            obligation = (
+                f"BOX(consistency(semantics,axioms) and rehabilitated({system_id}))"
+            )
+            proof_token = self.reference_monitor.require_proof_token(
+                obligation, provenance
+            )
 
             # Release from quarantine
             self.quarantined_systems.remove(system_id)

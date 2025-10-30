@@ -9,7 +9,9 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 
 
-def test_encode_token_embeddings(paraphrase_distilroberta_base_v1_model: SentenceTransformer) -> None:
+def test_encode_token_embeddings(
+    paraphrase_distilroberta_base_v1_model: SentenceTransformer,
+) -> None:
     """
     Test that encode(output_value='token_embeddings') works
     """
@@ -28,7 +30,9 @@ def test_encode_token_embeddings(paraphrase_distilroberta_base_v1_model: Sentenc
         assert len(model.tokenize([s])["input_ids"][0]) == e.shape[0]
 
 
-def test_encode_single_sentences(paraphrase_distilroberta_base_v1_model: SentenceTransformer) -> None:
+def test_encode_single_sentences(
+    paraphrase_distilroberta_base_v1_model: SentenceTransformer,
+) -> None:
     model = paraphrase_distilroberta_base_v1_model
     # Single sentence
     emb = model.encode("Hello Word, a test sentence")
@@ -52,7 +56,9 @@ def test_encode_single_sentences(paraphrase_distilroberta_base_v1_model: Sentenc
     assert abs(np.sum(emb) - 22.968266) < 0.007
 
 
-def test_encode_normalize(paraphrase_distilroberta_base_v1_model: SentenceTransformer) -> None:
+def test_encode_normalize(
+    paraphrase_distilroberta_base_v1_model: SentenceTransformer,
+) -> None:
     model = paraphrase_distilroberta_base_v1_model
     emb = model.encode(
         [
@@ -67,7 +73,9 @@ def test_encode_normalize(paraphrase_distilroberta_base_v1_model: SentenceTransf
         assert abs(norm - 1) < 0.001
 
 
-def test_encode_tuple_sentences(paraphrase_distilroberta_base_v1_model: SentenceTransformer) -> None:
+def test_encode_tuple_sentences(
+    paraphrase_distilroberta_base_v1_model: SentenceTransformer,
+) -> None:
     model = paraphrase_distilroberta_base_v1_model
     # Input a sentence tuple
     emb = model.encode([("Hello Word, a test sentence", "Second input for model")])

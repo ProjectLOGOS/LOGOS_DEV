@@ -14,7 +14,13 @@ from sentence_transformers.models.Module import Module
 class LSTM(Module):
     """Bidirectional LSTM running over word embeddings."""
 
-    config_keys: list[str] = ["word_embedding_dimension", "hidden_dim", "num_layers", "dropout", "bidirectional"]
+    config_keys: list[str] = [
+        "word_embedding_dimension",
+        "hidden_dim",
+        "num_layers",
+        "dropout",
+        "bidirectional",
+    ]
     config_file_name: str = "lstm_config.json"
 
     def __init__(
@@ -50,7 +56,10 @@ class LSTM(Module):
         sentence_lengths = torch.clamp(features["sentence_lengths"], min=1)
 
         packed = nn.utils.rnn.pack_padded_sequence(
-            token_embeddings, sentence_lengths.cpu(), batch_first=True, enforce_sorted=False
+            token_embeddings,
+            sentence_lengths.cpu(),
+            batch_first=True,
+            enforce_sorted=False,
         )
         packed = self.encoder(packed)
         unpack = nn.utils.rnn.pad_packed_sequence(packed[0], batch_first=True)[0]
@@ -60,7 +69,9 @@ class LSTM(Module):
     def get_word_embedding_dimension(self) -> int:
         return self.embeddings_dimension
 
-    def save(self, output_path: str, *args, safe_serialization: bool = True, **kwargs) -> None:
+    def save(
+        self, output_path: str, *args, safe_serialization: bool = True, **kwargs
+    ) -> None:
         self.save_config(output_path)
 
         # Saving LSTM models with Safetensors does not work unless the weights are on CPU
@@ -90,5 +101,7 @@ class LSTM(Module):
         }
         config = cls.load_config(model_name_or_path=model_name_or_path, **hub_kwargs)
         model = cls(**config)
-        model = cls.load_torch_weights(model_name_or_path=model_name_or_path, model=model, **hub_kwargs)
+        model = cls.load_torch_weights(
+            model_name_or_path=model_name_or_path, model=model, **hub_kwargs
+        )
         return model

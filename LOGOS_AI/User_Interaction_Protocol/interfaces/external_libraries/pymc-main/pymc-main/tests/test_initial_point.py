@@ -27,7 +27,11 @@ from pymc.initial_point import make_initial_point_fn, make_initial_point_fns_per
 
 
 def transform_fwd(rv, expected_untransformed, model):
-    return model.rvs_to_transforms[rv].forward(expected_untransformed, *rv.owner.inputs).eval()
+    return (
+        model.rvs_to_transforms[rv]
+        .forward(expected_untransformed, *rv.owner.inputs)
+        .eval()
+    )
 
 
 def transform_back(rv, transformed, model) -> np.ndarray:
@@ -38,7 +42,9 @@ class TestInitvalEvaluation:
     def test_make_initial_point_fns_per_chain_checks_kwargs(self):
         with pm.Model() as pmodel:
             A = pm.Uniform("A", 0, 1, initval=0.5)
-            B = pm.Uniform("B", lower=A, upper=1.5, default_transform=None, initval="support_point")
+            B = pm.Uniform(
+                "B", lower=A, upper=1.5, default_transform=None, initval="support_point"
+            )
         with pytest.raises(ValueError, match="Number of initval dicts"):
             make_initial_point_fns_per_chain(
                 model=pmodel,
@@ -86,23 +92,37 @@ class TestInitvalEvaluation:
         with pm.Model() as pmodel:
             one = pm.LogNormal("one", mu=np.log(1), sigma=1e-5, initval="prior")
             two = pm.Lognormal("two", mu=np.log(one * 2), sigma=1e-5, initval="prior")
-            three = pm.LogNormal("three", mu=np.log(two * 2), sigma=1e-5, initval="prior")
-            four = pm.LogNormal("four", mu=np.log(three * 2), sigma=1e-5, initval="prior")
-            five = pm.LogNormal("five", mu=np.log(four * 2), sigma=1e-5, initval="prior")
+            three = pm.LogNormal(
+                "three", mu=np.log(two * 2), sigma=1e-5, initval="prior"
+            )
+            four = pm.LogNormal(
+                "four", mu=np.log(three * 2), sigma=1e-5, initval="prior"
+            )
+            five = pm.LogNormal(
+                "five", mu=np.log(four * 2), sigma=1e-5, initval="prior"
+            )
             six = pm.LogNormal("six", mu=np.log(five * 2), sigma=1e-5, initval="prior")
 
-        ip_vals = list(make_initial_point_fn(model=pmodel, return_transformed=True)(0).values())
+        ip_vals = list(
+            make_initial_point_fn(model=pmodel, return_transformed=True)(0).values()
+        )
         assert np.allclose(np.exp(ip_vals), [1, 2, 4, 8, 16, 32], rtol=1e-3)
 
-        ip_vals = list(make_initial_point_fn(model=pmodel, return_transformed=False)(0).values())
+        ip_vals = list(
+            make_initial_point_fn(model=pmodel, return_transformed=False)(0).values()
+        )
         assert np.allclose(ip_vals, [1, 2, 4, 8, 16, 32], rtol=1e-3)
 
         pmodel.rvs_to_initial_values[four] = 1
 
-        ip_vals = list(make_initial_point_fn(model=pmodel, return_transformed=True)(0).values())
+        ip_vals = list(
+            make_initial_point_fn(model=pmodel, return_transformed=True)(0).values()
+        )
         assert np.allclose(np.exp(ip_vals), [1, 2, 4, 1, 2, 4], rtol=1e-3)
 
-        ip_vals = list(make_initial_point_fn(model=pmodel, return_transformed=False)(0).values())
+        ip_vals = list(
+            make_initial_point_fn(model=pmodel, return_transformed=False)(0).values()
+        )
         assert np.allclose(ip_vals, [1, 2, 4, 1, 2, 4], rtol=1e-3)
 
     def test_initval_resizing(self):
@@ -134,7 +154,9 @@ class TestInitvalEvaluation:
         with pm.Model() as pmodel:
             pm.Flat("A", initval="support_point")
             pm.HalfFlat("B", initval="support_point")
-        fn = make_initial_point_fn(model=pmodel, jitter_rvs={}, return_transformed=False)
+        fn = make_initial_point_fn(
+            model=pmodel, jitter_rvs={}, return_transformed=False
+        )
         iv = fn(0)
         assert iv["A"] == 0
         assert iv["B"] == 1
@@ -145,7 +167,9 @@ class TestInitvalEvaluation:
             A = pm.Flat("A", initval="support_point")
             B = pm.HalfFlat("B", initval="support_point")
             C = pm.Normal("C", mu=A + B, initval="support_point")
-        fn = make_initial_point_fn(model=pmodel, jitter_rvs={B}, return_transformed=True)
+        fn = make_initial_point_fn(
+            model=pmodel, jitter_rvs={B}, return_transformed=True
+        )
         iv = fn(0)
         # Moment of the Flat is 0
         assert iv["A"] == 0
@@ -156,7 +180,9 @@ class TestInitvalEvaluation:
         assert b_transformed != 0
         assert -1 < b_transformed < 1
         # C is centered on 0 + untransformed initval of B
-        assert np.isclose(iv["C"], np.array(0 + b_untransformed, dtype=pytensor.config.floatX))
+        assert np.isclose(
+            iv["C"], np.array(0 + b_untransformed, dtype=pytensor.config.floatX)
+        )
         # Test jitter respects seeding.
         assert fn(0) == fn(0)
         assert fn(0) != fn(1)
@@ -297,7 +323,8 @@ class TestSupportPoint:
             x = MyNormalDistribution("x", 0, 1, initval="support_point")
 
         with pytest.warns(
-            UserWarning, match="Support point not defined for variable x of type MyNormalRV"
+            UserWarning,
+            match="Support point not defined for variable x of type MyNormalRV",
         ):
             res = m.initial_point()
 

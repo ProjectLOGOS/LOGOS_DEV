@@ -5,8 +5,9 @@ Provides classes for modeling cosmic and universal systems,
 including space-time structures and cosmological principles.
 """
 
-from typing import Dict, List, Any, Optional, Tuple
 import math
+from typing import Any, Dict, List, Optional, Tuple
+
 
 class CosmicSystem:
     """
@@ -16,7 +17,9 @@ class CosmicSystem:
     fundamental physical/mathematical relationships.
     """
 
-    def __init__(self, name: str, dimensions: int = 4, constants: Dict[str, float] = None):
+    def __init__(
+        self, name: str, dimensions: int = 4, constants: Dict[str, float] = None
+    ):
         """
         Initialize a cosmic system.
 
@@ -28,37 +31,36 @@ class CosmicSystem:
         self.name = name
         self.dimensions = dimensions
         self.constants = constants or {
-            'speed_of_light': 299792458,
-            'gravitational_constant': 6.67430e-11,
-            'planck_constant': 6.62607015e-34,
-            'cosmological_constant': 1.089e-52
+            "speed_of_light": 299792458,
+            "gravitational_constant": 6.67430e-11,
+            "planck_constant": 6.62607015e-34,
+            "cosmological_constant": 1.089e-52,
         }
         self.space_time_manifold = SpaceTimeManifold(dimensions)
         self.universal_laws = []
 
     def add_universal_law(self, law: str, equation: str):
         """Add a universal law to the system."""
-        self.universal_laws.append({
-            'law': law,
-            'equation': equation,
-            'verified': False
-        })
+        self.universal_laws.append(
+            {"law": law, "equation": equation, "verified": False}
+        )
 
     def verify_law(self, law_index: int, proof: Any = None) -> bool:
         """Verify a universal law."""
         if 0 <= law_index < len(self.universal_laws):
-            self.universal_laws[law_index]['verified'] = True
+            self.universal_laws[law_index]["verified"] = True
             return True
         return False
 
     def get_cosmological_parameters(self) -> Dict[str, Any]:
         """Get current cosmological parameters."""
         return {
-            'dimensions': self.dimensions,
-            'constants': self.constants,
-            'laws_count': len(self.universal_laws),
-            'verified_laws': sum(1 for law in self.universal_laws if law['verified'])
+            "dimensions": self.dimensions,
+            "constants": self.constants,
+            "laws_count": len(self.universal_laws),
+            "verified_laws": sum(1 for law in self.universal_laws if law["verified"]),
         }
+
 
 class SpaceTimeManifold:
     """

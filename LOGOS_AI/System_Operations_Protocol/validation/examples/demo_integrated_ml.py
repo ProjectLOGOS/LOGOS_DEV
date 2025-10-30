@@ -3,17 +3,21 @@ Enhanced LOGOS Demo with External Library Integration
 Showcases all 10 library capabilities integrated with LOGOS reasoning
 """
 
-import sys
 import os
-sys.path.insert(0, os.path.abspath('.'))
+import sys
+
+sys.path.insert(0, os.path.abspath("."))
 
 from boot.extensions_loader import extensions_manager
+
 try:
     from logos_core.natural_language_processor import NaturalLanguageProcessor
+
     HAS_NLP = True
 except ImportError:
     HAS_NLP = False
 import json
+
 
 def demo_ml_integration():
     """Demo 1: Machine Learning with LOGOS reasoning"""
@@ -21,25 +25,25 @@ def demo_ml_integration():
     print("DEMO 1: ML Classification with LOGOS Validation")
     print("=" * 70)
 
-    if not extensions_manager.is_available('scikit_learn'):
+    if not extensions_manager.is_available("scikit_learn"):
         print("⚠️  Scikit-learn not available - skipping ML demo")
         return
 
     # Create a simple dataset: Logic proofs (valid=1, invalid=0)
     # Features: [axiom_count, inference_steps]
     X_train = [
-        [3, 5],   # Valid proof
-        [2, 3],   # Valid proof
-        [5, 2],   # Invalid proof (too few steps)
-        [1, 8],   # Invalid proof (too many steps for axioms)
-        [4, 6],   # Valid proof
-        [3, 4],   # Valid proof
+        [3, 5],  # Valid proof
+        [2, 3],  # Valid proof
+        [5, 2],  # Invalid proof (too few steps)
+        [1, 8],  # Invalid proof (too many steps for axioms)
+        [4, 6],  # Valid proof
+        [3, 4],  # Valid proof
     ]
     y_train = [1, 1, 0, 0, 1, 1]
 
     X_test = [
-        [3, 4],   # Should be valid
-        [5, 1],   # Should be invalid
+        [3, 4],  # Should be valid
+        [5, 1],  # Should be invalid
     ]
 
     print("Training ML model on proof validation patterns...")
@@ -47,9 +51,14 @@ def demo_ml_integration():
 
     if predictions is not None:
         print(f"✅ Model trained successfully")
-        print(f"Test case 1 [3 axioms, 4 steps]: {'Valid' if predictions[0] == 1 else 'Invalid'}")
-        print(f"Test case 2 [5 axioms, 1 step]: {'Valid' if predictions[1] == 1 else 'Invalid'}")
+        print(
+            f"Test case 1 [3 axioms, 4 steps]: {'Valid' if predictions[0] == 1 else 'Invalid'}"
+        )
+        print(
+            f"Test case 2 [5 axioms, 1 step]: {'Valid' if predictions[1] == 1 else 'Invalid'}"
+        )
         print("✓ ML-assisted proof validation operational")
+
 
 def demo_nlp_embeddings():
     """Demo 2: NLP Embeddings for semantic similarity"""
@@ -57,7 +66,7 @@ def demo_nlp_embeddings():
     print("DEMO 2: Semantic Similarity via Sentence Embeddings")
     print("=" * 70)
 
-    if not extensions_manager.is_available('sentence_transformers'):
+    if not extensions_manager.is_available("sentence_transformers"):
         print("⚠️  Sentence Transformers not available - skipping NLP demo")
         return
 
@@ -66,7 +75,7 @@ def demo_nlp_embeddings():
         "All men are mortal",
         "Socrates is a man",
         "Therefore Socrates is mortal",
-        "The sky is blue"
+        "The sky is blue",
     ]
 
     print("Generating embeddings for logical statements...")
@@ -96,32 +105,37 @@ def demo_nlp_embeddings():
         print(f"  Premise 1 ↔ Unrelated:  {sim_14:.4f}")
         print("✓ Semantic analysis operational")
 
+
 def demo_graph_reasoning():
     """Demo 3: Graph-based proof dependencies"""
     print("\n" + "=" * 70)
     print("DEMO 3: Proof Dependency Graph Analysis")
     print("=" * 70)
 
-    if not extensions_manager.is_available('networkx'):
+    if not extensions_manager.is_available("networkx"):
         print("⚠️  NetworkX not available - skipping graph demo")
         return
 
     # Build a proof dependency graph
     theorems = [
-        'Axiom1', 'Axiom2', 'Axiom3',
-        'Lemma1', 'Lemma2',
-        'Theorem1', 'Theorem2',
-        'Corollary1'
+        "Axiom1",
+        "Axiom2",
+        "Axiom3",
+        "Lemma1",
+        "Lemma2",
+        "Theorem1",
+        "Theorem2",
+        "Corollary1",
     ]
 
     dependencies = [
-        ('Axiom1', 'Lemma1'),
-        ('Axiom2', 'Lemma1'),
-        ('Axiom3', 'Lemma2'),
-        ('Lemma1', 'Theorem1'),
-        ('Lemma2', 'Theorem1'),
-        ('Theorem1', 'Theorem2'),
-        ('Theorem2', 'Corollary1'),
+        ("Axiom1", "Lemma1"),
+        ("Axiom2", "Lemma1"),
+        ("Axiom3", "Lemma2"),
+        ("Lemma1", "Theorem1"),
+        ("Lemma2", "Theorem1"),
+        ("Theorem1", "Theorem2"),
+        ("Theorem2", "Corollary1"),
     ]
 
     print("Building proof dependency graph...")
@@ -137,13 +151,16 @@ def demo_graph_reasoning():
         print(f"  Clustering coefficient: {analysis['clustering_coefficient']:.3f}")
         print("✓ Graph-based reasoning operational")
 
+
 def demo_kalman_filtering():
     """Demo 4: Kalman filter for noisy reasoning confidence"""
     print("\n" + "=" * 70)
     print("DEMO 4: Kalman Filtering for Confidence Estimation")
     print("=" * 70)
 
-    if not extensions_manager.is_available('filterpy') and not extensions_manager.is_available('pykalman'):
+    if not extensions_manager.is_available(
+        "filterpy"
+    ) and not extensions_manager.is_available("pykalman"):
         print("⚠️  No Kalman filter library available - skipping demo")
         return
 
@@ -160,6 +177,7 @@ def demo_kalman_filtering():
 
         # Calculate variance reduction
         import numpy as np
+
         raw_var = np.var(raw_confidences)
         filtered_var = np.var(filtered)
         reduction = (1 - filtered_var / raw_var) * 100
@@ -167,13 +185,14 @@ def demo_kalman_filtering():
         print(f"\nNoise reduction: {reduction:.1f}%")
         print("✓ Kalman filtering operational")
 
+
 def demo_pytorch_tensors():
     """Demo 5: PyTorch for tensor-based reasoning"""
     print("\n" + "=" * 70)
     print("DEMO 5: Tensor Operations for Matrix Logic")
     print("=" * 70)
 
-    if not extensions_manager.is_available('pytorch'):
+    if not extensions_manager.is_available("pytorch"):
         print("⚠️  PyTorch not available - skipping tensor demo")
         return
 
@@ -195,6 +214,7 @@ def demo_pytorch_tensors():
 
         # Compute transitive closure (A→D via B,C)
         import torch
+
         result = tensor.clone().float()  # Ensure float type
         for _ in range(3):  # Max path length
             result = torch.matmul(result, tensor.float())
@@ -202,6 +222,7 @@ def demo_pytorch_tensors():
 
         print(f"\nTransitive closure (reachability):\n{result.int()}")
         print("✓ Tensor-based logic operational")
+
 
 def demo_integrated_system():
     """Demo 6: Full integrated system"""
@@ -227,13 +248,14 @@ def demo_integrated_system():
     print(f"\nResponse preview: {response[:200]}...")
 
     # If we have embeddings, show semantic analysis
-    if extensions_manager.is_available('sentence_transformers'):
+    if extensions_manager.is_available("sentence_transformers"):
         embedding = extensions_manager.embed_sentence(query)
         if embedding:
             print(f"\n✅ Query embedded: {len(embedding)} dimensions")
             print("✓ Semantic indexing available for similarity search")
 
     print("\n✓ Integrated NLP + ML system operational")
+
 
 def main():
     print("=" * 70)
@@ -246,8 +268,8 @@ def main():
     extensions_manager.initialize(pxl_client=None)
 
     status = extensions_manager.get_status()
-    loaded = sum(1 for lib in status['libraries'].values() if lib['loaded'])
-    total = len(status['libraries'])
+    loaded = sum(1 for lib in status["libraries"].values() if lib["loaded"])
+    total = len(status["libraries"])
 
     print(f"✅ Extensions initialized: {loaded}/{total} libraries available")
 
@@ -263,6 +285,7 @@ def main():
     except Exception as e:
         print(f"\n⚠️  Demo error: {e}")
         import traceback
+
         traceback.print_exc()
 
     # Final summary
@@ -271,7 +294,7 @@ def main():
     print("=" * 70)
 
     audit_log = extensions_manager.get_audit_log()
-    allowed = sum(1 for entry in audit_log if entry['decision'] == 'allow')
+    allowed = sum(1 for entry in audit_log if entry["decision"] == "allow")
 
     print(f"\n📊 System Status:")
     print(f"  Active libraries: {allowed}")
@@ -279,5 +302,6 @@ def main():
     print(f"  Audit trail: Complete")
     print(f"\n✅ LOGOS AGI with ML/NLP enhancement is operational!")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

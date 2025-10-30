@@ -2,24 +2,27 @@
 Fractal Orbital Predictor Module
 Scaffold + operational code
 """
-from typing import List, Optional, Dict, Any
-import time
+
 import json
+import time
+from typing import Any, Dict, List, Optional
 
 from bayesian_inferencer import BayesianTrinityInferencer
-from ontological_node_class import OntologicalNode
 from modal_verifier import ThonocVerifier
+from ontological_node_class import OntologicalNode
+
 
 class TrinityPredictionEngine:
     def __init__(self, prior_path="bayes_priors.json"):
         self.inferencer = BayesianTrinityInferencer(prior_path)
 
-    def predict(self,
-                keywords: List[str],
-                weights: Optional[List[float]] = None,
-                log: bool = False,
-                comment: Optional[str] = None
-               ) -> Dict[str, Any]:
+    def predict(
+        self,
+        keywords: List[str],
+        weights: Optional[List[float]] = None,
+        log: bool = False,
+        comment: Optional[str] = None,
+    ) -> Dict[str, Any]:
         prior_result = self.inferencer.infer(keywords, weights)
         trinity = prior_result["trinity"]
         c = prior_result["c"]
@@ -40,9 +43,9 @@ class TrinityPredictionEngine:
             "fractal": {
                 "iterations": orbit_props["depth"],
                 "in_set": orbit_props["in_set"],
-                "type": orbit_props["type"]
+                "type": orbit_props["type"],
             },
-            "comment": comment
+            "comment": comment,
         }
 
         if log:

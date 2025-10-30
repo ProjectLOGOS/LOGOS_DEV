@@ -8,8 +8,8 @@ ontological representations, and lambda expressions.
 Dependencies: typing, thonoc_translation_engine, lambda_engine
 """
 
-from typing import Dict, List, Tuple, Optional, Union, Any
 import json
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 
 class LambdaEngine:
@@ -61,7 +61,11 @@ class PDNBridge:
         ontological = self._map_to_ontological(semantic)
 
         # Construct 3PDN representation
-        return {"SIGN": self._expr_to_sign(expr), "MIND": semantic, "BRIDGE": ontological}
+        return {
+            "SIGN": self._expr_to_sign(expr),
+            "MIND": semantic,
+            "BRIDGE": ontological,
+        }
 
     def _extract_types(self, expr: LambdaExpr) -> Dict[str, Any]:
         """Extract type information from lambda expression.
@@ -196,7 +200,9 @@ class PDNBridge:
         expr_str = str(expr)
 
         # Basic tokenization (can be enhanced)
-        tokens = expr_str.replace("(", " ( ").replace(")", " ) ").replace(".", " . ").split()
+        tokens = (
+            expr_str.replace("(", " ( ").replace(")", " ) ").replace(".", " . ").split()
+        )
 
         return tokens
 
@@ -217,7 +223,10 @@ class PDNBridge:
 
         # Determine primary dimension
         primary_dim = max(
-            ("existence", existence), ("goodness", goodness), ("truth", truth), key=lambda x: x[1]
+            ("existence", existence),
+            ("goodness", goodness),
+            ("truth", truth),
+            key=lambda x: x[1],
         )[0]
 
         # Create variable based on primary dimension
@@ -230,7 +239,9 @@ class PDNBridge:
 
         # If we have strong existence -> goodness connection, create SR E->G
         if existence > 0.7 and goodness > 0.7:
-            eg_sr = SufficientReason(OntologicalType.EXISTENCE, OntologicalType.GOODNESS, 3)
+            eg_sr = SufficientReason(
+                OntologicalType.EXISTENCE, OntologicalType.GOODNESS, 3
+            )
             if primary_dim == "existence":
                 return Application(eg_sr, var)
 
@@ -347,7 +358,9 @@ class PDNBottleneckSolver:
             "original_translation": translation,
             "optimized_lambda": str(optimized_expr),
             "optimized_3pdn": optimized_3pdn,
-            "improvement_metrics": self._calculate_improvement(translation, optimized_3pdn),
+            "improvement_metrics": self._calculate_improvement(
+                translation, optimized_3pdn
+            ),
         }
 
     def _optimize_lambda(self, expr: LambdaExpr) -> LambdaExpr:
@@ -399,7 +412,9 @@ if __name__ == "__main__":
     bottleneck_solver = PDNBottleneckSolver(bridge)
 
     # Test with a query
-    result = bottleneck_solver.optimize_translation_path("Does goodness require existence?")
+    result = bottleneck_solver.optimize_translation_path(
+        "Does goodness require existence?"
+    )
 
     print(f"Original query: {result['original_query']}")
     print(f"Optimized λ: {result['optimized_lambda']}")

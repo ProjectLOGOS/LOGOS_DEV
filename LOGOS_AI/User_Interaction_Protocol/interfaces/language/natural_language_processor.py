@@ -4,47 +4,50 @@ LOGOS Natural Language Processor
 Converts formal logic, modal formulas, and Coq proof outputs into conversational English
 """
 
-import re
 import json
-from typing import Dict, Any, List, Optional, Tuple
+import re
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
+
 
 @dataclass
 class ConversationContext:
     """Maintains context for natural language conversations"""
+
     session_id: str
     history: List[Dict[str, Any]]
     current_topic: Optional[str] = None
     reasoning_depth: int = 0
     last_query_type: Optional[str] = None
 
+
 class LogicTranslator:
     """Translates formal logic expressions into natural language"""
 
     def __init__(self):
         self.modal_operators = {
-            '□': 'necessarily',
-            '◊': 'possibly',
-            '→': 'implies',
-            '∧': 'and',
-            '∨': 'or',
-            '¬': 'not',
-            '~': 'not',
-            '∀': 'for all',
-            '∃': 'there exists',
-            '⊥': 'contradiction',
-            '⊤': 'always true'
+            "□": "necessarily",
+            "◊": "possibly",
+            "→": "implies",
+            "∧": "and",
+            "∨": "or",
+            "¬": "not",
+            "~": "not",
+            "∀": "for all",
+            "∃": "there exists",
+            "⊥": "contradiction",
+            "⊤": "always true",
         }
 
         self.logic_patterns = {
-            r'□\(([^)]+)\)': r'it is necessarily the case that \1',
-            r'◊\(([^)]+)\)': r'it is possible that \1',
-            r'(\w+)\s*→\s*(\w+)': r'if \1 then \2',
-            r'(\w+)\s*∧\s*(\w+)': r'\1 and \2',
-            r'(\w+)\s*∨\s*(\w+)': r'\1 or \2',
-            r'¬(\w+)': r'not \1',
-            r'~(\w+)': r'not \1',
+            r"□\(([^)]+)\)": r"it is necessarily the case that \1",
+            r"◊\(([^)]+)\)": r"it is possible that \1",
+            r"(\w+)\s*→\s*(\w+)": r"if \1 then \2",
+            r"(\w+)\s*∧\s*(\w+)": r"\1 and \2",
+            r"(\w+)\s*∨\s*(\w+)": r"\1 or \2",
+            r"¬(\w+)": r"not \1",
+            r"~(\w+)": r"not \1",
         }
 
     def translate_formula(self, formula: str) -> str:
@@ -57,43 +60,44 @@ class LogicTranslator:
 
         # Replace remaining operators
         for operator, english in self.modal_operators.items():
-            result = result.replace(operator, f' {english} ')
+            result = result.replace(operator, f" {english} ")
 
         # Clean up spacing and formatting
-        result = re.sub(r'\s+', ' ', result).strip()
-        result = result.replace('( ', '(').replace(' )', ')')
+        result = re.sub(r"\s+", " ", result).strip()
+        result = result.replace("( ", "(").replace(" )", ")")
 
         return result
+
 
 class CoqTranslator:
     """Translates Coq proof outputs into natural language"""
 
     def __init__(self):
         self.proof_keywords = {
-            'Theorem': 'I proved the theorem',
-            'Lemma': 'I established the lemma',
-            'Definition': 'I defined',
-            'Proof': 'Here\'s the proof',
-            'Qed': 'The proof is complete',
-            'intros': 'I introduced the assumptions',
-            'apply': 'I applied',
-            'rewrite': 'I rewrote using',
-            'reflexivity': 'by reflexivity',
-            'assumption': 'using the assumption',
-            'split': 'I split this into two parts',
-            'left': 'I chose the left branch',
-            'right': 'I chose the right branch',
-            'exists': 'there exists'
+            "Theorem": "I proved the theorem",
+            "Lemma": "I established the lemma",
+            "Definition": "I defined",
+            "Proof": "Here's the proof",
+            "Qed": "The proof is complete",
+            "intros": "I introduced the assumptions",
+            "apply": "I applied",
+            "rewrite": "I rewrote using",
+            "reflexivity": "by reflexivity",
+            "assumption": "using the assumption",
+            "split": "I split this into two parts",
+            "left": "I chose the left branch",
+            "right": "I chose the right branch",
+            "exists": "there exists",
         }
 
     def translate_proof(self, proof_text: str) -> str:
         """Convert Coq proof output to natural language explanation"""
-        lines = proof_text.split('\n')
+        lines = proof_text.split("\n")
         translated_lines = []
 
         for line in lines:
             line = line.strip()
-            if not line or line.startswith('(*') or line.startswith('//'):
+            if not line or line.startswith("(*") or line.startswith("//"):
                 continue
 
             # Translate proof steps
@@ -103,20 +107,21 @@ class CoqTranslator:
                     translated = translated.replace(coq_term, english)
 
             # Handle specific patterns
-            if 'falsifiable' in translated.lower():
+            if "falsifiable" in translated.lower():
                 translated = f"I found that {translated.lower()}"
-            elif 'countermodel' in translated.lower():
+            elif "countermodel" in translated.lower():
                 translated = f"I generated a countermodel showing {translated.lower()}"
-            elif 'valid' in translated.lower():
+            elif "valid" in translated.lower():
                 translated = f"I verified that {translated.lower()}"
 
             if translated != line:
                 translated_lines.append(translated)
 
         if translated_lines:
-            return '. '.join(translated_lines) + '.'
+            return ". ".join(translated_lines) + "."
         else:
             return "I completed the formal verification successfully."
+
 
 class NaturalLanguageProcessor:
     """Main processor for converting LOGOS backend outputs to conversational responses"""
@@ -129,9 +134,7 @@ class NaturalLanguageProcessor:
     def create_session(self, session_id: str) -> ConversationContext:
         """Create a new conversation session"""
         context = ConversationContext(
-            session_id=session_id,
-            history=[],
-            current_topic=None
+            session_id=session_id, history=[], current_topic=None
         )
         self.contexts[session_id] = context
         return context
@@ -140,16 +143,18 @@ class NaturalLanguageProcessor:
         """Get existing conversation context"""
         return self.contexts.get(session_id)
 
-    def process_falsifiability_result(self, result: Dict[str, Any], session_id: str) -> str:
+    def process_falsifiability_result(
+        self, result: Dict[str, Any], session_id: str
+    ) -> str:
         """Convert falsifiability result to natural language"""
         context = self.get_context(session_id)
         if not context:
             context = self.create_session(session_id)
 
-        formula = result.get('formula', 'the formula')
-        falsifiable = result.get('falsifiable', False)
-        countermodel = result.get('countermodel')
-        reasoning_trace = result.get('reasoning_trace', [])
+        formula = result.get("formula", "the formula")
+        falsifiable = result.get("falsifiable", False)
+        countermodel = result.get("countermodel")
+        reasoning_trace = result.get("reasoning_trace", [])
 
         # Translate the formula
         translated_formula = self.logic_translator.translate_formula(formula)
@@ -159,42 +164,52 @@ class NaturalLanguageProcessor:
             response = f"I analyzed the statement '{translated_formula}' and found that it's falsifiable. "
 
             if countermodel:
-                worlds = countermodel.get('worlds', [])
-                response += f"I constructed a countermodel with {len(worlds)} possible worlds "
+                worlds = countermodel.get("worlds", [])
+                response += (
+                    f"I constructed a countermodel with {len(worlds)} possible worlds "
+                )
                 response += f"({', '.join(worlds)}) that demonstrates why this statement can be false."
 
                 # Explain the valuation if available
-                valuation = countermodel.get('valuation', {})
+                valuation = countermodel.get("valuation", {})
                 if valuation:
                     response += " In this countermodel, "
                     val_explanations = []
                     for world, props in valuation.items():
                         prop_list = []
                         for prop, value in props.items():
-                            prop_list.append(f"{prop} is {'true' if value else 'false'}")
+                            prop_list.append(
+                                f"{prop} is {'true' if value else 'false'}"
+                            )
                         if prop_list:
-                            val_explanations.append(f"in world {world}, {', '.join(prop_list)}")
-                    response += '; '.join(val_explanations) + "."
+                            val_explanations.append(
+                                f"in world {world}, {', '.join(prop_list)}"
+                            )
+                    response += "; ".join(val_explanations) + "."
 
             response += " This means the original statement is not necessarily true in all possible circumstances."
 
         else:
             response = f"I analyzed the statement '{translated_formula}' and determined that it's valid. "
             response += "This means it holds true in all possible worlds and cannot be falsified. "
-            response += "The statement represents a logical truth within the modal framework."
+            response += (
+                "The statement represents a logical truth within the modal framework."
+            )
 
         # Add reasoning process if requested
         if reasoning_trace and len(reasoning_trace) > 2:
             response += f"\n\nHere's how I reasoned through this: {' → '.join(reasoning_trace[1:3])}"
 
         # Update context
-        context.history.append({
-            'type': 'falsifiability',
-            'input': formula,
-            'output': response,
-            'timestamp': datetime.now().isoformat()
-        })
-        context.last_query_type = 'falsifiability'
+        context.history.append(
+            {
+                "type": "falsifiability",
+                "input": formula,
+                "output": response,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
+        context.last_query_type = "falsifiability"
 
         return response
 
@@ -204,59 +219,67 @@ class NaturalLanguageProcessor:
         if not context:
             context = self.create_session(session_id)
 
-        query = result.get('query', 'your question')
-        processed_result = result.get('result', '')
-        confidence = result.get('confidence', 0.0)
-        reasoning_depth = result.get('reasoning_depth', 0)
+        query = result.get("query", "your question")
+        processed_result = result.get("result", "")
+        confidence = result.get("confidence", 0.0)
+        reasoning_depth = result.get("reasoning_depth", 0)
 
         # Generate natural, contextual response based on query content
-        response = self._generate_natural_reasoning_response(query, processed_result, confidence)
+        response = self._generate_natural_reasoning_response(
+            query, processed_result, confidence
+        )
 
         # Update context
-        context.history.append({
-            'type': 'reasoning',
-            'input': query,
-            'output': response,
-            'confidence': confidence,
-            'timestamp': datetime.now().isoformat()
-        })
+        context.history.append(
+            {
+                "type": "reasoning",
+                "input": query,
+                "output": response,
+                "confidence": confidence,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
         context.current_topic = self._extract_topic(query)
         context.reasoning_depth = reasoning_depth
-        context.last_query_type = 'reasoning'
+        context.last_query_type = "reasoning"
 
         return response
 
-    def _generate_natural_reasoning_response(self, query: str, result: str, confidence: float) -> str:
+    def _generate_natural_reasoning_response(
+        self, query: str, result: str, confidence: float
+    ) -> str:
         """Generate natural, conversational responses based on query content"""
         query_lower = query.lower()
 
         # Handle specific types of questions naturally
-        if any(word in query_lower for word in ['describe', 'what is', 'tell me about']):
-            if 'logic core' in query_lower or 'core' in query_lower:
+        if any(
+            word in query_lower for word in ["describe", "what is", "tell me about"]
+        ):
+            if "logic core" in query_lower or "core" in query_lower:
                 return self._describe_logic_core()
-            elif 'modal logic' in query_lower:
+            elif "modal logic" in query_lower:
                 return self._explain_modal_logic()
-            elif 'proof' in query_lower:
+            elif "proof" in query_lower:
                 return self._explain_proofs()
-            elif 'falsifiable' in query_lower or 'falsification' in query_lower:
+            elif "falsifiable" in query_lower or "falsification" in query_lower:
                 return self._explain_falsifiability()
 
-        elif any(word in query_lower for word in ['how', 'how do', 'how does']):
-            if 'work' in query_lower:
-                if 'proof' in query_lower:
+        elif any(word in query_lower for word in ["how", "how do", "how does"]):
+            if "work" in query_lower:
+                if "proof" in query_lower:
                     return self._explain_how_proofs_work()
-                elif 'logic' in query_lower:
+                elif "logic" in query_lower:
                     return self._explain_how_logic_works()
-                elif 'countermodel' in query_lower:
+                elif "countermodel" in query_lower:
                     return self._explain_countermodels()
 
-        elif any(word in query_lower for word in ['why', 'reason', 'because']):
+        elif any(word in query_lower for word in ["why", "reason", "because"]):
             return self._explain_reasoning_behind(query_lower)
 
-        elif 'relationship' in query_lower or 'difference' in query_lower:
-            if 'necessity' in query_lower and 'possibility' in query_lower:
+        elif "relationship" in query_lower or "difference" in query_lower:
+            if "necessity" in query_lower and "possibility" in query_lower:
                 return self._explain_necessity_possibility_relationship()
-            elif 'truth' in query_lower and 'falsifiability' in query_lower:
+            elif "truth" in query_lower and "falsifiability" in query_lower:
                 return self._explain_truth_falsifiability_relationship()
 
         # Default to more natural response
@@ -330,10 +353,10 @@ This helps distinguish between statements that are necessarily true versus those
         if not context:
             context = self.create_session(session_id)
 
-        health = status.get('status', 'unknown')
-        services = status.get('services', {})
+        health = status.get("status", "unknown")
+        services = status.get("services", {})
 
-        if health == 'healthy':
+        if health == "healthy":
             response = "All systems are running smoothly! "
         else:
             response = f"System status is currently: {health}. "
@@ -343,8 +366,8 @@ This helps distinguish between statements that are necessarily true versus those
         issues = []
 
         for service, state in services.items():
-            service_name = service.replace('_', ' ').title()
-            if state == 'operational':
+            service_name = service.replace("_", " ").title()
+            if state == "operational":
                 operational_services.append(service_name)
             else:
                 issues.append(f"{service_name} is {state}")
@@ -407,9 +430,9 @@ Would you like me to construct a countermodel for a specific statement?"""
 
     def _explain_reasoning_behind(self, query: str) -> str:
         """Explain reasoning behind concepts"""
-        if 'important' in query:
+        if "important" in query:
             return """Logic and reasoning are important because they help us think clearly and avoid errors. In a world full of information, logic gives us tools to evaluate what's reliable, build knowledge systematically, and make sound decisions. It's like having a quality control system for thinking!"""
-        elif 'modal' in query:
+        elif "modal" in query:
             return """Modal logic matters because the world isn't just about what happens to be true right now - we need to reason about possibilities, necessities, and what could have been different. It helps us understand concepts like knowledge, belief, time, obligation, and ability."""
         else:
             return """The reasoning behind this involves understanding how logical structures work and why certain principles hold universally. Would you like me to elaborate on any specific aspect?"""
@@ -456,7 +479,16 @@ Want to test the falsifiability of a specific statement?"""
     def _extract_topic(self, query: str) -> str:
         """Extract the main topic from a query"""
         # Simple topic extraction - could be enhanced with NLP
-        keywords = ['logic', 'proof', 'modal', 'necessity', 'possibility', 'truth', 'falsification', 'reasoning']
+        keywords = [
+            "logic",
+            "proof",
+            "modal",
+            "necessity",
+            "possibility",
+            "truth",
+            "falsification",
+            "reasoning",
+        ]
         query_lower = query.lower()
 
         for keyword in keywords:
@@ -464,12 +496,12 @@ Want to test the falsifiability of a specific statement?"""
                 return keyword
 
         # Default topic based on key words
-        if any(word in query_lower for word in ['true', 'false', 'valid']):
-            return 'truth_evaluation'
-        elif any(word in query_lower for word in ['prove', 'proof', 'demonstrate']):
-            return 'formal_proof'
+        if any(word in query_lower for word in ["true", "false", "valid"]):
+            return "truth_evaluation"
+        elif any(word in query_lower for word in ["prove", "proof", "demonstrate"]):
+            return "formal_proof"
         else:
-            return 'general_reasoning'
+            return "general_reasoning"
 
     def generate_contextual_response(self, user_input: str, session_id: str) -> str:
         """Generate a response based on conversation context"""
@@ -480,57 +512,69 @@ Want to test the falsifiability of a specific statement?"""
         user_lower = user_input.lower()
 
         # Handle specific questions about LOGOS directly
-        if any(word in user_lower for word in ['describe', 'what is', 'tell me about']):
-            if 'logic core' in user_lower or 'your core' in user_lower:
+        if any(word in user_lower for word in ["describe", "what is", "tell me about"]):
+            if "logic core" in user_lower or "your core" in user_lower:
                 return self._describe_logic_core()
-            elif 'yourself' in user_lower or 'you are' in user_lower:
+            elif "yourself" in user_lower or "you are" in user_lower:
                 return self._describe_logos_capabilities()
-            elif 'modal logic' in user_lower:
+            elif "modal logic" in user_lower:
                 return self._explain_modal_logic()
-            elif 'proof' in user_lower or 'proofs' in user_lower:
+            elif "proof" in user_lower or "proofs" in user_lower:
                 return self._explain_proofs()
-            elif 'falsifiable' in user_lower or 'falsification' in user_lower:
+            elif "falsifiable" in user_lower or "falsification" in user_lower:
                 return self._explain_falsifiability()
 
         # Handle how/why questions
-        elif any(word in user_lower for word in ['how', 'why']):
-            if 'work' in user_lower:
-                if 'proof' in user_lower:
+        elif any(word in user_lower for word in ["how", "why"]):
+            if "work" in user_lower:
+                if "proof" in user_lower:
                     return self._explain_how_proofs_work()
-                elif 'logic' in user_lower:
+                elif "logic" in user_lower:
                     return self._explain_how_logic_works()
-                elif 'countermodel' in user_lower:
+                elif "countermodel" in user_lower:
                     return self._explain_countermodels()
                 else:
                     return "I work by applying formal logical principles and mathematical reasoning. I can analyze statements, construct proofs, test falsifiability, and translate complex logical concepts into natural language. What specific aspect would you like to understand?"
 
         # Handle follow-up questions based on context
-        elif context.history and any(word in user_lower for word in ['explain', 'elaborate', 'more detail', 'what does']):
+        elif context.history and any(
+            word in user_lower
+            for word in ["explain", "elaborate", "more detail", "what does"]
+        ):
             last_entry = context.history[-1]
-            if last_entry['type'] == 'falsifiability':
+            if last_entry["type"] == "falsifiability":
                 return "I'd be happy to elaborate on that falsifiability analysis! Which part would you like me to explain further - how I constructed the countermodel, what it means for the statement, or the logical principles involved?"
-            elif last_entry['type'] == 'reasoning':
+            elif last_entry["type"] == "reasoning":
                 return "I can definitely explain more about that reasoning! What specific aspect interests you - the logical principles I used, the steps in my analysis, or how it connects to broader logical concepts?"
 
         # Handle greetings
-        elif any(greeting in user_lower for greeting in ['hello', 'hi', 'hey', 'greetings']):
+        elif any(
+            greeting in user_lower for greeting in ["hello", "hi", "hey", "greetings"]
+        ):
             return "Hello! I'm LOGOS, your AI reasoning assistant. I love exploring logical questions, testing whether statements can be falsified, and explaining complex reasoning in natural language. What's on your mind today?"
 
         # Handle capability questions
-        elif any(word in user_lower for word in ['can you', 'what can', 'help', 'able', 'capabilities']):
+        elif any(
+            word in user_lower
+            for word in ["can you", "what can", "help", "able", "capabilities"]
+        ):
             return self._describe_logos_capabilities()
 
         # Handle relationship questions
-        elif 'relationship' in user_lower or 'difference' in user_lower or 'connection' in user_lower:
-            if 'necessity' in user_lower and 'possibility' in user_lower:
+        elif (
+            "relationship" in user_lower
+            or "difference" in user_lower
+            or "connection" in user_lower
+        ):
+            if "necessity" in user_lower and "possibility" in user_lower:
                 return self._explain_necessity_possibility_relationship()
-            elif 'truth' in user_lower and 'falsifiability' in user_lower:
+            elif "truth" in user_lower and "falsifiability" in user_lower:
                 return self._explain_truth_falsifiability_relationship()
             else:
                 return "That's an interesting question about relationships between concepts! Could you be more specific about which logical concepts you'd like me to compare or connect?"
 
         # Handle thank you
-        elif any(word in user_lower for word in ['thank', 'thanks', 'appreciate']):
+        elif any(word in user_lower for word in ["thank", "thanks", "appreciate"]):
             return "You're very welcome! I enjoy exploring logical questions and making complex reasoning accessible. Feel free to ask me anything else about logic, proofs, modal reasoning, or falsifiability!"
 
         # Default response for natural conversation

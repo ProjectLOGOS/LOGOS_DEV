@@ -48,7 +48,9 @@ When users ask for text analysis, forecasting, or theorem proving,
 indicate which tool should be used and format the request appropriately.
 """
 
-    async def process_message(self, user_message: str, session_id: str) -> tuple[str, str | None]:
+    async def process_message(
+        self, user_message: str, session_id: str
+    ) -> tuple[str, str | None]:
         """
         Process user message with GPT and return (response, tool_request)
 
@@ -63,7 +65,11 @@ indicate which tool should be used and format the request appropriately.
 
         # Add user message to history
         self.conversation_history[session_id].append(
-            {"role": "user", "content": user_message, "timestamp": datetime.now().isoformat()}
+            {
+                "role": "user",
+                "content": user_message,
+                "timestamp": datetime.now().isoformat(),
+            }
         )
 
         # Keep conversation history manageable (last 10 exchanges)
@@ -75,7 +81,10 @@ indicate which tool should be used and format the request appropriately.
                 model="gpt-4",
                 messages=[
                     {"role": "system", "content": self.system_prompt},
-                    *[{"role": msg["role"], "content": msg["content"]} for msg in history],
+                    *[
+                        {"role": msg["role"], "content": msg["content"]}
+                        for msg in history
+                    ],
                 ],
                 temperature=0.7,
                 max_tokens=500,
@@ -121,7 +130,10 @@ indicate which tool should be used and format the request appropriately.
             return message.content, None
 
         except Exception as e:
-            return f"I'm having trouble processing that right now. Error: {str(e)}", None
+            return (
+                f"I'm having trouble processing that right now. Error: {str(e)}",
+                None,
+            )
 
     def clear_conversation(self, session_id: str):
         """Clear conversation history for a session"""
@@ -150,7 +162,9 @@ class EnhancedLOGOSChatEngine:
 
         # Use GPT for conversation if available
         if self.gpt_enabled:
-            response, tool_request = await self.gpt_engine.process_message(message, session_id)
+            response, tool_request = await self.gpt_engine.process_message(
+                message, session_id
+            )
 
             # If GPT wants to use a tool, execute it
             if tool_request:

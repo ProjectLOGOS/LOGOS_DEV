@@ -18,7 +18,11 @@ from sentence_transformers.models import Pooling, Transformer
 from sentence_transformers.SentenceTransformer import SentenceTransformer
 from sentence_transformers.similarity_functions import SimilarityFunction
 from sentence_transformers.sparse_encoder.model_card import SparseEncoderModelCardData
-from sentence_transformers.sparse_encoder.models import MLMTransformer, SparseAutoEncoder, SpladePooling
+from sentence_transformers.sparse_encoder.models import (
+    MLMTransformer,
+    SparseAutoEncoder,
+    SpladePooling,
+)
 from sentence_transformers.util import batch_to_device, select_max_active_dims
 
 logger = logging.getLogger(__name__)
@@ -193,7 +197,9 @@ class SparseEncoder(SentenceTransformer):
         pool: dict[Literal["input", "output", "processes"], Any] | None = None,
         chunk_size: int | None = None,
         **kwargs: Any,
-    ) -> list[Tensor] | np.ndarray | Tensor | dict[str, Tensor] | list[dict[str, Tensor]]:
+    ) -> (
+        list[Tensor] | np.ndarray | Tensor | dict[str, Tensor] | list[dict[str, Tensor]]
+    ):
         """
         Computes sentence embeddings specifically optimized for query representation.
 
@@ -307,7 +313,9 @@ class SparseEncoder(SentenceTransformer):
         pool: dict[Literal["input", "output", "processes"], Any] | None = None,
         chunk_size: int | None = None,
         **kwargs: Any,
-    ) -> list[Tensor] | np.ndarray | Tensor | dict[str, Tensor] | list[dict[str, Tensor]]:
+    ) -> (
+        list[Tensor] | np.ndarray | Tensor | dict[str, Tensor] | list[dict[str, Tensor]]
+    ):
         """
         Computes sentence embeddings specifically optimized for document/passage representation.
 
@@ -424,7 +432,9 @@ class SparseEncoder(SentenceTransformer):
         pool: dict[Literal["input", "output", "processes"], Any] | None = None,
         chunk_size: int | None = None,
         **kwargs: Any,
-    ) -> list[Tensor] | np.ndarray | Tensor | dict[str, Tensor] | list[dict[str, Tensor]]:
+    ) -> (
+        list[Tensor] | np.ndarray | Tensor | dict[str, Tensor] | list[dict[str, Tensor]]
+    ):
         """
         Computes sparse sentence embeddings.
 
@@ -558,7 +568,9 @@ class SparseEncoder(SentenceTransformer):
             # Tracking the prompt length allow us to remove the prompt during pooling
             tokenized_prompt = self.tokenize([prompt], **kwargs)
             if "input_ids" in tokenized_prompt:
-                extra_features["prompt_length"] = tokenized_prompt["input_ids"].shape[-1] - 1
+                extra_features["prompt_length"] = (
+                    tokenized_prompt["input_ids"].shape[-1] - 1
+                )
 
         # Here, device is either a single device string (e.g., "cuda:0", "cpu") for single-process encoding or None
         if device is None:
@@ -566,7 +578,9 @@ class SparseEncoder(SentenceTransformer):
 
         self.to(device)
 
-        max_active_dims = max_active_dims if max_active_dims is not None else self.max_active_dims
+        max_active_dims = (
+            max_active_dims if max_active_dims is not None else self.max_active_dims
+        )
         if max_active_dims is not None:
             kwargs["max_active_dims"] = max_active_dims
 
@@ -574,17 +588,23 @@ class SparseEncoder(SentenceTransformer):
         length_sorted_idx = np.argsort([-self._text_length(sen) for sen in sentences])
         sentences_sorted = [sentences[int(idx)] for idx in length_sorted_idx]
 
-        for start_index in trange(0, len(sentences), batch_size, desc="Batches", disable=not show_progress_bar):
+        for start_index in trange(
+            0, len(sentences), batch_size, desc="Batches", disable=not show_progress_bar
+        ):
             sentences_batch = sentences_sorted[start_index : start_index + batch_size]
             features = self.tokenize(sentences_batch, **kwargs)
             features = batch_to_device(features, self.device)
             features.update(extra_features)
 
             with torch.inference_mode():
-                embeddings = self.forward(features, **kwargs)["sentence_embedding"].detach()
+                embeddings = self.forward(features, **kwargs)[
+                    "sentence_embedding"
+                ].detach()
 
                 if max_active_dims:
-                    embeddings = select_max_active_dims(embeddings, max_active_dims=max_active_dims)
+                    embeddings = select_max_active_dims(
+                        embeddings, max_active_dims=max_active_dims
+                    )
 
             if convert_to_sparse_tensor:
                 embeddings = embeddings.to_sparse()
@@ -634,10 +654,16 @@ class SparseEncoder(SentenceTransformer):
 
         if value is not None:
             self._similarity = SimilarityFunction.to_similarity_fn(value)
-            self._similarity_pairwise = SimilarityFunction.to_similarity_pairwise_fn(value)
+            self._similarity_pairwise = SimilarityFunction.to_similarity_pairwise_fn(
+                value
+            )
 
     @property
-    def similarity(self) -> Callable[[Tensor | npt.NDArray[np.float32], Tensor | npt.NDArray[np.float32]], Tensor]:
+    def similarity(
+        self,
+    ) -> Callable[
+        [Tensor | npt.NDArray[np.float32], Tensor | npt.NDArray[np.float32]], Tensor
+    ]:
         """
         Compute the similarity between two collections of embeddings. The output will be a matrix with the similarity
         scores between all embeddings from the first parameter and all embeddings from the second parameter. This
@@ -683,7 +709,9 @@ class SparseEncoder(SentenceTransformer):
     @property
     def similarity_pairwise(
         self,
-    ) -> Callable[[Tensor | npt.NDArray[np.float32], Tensor | npt.NDArray[np.float32]], Tensor]:
+    ) -> Callable[
+        [Tensor | npt.NDArray[np.float32], Tensor | npt.NDArray[np.float32]], Tensor
+    ]:
         """
         Compute the similarity between two collections of embeddings. The output will be a vector with the similarity
         scores between each pair of embeddings.
@@ -816,7 +844,9 @@ class SparseEncoder(SentenceTransformer):
         """
         output_dim = None
         for mod in reversed(self._modules.values()):
-            sent_embedding_dim_method = getattr(mod, "get_sentence_embedding_dimension", None)
+            sent_embedding_dim_method = getattr(
+                mod, "get_sentence_embedding_dimension", None
+            )
             if callable(sent_embedding_dim_method):
                 output_dim = sent_embedding_dim_method()
                 break
@@ -983,11 +1013,23 @@ class SparseEncoder(SentenceTransformer):
             "revision": revision,
             "local_files_only": local_files_only,
         }
-        model_kwargs = shared_kwargs if model_kwargs is None else {**shared_kwargs, **model_kwargs}
-        tokenizer_kwargs = shared_kwargs if tokenizer_kwargs is None else {**shared_kwargs, **tokenizer_kwargs}
-        config_kwargs = shared_kwargs if config_kwargs is None else {**shared_kwargs, **config_kwargs}
+        model_kwargs = (
+            shared_kwargs if model_kwargs is None else {**shared_kwargs, **model_kwargs}
+        )
+        tokenizer_kwargs = (
+            shared_kwargs
+            if tokenizer_kwargs is None
+            else {**shared_kwargs, **tokenizer_kwargs}
+        )
+        config_kwargs = (
+            shared_kwargs
+            if config_kwargs is None
+            else {**shared_kwargs, **config_kwargs}
+        )
 
-        config = AutoConfig.from_pretrained(model_name_or_path, cache_dir=cache_folder, **config_kwargs)
+        config = AutoConfig.from_pretrained(
+            model_name_or_path, cache_dir=cache_folder, **config_kwargs
+        )
 
         # Check if the architecture ends with "ForMaskedLM"
         is_mlm_model = False
@@ -1027,7 +1069,9 @@ class SparseEncoder(SentenceTransformer):
 
         elif is_mlm_model:
             # For MLM models like BERT, RoBERTa, etc., use MLMTransformer with SpladePooling
-            logger.info(f"Detected MLM architecture: {config.architectures}, using SpladePooling")
+            logger.info(
+                f"Detected MLM architecture: {config.architectures}, using SpladePooling"
+            )
             transformer_model = MLMTransformer(
                 model_name_or_path,
                 cache_dir=cache_folder,
@@ -1052,7 +1096,9 @@ class SparseEncoder(SentenceTransformer):
                 config_args=config_kwargs,
                 backend=self.backend,
             )
-            pooling = Pooling(transformer_model.get_word_embedding_dimension(), pooling_mode="mean")
+            pooling = Pooling(
+                transformer_model.get_word_embedding_dimension(), pooling_mode="mean"
+            )
             sae = SparseAutoEncoder(
                 input_dim=pooling.get_sentence_embedding_dimension(),
                 hidden_dim=4 * pooling.get_sentence_embedding_dimension(),
@@ -1107,7 +1153,9 @@ class SparseEncoder(SentenceTransformer):
         )
 
     @staticmethod
-    @deprecated("SparseEncoder.load(...) is deprecated, use SparseEncoder(...) instead.")
+    @deprecated(
+        "SparseEncoder.load(...) is deprecated, use SparseEncoder(...) instead."
+    )
     def load(input_path) -> SparseEncoder:
         return SparseEncoder(input_path)
 
@@ -1274,14 +1322,20 @@ class SparseEncoder(SentenceTransformer):
             embeddings_2 = embeddings_2.to_sparse()
 
         if embeddings_1.ndim != 1:
-            raise ValueError(f"Expected 1D tensor for embeddings_1, but got {embeddings_1.shape} shape.")
+            raise ValueError(
+                f"Expected 1D tensor for embeddings_1, but got {embeddings_1.shape} shape."
+            )
 
         if embeddings_2.ndim == 1:
             intersection = embeddings_1 * embeddings_2
         elif embeddings_2.ndim == 2:
-            intersection = torch.stack([embeddings_1 * embedding for embedding in embeddings_2])
+            intersection = torch.stack(
+                [embeddings_1 * embedding for embedding in embeddings_2]
+            )
         else:
-            raise ValueError(f"Expected 1D tensor or 2D tensor for embeddings_2, but got {embeddings_2.shape} shape.")
+            raise ValueError(
+                f"Expected 1D tensor or 2D tensor for embeddings_2, but got {embeddings_2.shape} shape."
+            )
 
         # Cheaply remove zero values
         intersection = intersection.coalesce()
@@ -1354,7 +1408,9 @@ class SparseEncoder(SentenceTransformer):
             sample_indices, token_indices = indices[0], indices[1]
 
             # Count tokens per sample
-            sample_counts = torch.bincount(sample_indices, minlength=embeddings.size(0)).tolist()
+            sample_counts = torch.bincount(
+                sample_indices, minlength=embeddings.size(0)
+            ).tolist()
 
             # Apply top-k if specified
             if top_k is not None:
@@ -1371,13 +1427,20 @@ class SparseEncoder(SentenceTransformer):
                     if count > top_k:
                         top_values, top_idx = torch.topk(sample_values, top_k)
                         top_tokens = sample_tokens[top_idx]
-                        token_strs = self.tokenizer.convert_ids_to_tokens(top_tokens.tolist())
+                        token_strs = self.tokenizer.convert_ids_to_tokens(
+                            top_tokens.tolist()
+                        )
                         results.append(list(zip(token_strs, top_values.tolist())))
                     else:
                         # Sort values and indices
                         sorted_indices = torch.argsort(sample_values, descending=True)
-                        sample_values, sample_tokens = sample_values[sorted_indices], sample_tokens[sorted_indices]
-                        token_strs = self.tokenizer.convert_ids_to_tokens(sample_tokens.tolist())
+                        sample_values, sample_tokens = (
+                            sample_values[sorted_indices],
+                            sample_tokens[sorted_indices],
+                        )
+                        token_strs = self.tokenizer.convert_ids_to_tokens(
+                            sample_tokens.tolist()
+                        )
                         results.append(list(zip(token_strs, sample_values.tolist())))
 
                     start_idx += count
@@ -1396,8 +1459,13 @@ class SparseEncoder(SentenceTransformer):
                     sample_tokens = token_indices[start_idx : start_idx + count]
                     # Sort values and indices
                     sorted_indices = torch.argsort(sample_values, descending=True)
-                    sample_values, sample_tokens = sample_values[sorted_indices], sample_tokens[sorted_indices]
-                    token_strs = self.tokenizer.convert_ids_to_tokens(sample_tokens.tolist())
+                    sample_values, sample_tokens = (
+                        sample_values[sorted_indices],
+                        sample_tokens[sorted_indices],
+                    )
+                    token_strs = self.tokenizer.convert_ids_to_tokens(
+                        sample_tokens.tolist()
+                    )
                     results.append(list(zip(token_strs, sample_values.tolist())))
 
                     start_idx += count

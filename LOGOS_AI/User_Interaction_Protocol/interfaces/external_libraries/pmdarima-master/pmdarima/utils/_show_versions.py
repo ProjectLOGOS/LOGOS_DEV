@@ -4,6 +4,7 @@ Utility methods to print system info for debugging
 adapted from ``pandas.show_versions``
 adapted from ``sklearn.show_versions``
 """
+
 # License: BSD 3 clause
 
 import platform
@@ -24,9 +25,7 @@ _pmdarima_deps = (
 )
 
 # Packages that have a different import name than name on PyPI
-_install_mapping = {
-    "sklearn": "scikit-learn"
-}
+_install_mapping = {"sklearn": "scikit-learn"}
 
 
 def _get_sys_info():
@@ -38,11 +37,11 @@ def _get_sys_info():
         system and Python version information
 
     """
-    python = sys.version.replace('\n', ' ')
+    python = sys.version.replace("\n", " ")
 
     blob = [
         ("python", python),
-        ('executable', sys.executable),
+        ("executable", sys.executable),
         ("machine", platform.platform()),
     ]
 
@@ -57,6 +56,7 @@ def _get_deps_info(deps=_pmdarima_deps):
     deps_info: dict
         version information on relevant Python libraries
     """
+
     def get_version(module):
         return module.__version__
 
@@ -82,7 +82,9 @@ def _get_deps_info(deps=_pmdarima_deps):
 
         for modname in deps:
             try:
-                deps_info[modname] = version(_install_mapping.get(modname, modname))  # noqa:E501
+                deps_info[modname] = version(
+                    _install_mapping.get(modname, modname)
+                )  # noqa:E501
             except PackageNotFoundError:
                 deps_info[modname] = None
 
@@ -94,10 +96,10 @@ def show_versions():
     sys_info = _get_sys_info()
     deps_info = _get_deps_info()
 
-    print('\nSystem:')
+    print("\nSystem:")
     for k, stat in sys_info.items():
         print("{k:>10}: {stat}".format(k=k, stat=stat))
 
-    print('\nPython dependencies:')
+    print("\nPython dependencies:")
     for k, stat in deps_info.items():
         print("{k:>11}: {stat}".format(k=k, stat=stat))

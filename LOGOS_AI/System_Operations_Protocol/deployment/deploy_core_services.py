@@ -4,16 +4,20 @@ LOGOS AGI Core Services Deployment
 Simplified deployment for essential services that can run independently
 """
 
+import json
+import logging
 import subprocess
 import time
-import requests
-import logging
-from pathlib import Path
-import json
 from datetime import datetime
+from pathlib import Path
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+import requests
+
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
+
 
 class LogosCoreDeployment:
     """Core LOGOS services deployment manager"""
@@ -28,18 +32,18 @@ class LogosCoreDeployment:
             "logos-api": {
                 "port": 8090,
                 "module": "logos_core.api_server",
-                "description": "LOGOS Core API with falsifiability framework"
+                "description": "LOGOS Core API with falsifiability framework",
             },
             "interactive-demo": {
                 "port": 8080,
                 "module": "logos_core.demo_server",
-                "description": "Interactive demo interface"
+                "description": "Interactive demo interface",
             },
             "health-monitor": {
                 "port": 8099,
                 "module": "logos_core.health_server",
-                "description": "Health monitoring service"
-            }
+                "description": "Health monitoring service",
+            },
         }
 
     def create_mock_services(self):
@@ -176,7 +180,9 @@ if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8090)
 '''
 
-        (logos_core_dir / "api_server.py").write_text(api_server_content, encoding='utf-8')
+        (logos_core_dir / "api_server.py").write_text(
+            api_server_content, encoding="utf-8"
+        )
 
         # Create demo server
         demo_server_content = '''
@@ -327,10 +333,12 @@ if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8080)
 '''
 
-        (logos_core_dir / "demo_server.py").write_text(demo_server_content, encoding='utf-8')
+        (logos_core_dir / "demo_server.py").write_text(
+            demo_server_content, encoding="utf-8"
+        )
 
         # Create health monitoring server
-        health_server_content = '''
+        health_server_content = """
 from fastapi import FastAPI
 import requests
 import time
@@ -372,9 +380,11 @@ async def health_dashboard():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="127.0.0.1", port=8099)
-'''
+"""
 
-        (logos_core_dir / "health_server.py").write_text(health_server_content, encoding='utf-8')
+        (logos_core_dir / "health_server.py").write_text(
+            health_server_content, encoding="utf-8"
+        )
 
         logger.info("✅ Mock services created successfully")
 
@@ -384,27 +394,31 @@ if __name__ == "__main__":
 
         try:
             cmd = [
-                str(self.python_exe), "-m", "uvicorn",
+                str(self.python_exe),
+                "-m",
+                "uvicorn",
                 config["module"] + ":app",
-                "--host", "127.0.0.1",
-                "--port", str(config["port"]),
-                "--log-level", "warning"
+                "--host",
+                "127.0.0.1",
+                "--port",
+                str(config["port"]),
+                "--log-level",
+                "warning",
             ]
 
             process = subprocess.Popen(
-                cmd,
-                cwd=self.root_dir,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
+                cmd, cwd=self.root_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE
             )
 
             self.running_processes[name] = {
                 "process": process,
                 "config": config,
-                "started_at": datetime.now()
+                "started_at": datetime.now(),
             }
 
-            logger.info(f"   ✅ {name} started (PID: {process.pid}) - {config['description']}")
+            logger.info(
+                f"   ✅ {name} started (PID: {process.pid}) - {config['description']}"
+            )
             return True
 
         except Exception as e:
@@ -426,7 +440,7 @@ if __name__ == "__main__":
                 health_status[name] = {
                     "status": "healthy" if response.status_code == 200 else "unhealthy",
                     "port": config["port"],
-                    "response_time_ms": response.elapsed.total_seconds() * 1000
+                    "response_time_ms": response.elapsed.total_seconds() * 1000,
                 }
             except Exception:
                 health_status[name] = {"status": "unreachable", "port": config["port"]}
@@ -454,17 +468,21 @@ if __name__ == "__main__":
 
         # Check health
         health = self.check_health()
-        healthy_services = [name for name, status in health.items() if status.get("status") == "healthy"]
+        healthy_services = [
+            name for name, status in health.items() if status.get("status") == "healthy"
+        ]
 
         if len(healthy_services) == len(self.core_services):
             logger.info("✅ All core services are healthy!")
         else:
-            logger.warning(f"⚠️ {len(healthy_services)}/{len(self.core_services)} services healthy")
+            logger.warning(
+                f"⚠️ {len(healthy_services)}/{len(self.core_services)} services healthy"
+            )
 
         # Display endpoints
-        logger.info("\n" + "="*60)
+        logger.info("\n" + "=" * 60)
         logger.info("🎉 LOGOS CORE DEPLOYMENT SUCCESSFUL!")
-        logger.info("="*60)
+        logger.info("=" * 60)
         logger.info("Key Endpoints:")
         logger.info("  📡 LOGOS Core API: http://localhost:8090")
         logger.info("  🖥️ Interactive Demo: http://localhost:8080")
@@ -494,6 +512,7 @@ if __name__ == "__main__":
         self.running_processes.clear()
         logger.info("🛑 Shutdown complete")
 
+
 def main():
     deployment = LogosCoreDeployment()
 
@@ -504,7 +523,11 @@ def main():
                 time.sleep(60)
                 # Check health periodically
                 health = deployment.check_health()
-                unhealthy = [name for name, status in health.items() if status.get("status") != "healthy"]
+                unhealthy = [
+                    name
+                    for name, status in health.items()
+                    if status.get("status") != "healthy"
+                ]
                 if unhealthy:
                     logger.warning(f"⚠️ Unhealthy services: {unhealthy}")
         else:
@@ -518,6 +541,8 @@ def main():
 
     return 0
 
+
 if __name__ == "__main__":
     import sys
+
     sys.exit(main())

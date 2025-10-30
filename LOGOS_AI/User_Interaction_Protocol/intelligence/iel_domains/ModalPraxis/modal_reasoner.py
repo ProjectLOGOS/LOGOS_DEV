@@ -5,9 +5,11 @@ Provides automated reasoning capabilities for modal logics,
 including theorem proving and model checking.
 """
 
-from typing import Dict, List, Any, Optional, Set, Tuple
-from .modal_logic import ModalLogic, ModalFormula, ModalOperator, ModalSystem
 from collections import deque
+from typing import Any, Dict, List, Optional, Set, Tuple
+
+from .modal_logic import ModalFormula, ModalLogic, ModalOperator, ModalSystem
+
 
 class ModalReasoner:
     """
@@ -22,7 +24,9 @@ class ModalReasoner:
         self.theorems: Set[str] = set()
         self.proof_history: List[Dict[str, Any]] = []
 
-    def prove_theorem(self, formula: str, assumptions: List[str] = None) -> Dict[str, Any]:
+    def prove_theorem(
+        self, formula: str, assumptions: List[str] = None
+    ) -> Dict[str, Any]:
         """Prove a modal theorem."""
         assumptions = assumptions or []
 
@@ -39,23 +43,32 @@ class ModalReasoner:
 
         if result.get("proved", False):
             self.theorems.add(formula)
-            self.proof_history.append({
-                "theorem": formula,
-                "assumptions": assumptions,
-                "result": result
-            })
+            self.proof_history.append(
+                {"theorem": formula, "assumptions": assumptions, "result": result}
+            )
 
         return result
 
-    def _prove_necessity_theorem(self, formula: str, assumptions: List[str]) -> Dict[str, Any]:
+    def _prove_necessity_theorem(
+        self, formula: str, assumptions: List[str]
+    ) -> Dict[str, Any]:
         """Prove a necessity theorem."""
         # Check if theorem follows from modal system axioms
         system = self.modal_logic.system
 
-        if "□(p→q)→(□p→□q)" in formula and system in [ModalSystem.K, ModalSystem.T, ModalSystem.S4, ModalSystem.S5]:
+        if "□(p→q)→(□p→□q)" in formula and system in [
+            ModalSystem.K,
+            ModalSystem.T,
+            ModalSystem.S4,
+            ModalSystem.S5,
+        ]:
             return {"proved": True, "rule": "K axiom", "system": system.value}
 
-        if "□p→p" in formula and system in [ModalSystem.T, ModalSystem.S4, ModalSystem.S5]:
+        if "□p→p" in formula and system in [
+            ModalSystem.T,
+            ModalSystem.S4,
+            ModalSystem.S5,
+        ]:
             return {"proved": True, "rule": "T axiom", "system": system.value}
 
         if "□p→□□p" in formula and system in [ModalSystem.S4, ModalSystem.S5]:
@@ -66,7 +79,9 @@ class ModalReasoner:
 
         return {"proved": False, "reason": "Theorem not derivable from system axioms"}
 
-    def _prove_possibility_theorem(self, formula: str, assumptions: List[str]) -> Dict[str, Any]:
+    def _prove_possibility_theorem(
+        self, formula: str, assumptions: List[str]
+    ) -> Dict[str, Any]:
         """Prove a possibility theorem."""
         # Check possibility-related theorems
         if "◇p→□□◇p" in formula and self.modal_logic.system == ModalSystem.S5:
@@ -74,14 +89,19 @@ class ModalReasoner:
 
         return {"proved": False, "reason": "Possibility theorem not derivable"}
 
-    def check_logical_consequence(self, premises: List[str], conclusion: str) -> Dict[str, Any]:
+    def check_logical_consequence(
+        self, premises: List[str], conclusion: str
+    ) -> Dict[str, Any]:
         """Check if conclusion is logical consequence of premises."""
         # Simplified consequence checking
         modal_premises = [p for p in premises if "□" in p or "◇" in p]
         modal_conclusion = "□" in conclusion or "◇" in conclusion
 
         if modal_conclusion and not modal_premises:
-            return {"consequence": False, "reason": "Modal conclusion requires modal premises"}
+            return {
+                "consequence": False,
+                "reason": "Modal conclusion requires modal premises",
+            }
 
         # Check using modal system properties
         if self._is_valid_consequence(premises, conclusion):
@@ -114,7 +134,7 @@ class ModalReasoner:
         return {
             "worlds": list(self.modal_logic.worlds),
             "accessibility": dict(self.modal_logic.accessibility.relations),
-            "satisfies": True  # Assume it satisfies for now
+            "satisfies": True,  # Assume it satisfies for now
         }
 
     def generate_counterexample(self, formula: str) -> Optional[Dict[str, Any]]:
@@ -127,7 +147,9 @@ class ModalReasoner:
 
         return None
 
-    def _try_model_size(self, formula: str, num_worlds: int) -> Optional[Dict[str, Any]]:
+    def _try_model_size(
+        self, formula: str, num_worlds: int
+    ) -> Optional[Dict[str, Any]]:
         """Try to find a model with given number of worlds."""
         # Simplified model finding
         return {"satisfies": True, "worlds": num_worlds}
@@ -141,7 +163,7 @@ class ModalReasoner:
                     "theorem": theorem,
                     "proof": proof["result"],
                     "assumptions": proof["assumptions"],
-                    "system": self.modal_logic.system.value
+                    "system": self.modal_logic.system.value,
                 }
 
         return {"error": "Theorem not found in proof history"}
@@ -158,7 +180,7 @@ class ModalReasoner:
         return {
             "consistent": len(inconsistent_pairs) == 0,
             "inconsistent_pairs": inconsistent_pairs,
-            "formulas_checked": len(formulas)
+            "formulas_checked": len(formulas),
         }
 
     def _are_inconsistent(self, f1: str, f2: str) -> bool:
@@ -177,5 +199,5 @@ class ModalReasoner:
             "proofs_attempted": len(self.proof_history),
             "modal_system": self.modal_logic.system.value,
             "worlds_in_model": len(self.modal_logic.worlds),
-            "success_rate": len(self.theorems) / max(1, len(self.proof_history))
+            "success_rate": len(self.theorems) / max(1, len(self.proof_history)),
         }

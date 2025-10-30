@@ -38,7 +38,9 @@ def test_hf_argument_parser():
     }
     assert args.batch_sampler == BatchSamplers.NO_DUPLICATES
     assert args.multi_dataset_batch_sampler == MultiDatasetBatchSamplers.PROPORTIONAL
-    assert args.router_mapping == {"dataset1": {"column_A": "query", "column_B": "document"}}
+    assert args.router_mapping == {
+        "dataset1": {"column_A": "query", "column_B": "document"}
+    }
     assert args.learning_rate_mapping == {
         "dataset1": 0.001,
         "dataset2": 0.002,
@@ -57,7 +59,9 @@ def test_hf_argument_parser_incorrect_string_arguments(argument_name):
     )
     args = dataclasses[0]
     assert isinstance(args, SentenceTransformerTrainingArguments)
-    assert getattr(args, argument_name) == {"dataset1": {"column_A": "query", "column_B": "document"}}
+    assert getattr(args, argument_name) == {
+        "dataset1": {"column_A": "query", "column_B": "document"}
+    }
     with pytest.raises(ValueError):
         parser.parse_args_into_dataclasses(
             args=[
@@ -74,7 +78,9 @@ def test_incorrect_string_arguments(argument_name):
             argument_name: '{"dataset1": {"column_A": "query", "column_B": "document"}}',
         }
     )
-    assert getattr(args, argument_name) == {"dataset1": {"column_A": "query", "column_B": "document"}}
+    assert getattr(args, argument_name) == {
+        "dataset1": {"column_A": "query", "column_B": "document"}
+    }
     with pytest.raises(ValueError):
         args = SentenceTransformerTrainingArguments(
             **{

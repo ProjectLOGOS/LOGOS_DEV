@@ -68,7 +68,9 @@ def test_data():
 
 def test_simple(test_data, tmp_path: Path):
     queries, corpus, relevant_docs = test_data
-    model = SentenceTransformer("sentence-transformers-testing/stsb-bert-tiny-safetensors")
+    model = SentenceTransformer(
+        "sentence-transformers-testing/stsb-bert-tiny-safetensors"
+    )
 
     ir_evaluator = InformationRetrievalEvaluator(
         queries=queries,

@@ -110,9 +110,7 @@ class Saver(object):
         # need to save all properties since it is possible that the property
         # is computed only on access. I use this trick a lot to minimize
         # computing unused information.
-        properties = inspect.getmembers(
-            type(kf), lambda o: isinstance(o, property)
-        )
+        properties = inspect.getmembers(type(kf), lambda o: isinstance(o, property))
         self.properties = [p for p in properties if p[0] not in ignore]
 
         if save_current:

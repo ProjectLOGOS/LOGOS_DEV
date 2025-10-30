@@ -1,6 +1,6 @@
-from typing import Dict, List, Tuple, Optional, Union, Any, Callable
-from enum import Enum
 import logging
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 
 class OntologicalType(Enum):
@@ -33,7 +33,11 @@ class Value(LogosExpr):
 
 class Abstraction(LogosExpr):
     def __init__(self, var_name: str, var_type: str, body: LogosExpr):
-        self.var_name, self.var_type, self.body = var_name, OntologicalType[var_type], body
+        self.var_name, self.var_type, self.body = (
+            var_name,
+            OntologicalType[var_type],
+            body,
+        )
 
     def __str__(self):
         return f"λ{self.var_name}:{self.var_type.name}.({self.body})"
@@ -60,7 +64,9 @@ class LambdaEngine:
             if expr.var_name == var_name:
                 return expr
             return Abstraction(
-                expr.var_name, expr.var_type.name, self.substitute(expr.body, var_name, value)
+                expr.var_name,
+                expr.var_type.name,
+                self.substitute(expr.body, var_name, value),
             )
         if isinstance(expr, Application):
             return Application(
@@ -78,10 +84,14 @@ class LambdaEngine:
                 func = self.evaluate(expr.func)
                 arg = self.evaluate(expr.arg)
                 if isinstance(func, Abstraction):
-                    return self.evaluate(self.engine.substitute(func.body, func.var_name, arg))
+                    return self.evaluate(
+                        self.engine.substitute(func.body, func.var_name, arg)
+                    )
                 return Application(func, arg)
             if isinstance(expr, Abstraction):
-                return Abstraction(expr.var_name, expr.var_type.name, self.evaluate(expr.body))
+                return Abstraction(
+                    expr.var_name, expr.var_type.name, self.evaluate(expr.body)
+                )
             return expr
 
     def evaluate(self, expr):

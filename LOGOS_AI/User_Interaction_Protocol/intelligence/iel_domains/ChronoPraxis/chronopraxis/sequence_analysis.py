@@ -5,6 +5,7 @@ Provides tools for analyzing temporal sequences, patterns,
 and predicting future events based on historical data.
 """
 
+
 class SequenceAnalyzer:
     """
     Framework for analyzing temporal sequences.
@@ -27,14 +28,14 @@ class SequenceAnalyzer:
             metadata: Additional information about the sequence
         """
         seq_entry = {
-            'data': sequence,
-            'metadata': metadata or {},
-            'length': len(sequence),
-            'patterns': []
+            "data": sequence,
+            "metadata": metadata or {},
+            "length": len(sequence),
+            "patterns": [],
         }
         self.sequences.append(seq_entry)
 
-    def find_patterns(self, sequence: list, pattern_type: str = 'repeating') -> list:
+    def find_patterns(self, sequence: list, pattern_type: str = "repeating") -> list:
         """
         Find patterns in a sequence.
 
@@ -47,11 +48,11 @@ class SequenceAnalyzer:
         """
         patterns = []
 
-        if pattern_type == 'repeating':
+        if pattern_type == "repeating":
             patterns = self._find_repeating_patterns(sequence)
-        elif pattern_type == 'trending':
+        elif pattern_type == "trending":
             patterns = self._find_trends(sequence)
-        elif pattern_type == 'periodic':
+        elif pattern_type == "periodic":
             patterns = self._find_periodic_patterns(sequence)
 
         return patterns
@@ -72,16 +73,18 @@ class SequenceAnalyzer:
 
         for length in range(min_length, max_length + 1):
             for start in range(len(sequence) - 2 * length + 1):
-                pattern = sequence[start:start + length]
+                pattern = sequence[start : start + length]
                 # Check if pattern repeats
                 for offset in range(length, len(sequence) - length + 1, length):
-                    if sequence[start + offset:start + offset + length] == pattern:
-                        patterns.append({
-                            'pattern': pattern,
-                            'length': length,
-                            'positions': [start, start + offset],
-                            'frequency': 2
-                        })
+                    if sequence[start + offset : start + offset + length] == pattern:
+                        patterns.append(
+                            {
+                                "pattern": pattern,
+                                "length": length,
+                                "positions": [start, start + offset],
+                                "frequency": 2,
+                            }
+                        )
                         break
 
         return patterns
@@ -100,21 +103,29 @@ class SequenceAnalyzer:
             return []
 
         trends = []
-        increasing = all(sequence[i] <= sequence[i+1] for i in range(len(sequence)-1))
-        decreasing = all(sequence[i] >= sequence[i+1] for i in range(len(sequence)-1))
+        increasing = all(
+            sequence[i] <= sequence[i + 1] for i in range(len(sequence) - 1)
+        )
+        decreasing = all(
+            sequence[i] >= sequence[i + 1] for i in range(len(sequence) - 1)
+        )
 
         if increasing:
-            trends.append({
-                'type': 'increasing',
-                'slope': (sequence[-1] - sequence[0]) / len(sequence),
-                'confidence': 1.0
-            })
+            trends.append(
+                {
+                    "type": "increasing",
+                    "slope": (sequence[-1] - sequence[0]) / len(sequence),
+                    "confidence": 1.0,
+                }
+            )
         elif decreasing:
-            trends.append({
-                'type': 'decreasing',
-                'slope': (sequence[-1] - sequence[0]) / len(sequence),
-                'confidence': 1.0
-            })
+            trends.append(
+                {
+                    "type": "decreasing",
+                    "slope": (sequence[-1] - sequence[0]) / len(sequence),
+                    "confidence": 1.0,
+                }
+            )
 
         return trends
 
@@ -141,15 +152,17 @@ class SequenceAnalyzer:
                 total += 1
 
             if total > 0 and matches / total > 0.7:  # 70% match threshold
-                patterns.append({
-                    'period': period,
-                    'strength': matches / total,
-                    'pattern': sequence[:period]
-                })
+                patterns.append(
+                    {
+                        "period": period,
+                        "strength": matches / total,
+                        "pattern": sequence[:period],
+                    }
+                )
 
         return patterns
 
-    def predict_next(self, sequence: list, method: str = 'simple') -> dict:
+    def predict_next(self, sequence: list, method: str = "simple") -> dict:
         """
         Predict the next element in a sequence.
 
@@ -161,9 +174,9 @@ class SequenceAnalyzer:
             Prediction results
         """
         if not sequence:
-            return {'prediction': None, 'confidence': 0.0}
+            return {"prediction": None, "confidence": 0.0}
 
-        if method == 'simple':
+        if method == "simple":
             # Simple next value prediction
             if len(sequence) >= 2:
                 # Linear extrapolation
@@ -174,11 +187,11 @@ class SequenceAnalyzer:
                 prediction = sequence[-1]
                 confidence = 0.3
 
-        elif method == 'pattern_based':
+        elif method == "pattern_based":
             patterns = self.find_patterns(sequence)
             if patterns:
                 # Use most frequent pattern for prediction
-                pattern = patterns[0]['pattern']
+                pattern = patterns[0]["pattern"]
                 prediction = pattern[len(pattern) // 2]  # Middle element as prediction
                 confidence = 0.6
             else:
@@ -189,11 +202,7 @@ class SequenceAnalyzer:
             prediction = sequence[-1]
             confidence = 0.3
 
-        return {
-            'prediction': prediction,
-            'confidence': confidence,
-            'method': method
-        }
+        return {"prediction": prediction, "confidence": confidence, "method": method}
 
     def analyze_temporal_dependencies(self, sequences: list) -> dict:
         """
@@ -206,7 +215,7 @@ class SequenceAnalyzer:
             Dependency analysis results
         """
         if len(sequences) < 2:
-            return {'dependencies': []}
+            return {"dependencies": []}
 
         dependencies = []
 
@@ -219,15 +228,19 @@ class SequenceAnalyzer:
                     # Calculate simple correlation
                     correlation = self._calculate_correlation(seq1, seq2)
                     if abs(correlation) > 0.5:  # Significant correlation
-                        dependencies.append({
-                            'sequence1': i,
-                            'sequence2': j,
-                            'correlation': correlation,
-                            'strength': abs(correlation)
-                        })
+                        dependencies.append(
+                            {
+                                "sequence1": i,
+                                "sequence2": j,
+                                "correlation": correlation,
+                                "strength": abs(correlation),
+                            }
+                        )
 
         return {
-            'dependencies': sorted(dependencies, key=lambda x: x['strength'], reverse=True)
+            "dependencies": sorted(
+                dependencies, key=lambda x: x["strength"], reverse=True
+            )
         }
 
     def _calculate_correlation(self, seq1: list, seq2: list) -> float:

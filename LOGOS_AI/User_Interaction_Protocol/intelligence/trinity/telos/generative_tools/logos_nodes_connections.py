@@ -1,7 +1,8 @@
 ```python
 # Substrate Initialization: Bonnock Nodes for 29 Ontological Properties
 import json
-from agent_classes import TrinitarianAgent, CreatureAgent
+
+from agent_classes import CreatureAgent, TrinitarianAgent
 from logos_validator_hub import LOGOSValidatorHub
 from ontological_validator import OntologicalPropertyValidator
 

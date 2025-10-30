@@ -14,7 +14,14 @@ except ImportError:
 
 import huggingface_hub
 import torch
-from transformers import AutoConfig, AutoModel, AutoTokenizer, MT5Config, PretrainedConfig, T5Config
+from transformers import (
+    AutoConfig,
+    AutoModel,
+    AutoTokenizer,
+    MT5Config,
+    PretrainedConfig,
+    T5Config,
+)
 from transformers.utils.import_utils import is_peft_available
 from transformers.utils.peft_utils import find_adapter_config_file
 
@@ -26,7 +33,9 @@ if TYPE_CHECKING and is_peft_available():
     from peft import PeftConfig
 
 
-def _save_pretrained_wrapper(_save_pretrained_fn: Callable, subfolder: str) -> Callable[..., None]:
+def _save_pretrained_wrapper(
+    _save_pretrained_fn: Callable, subfolder: str
+) -> Callable[..., None]:
     def wrapper(save_directory: str | Path, **kwargs) -> None:
         os.makedirs(Path(save_directory) / subfolder, exist_ok=True)
         return _save_pretrained_fn(Path(save_directory) / subfolder, **kwargs)
@@ -84,13 +93,21 @@ class Transformer(InputModule):
         if config_args is None:
             config_args = {}
 
-        config, is_peft_model = self._load_config(model_name_or_path, cache_dir, backend, config_args)
-        self._load_model(model_name_or_path, config, cache_dir, backend, is_peft_model, **model_args)
+        config, is_peft_model = self._load_config(
+            model_name_or_path, cache_dir, backend, config_args
+        )
+        self._load_model(
+            model_name_or_path, config, cache_dir, backend, is_peft_model, **model_args
+        )
 
         if max_seq_length is not None and "model_max_length" not in tokenizer_args:
             tokenizer_args["model_max_length"] = max_seq_length
         self.tokenizer = AutoTokenizer.from_pretrained(
-            tokenizer_name_or_path if tokenizer_name_or_path is not None else model_name_or_path,
+            (
+                tokenizer_name_or_path
+                if tokenizer_name_or_path is not None
+                else model_name_or_path
+            ),
             cache_dir=cache_dir,
             **tokenizer_args,
         )
@@ -102,7 +119,10 @@ class Transformer(InputModule):
                 and hasattr(self.auto_model.config, "max_position_embeddings")
                 and hasattr(self.tokenizer, "model_max_length")
             ):
-                max_seq_length = min(self.auto_model.config.max_position_embeddings, self.tokenizer.model_max_length)
+                max_seq_length = min(
+                    self.auto_model.config.max_position_embeddings,
+                    self.tokenizer.model_max_length,
+                )
 
         self.max_seq_length = max_seq_length
 
@@ -110,7 +130,11 @@ class Transformer(InputModule):
             self.auto_model.config.tokenizer_class = self.tokenizer.__class__.__name__
 
     def _load_config(
-        self, model_name_or_path: str, cache_dir: str | None, backend: str, config_args: dict[str, Any]
+        self,
+        model_name_or_path: str,
+        cache_dir: str | None,
+        backend: str,
+        config_args: dict[str, Any],
     ) -> tuple[PeftConfig | PretrainedConfig, bool]:
         """Loads the transformers or PEFT configuration
 
@@ -147,9 +171,19 @@ class Transformer(InputModule):
                 )
             from peft import PeftConfig
 
-            return PeftConfig.from_pretrained(model_name_or_path, **config_args, cache_dir=cache_dir), True
+            return (
+                PeftConfig.from_pretrained(
+                    model_name_or_path, **config_args, cache_dir=cache_dir
+                ),
+                True,
+            )
 
-        return AutoConfig.from_pretrained(model_name_or_path, **config_args, cache_dir=cache_dir), False
+        return (
+            AutoConfig.from_pretrained(
+                model_name_or_path, **config_args, cache_dir=cache_dir
+            ),
+            False,
+        )
 
     def _load_model(
         self,
@@ -181,7 +215,9 @@ class Transformer(InputModule):
             if isinstance(config, T5Config):
                 self._load_t5_model(model_name_or_path, config, cache_dir, **model_args)
             elif isinstance(config, MT5Config):
-                self._load_mt5_model(model_name_or_path, config, cache_dir, **model_args)
+                self._load_mt5_model(
+                    model_name_or_path, config, cache_dir, **model_args
+                )
             else:
                 self.auto_model = AutoModel.from_pretrained(
                     model_name_or_path, config=config, cache_dir=cache_dir, **model_args
@@ -189,12 +225,20 @@ class Transformer(InputModule):
         elif backend == "onnx":
             self._load_onnx_model(model_name_or_path, config, cache_dir, **model_args)
         elif backend == "openvino":
-            self._load_openvino_model(model_name_or_path, config, cache_dir, **model_args)
+            self._load_openvino_model(
+                model_name_or_path, config, cache_dir, **model_args
+            )
         else:
-            raise ValueError(f"Unsupported backend '{backend}'. `backend` should be `torch`, `onnx`, or `openvino`.")
+            raise ValueError(
+                f"Unsupported backend '{backend}'. `backend` should be `torch`, `onnx`, or `openvino`."
+            )
 
     def _load_openvino_model(
-        self, model_name_or_path: str, config: PretrainedConfig, cache_dir: str, **model_args
+        self,
+        model_name_or_path: str,
+        config: PretrainedConfig,
+        cache_dir: str,
+        **model_args,
     ) -> None:
         if isinstance(config, T5Config) or isinstance(config, MT5Config):
             raise ValueError("T5 models are not yet supported by the OpenVINO backend.")
@@ -215,7 +259,12 @@ class Transformer(InputModule):
 
         # Determine whether the model should be exported or whether we can load it directly
         export, model_args = self._backend_should_export(
-            load_path, is_local, model_args, OV_XML_FILE_NAME, target_file_glob, backend_name
+            load_path,
+            is_local,
+            model_args,
+            OV_XML_FILE_NAME,
+            target_file_glob,
+            backend_name,
         )
 
         # If we're exporting, then there's no need for a file_name to load the model from
@@ -236,26 +285,37 @@ class Transformer(InputModule):
             model_args["ov_config"] = {}
 
         # Either load an exported model, or export the model to OpenVINO
-        self.auto_model: OVModelForFeatureExtraction = OVModelForFeatureExtraction.from_pretrained(
-            model_name_or_path,
-            config=config,
-            cache_dir=cache_dir,
-            export=export,
-            **model_args,
+        self.auto_model: OVModelForFeatureExtraction = (
+            OVModelForFeatureExtraction.from_pretrained(
+                model_name_or_path,
+                config=config,
+                cache_dir=cache_dir,
+                export=export,
+                **model_args,
+            )
         )
         # Wrap the save_pretrained method to save the model in the correct subfolder
-        self.auto_model._save_pretrained = _save_pretrained_wrapper(self.auto_model._save_pretrained, self.backend)
+        self.auto_model._save_pretrained = _save_pretrained_wrapper(
+            self.auto_model._save_pretrained, self.backend
+        )
 
         # Warn the user to save the model if they haven't already
         if export:
             self._backend_warn_to_save(model_name_or_path, is_local, backend_name)
 
     def _load_onnx_model(
-        self, model_name_or_path: str, config: PretrainedConfig, cache_dir: str, **model_args
+        self,
+        model_name_or_path: str,
+        config: PretrainedConfig,
+        cache_dir: str,
+        **model_args,
     ) -> None:
         try:
             import onnxruntime as ort
-            from optimum.onnxruntime import ONNX_WEIGHTS_NAME, ORTModelForFeatureExtraction
+            from optimum.onnxruntime import (
+                ONNX_WEIGHTS_NAME,
+                ORTModelForFeatureExtraction,
+            )
         except ModuleNotFoundError:
             raise Exception(
                 "Using the ONNX backend requires installing Optimum and ONNX Runtime. "
@@ -265,7 +325,9 @@ class Transformer(InputModule):
 
         # Default to the highest priority available provider if not specified
         # E.g. Tensorrt > CUDA > CPU
-        model_args["provider"] = model_args.pop("provider", ort.get_available_providers()[0])
+        model_args["provider"] = model_args.pop(
+            "provider", ort.get_available_providers()[0]
+        )
 
         load_path = Path(model_name_or_path)
         is_local = load_path.exists()
@@ -274,7 +336,12 @@ class Transformer(InputModule):
 
         # Determine whether the model should be exported or whether we can load it directly
         export, model_args = self._backend_should_export(
-            load_path, is_local, model_args, ONNX_WEIGHTS_NAME, target_file_glob, backend_name
+            load_path,
+            is_local,
+            model_args,
+            ONNX_WEIGHTS_NAME,
+            target_file_glob,
+            backend_name,
         )
 
         # If we're exporting, then there's no need for a file_name to load the model from
@@ -282,15 +349,19 @@ class Transformer(InputModule):
             model_args.pop("file_name", None)
 
         # Either load an exported model, or export the model to ONNX
-        self.auto_model: ORTModelForFeatureExtraction = ORTModelForFeatureExtraction.from_pretrained(
-            model_name_or_path,
-            config=config,
-            cache_dir=cache_dir,
-            export=export,
-            **model_args,
+        self.auto_model: ORTModelForFeatureExtraction = (
+            ORTModelForFeatureExtraction.from_pretrained(
+                model_name_or_path,
+                config=config,
+                cache_dir=cache_dir,
+                export=export,
+                **model_args,
+            )
         )
         # Wrap the save_pretrained method to save the model in the correct subfolder
-        self.auto_model._save_pretrained = _save_pretrained_wrapper(self.auto_model._save_pretrained, self.backend)
+        self.auto_model._save_pretrained = _save_pretrained_wrapper(
+            self.auto_model._save_pretrained, self.backend
+        )
 
         # Warn the user to save the model if they haven't already
         if export:
@@ -341,17 +412,28 @@ class Transformer(InputModule):
 
         file_name = model_args.get("file_name", target_file_name)
         subfolder = model_args.get("subfolder", None)
-        primary_full_path = Path(subfolder, file_name).as_posix() if subfolder else Path(file_name).as_posix()
+        primary_full_path = (
+            Path(subfolder, file_name).as_posix()
+            if subfolder
+            else Path(file_name).as_posix()
+        )
         secondary_full_path = (
             Path(subfolder, self.backend, file_name).as_posix()
             if subfolder
             else Path(self.backend, file_name).as_posix()
         )
-        glob_pattern = f"{subfolder}/**/{target_file_glob}" if subfolder else f"**/{target_file_glob}"
+        glob_pattern = (
+            f"{subfolder}/**/{target_file_glob}"
+            if subfolder
+            else f"**/{target_file_glob}"
+        )
 
         # Get the list of files in the model directory that match the target file name
         if is_local:
-            model_file_names = [path.relative_to(load_path).as_posix() for path in load_path.glob(glob_pattern)]
+            model_file_names = [
+                path.relative_to(load_path).as_posix()
+                for path in load_path.glob(glob_pattern)
+            ]
         else:
             all_files = huggingface_hub.list_repo_files(
                 load_path.as_posix(),
@@ -359,7 +441,9 @@ class Transformer(InputModule):
                 revision=model_args.get("revision", None),
                 token=model_args.get("token", None),
             )
-            model_file_names = [fname for fname in all_files if fnmatch(fname, glob_pattern)]
+            model_file_names = [
+                fname for fname in all_files if fnmatch(fname, glob_pattern)
+            ]
 
         # First check if the expected file exists in the root of the model directory
         # If it doesn't, check if it exists in the backend subfolder.
@@ -373,7 +457,11 @@ class Transformer(InputModule):
                         f"Multiple {backend_name} files found in {load_path.as_posix()!r}: {model_file_names}, defaulting to {secondary_full_path!r}. "
                         f'Please specify the desired file name via `model_kwargs={{"file_name": "<file_name>"}}`.'
                     )
-                model_args["subfolder"] = Path(subfolder, self.backend).as_posix() if subfolder else self.backend
+                model_args["subfolder"] = (
+                    Path(subfolder, self.backend).as_posix()
+                    if subfolder
+                    else self.backend
+                )
                 model_args["file_name"] = file_name
         if export is None:
             export = not model_found
@@ -382,7 +470,9 @@ class Transformer(InputModule):
         file_name_parts = Path(file_name).parts
         if len(file_name_parts) > 1:
             model_args["file_name"] = file_name_parts[-1]
-            model_args["subfolder"] = Path(model_args.get("subfolder", ""), *file_name_parts[:-1]).as_posix()
+            model_args["subfolder"] = Path(
+                model_args.get("subfolder", ""), *file_name_parts[:-1]
+            ).as_posix()
 
         if export:
             logger.warning(
@@ -397,7 +487,9 @@ class Transformer(InputModule):
 
         return export, model_args
 
-    def _backend_warn_to_save(self, model_name_or_path: str, is_local: str, backend_name: str) -> None:
+    def _backend_warn_to_save(
+        self, model_name_or_path: str, is_local: str, backend_name: str
+    ) -> None:
         to_log = f"Saving the exported {backend_name} model is heavily recommended to avoid having to export it again."
         if is_local:
             to_log += f" Do so with `model.save_pretrained({model_name_or_path!r})`."
@@ -405,7 +497,13 @@ class Transformer(InputModule):
             to_log += f" Do so with `model.push_to_hub({model_name_or_path!r}, create_pr=True)`."
         logger.warning(to_log)
 
-    def _load_t5_model(self, model_name_or_path: str, config: PretrainedConfig, cache_dir: str, **model_args) -> None:
+    def _load_t5_model(
+        self,
+        model_name_or_path: str,
+        config: PretrainedConfig,
+        cache_dir: str,
+        **model_args,
+    ) -> None:
         """Loads the encoder model from T5"""
         from transformers import T5EncoderModel
 
@@ -414,7 +512,13 @@ class Transformer(InputModule):
             model_name_or_path, config=config, cache_dir=cache_dir, **model_args
         )
 
-    def _load_mt5_model(self, model_name_or_path: str, config: PretrainedConfig, cache_dir: str, **model_args) -> None:
+    def _load_mt5_model(
+        self,
+        model_name_or_path: str,
+        config: PretrainedConfig,
+        cache_dir: str,
+        **model_args,
+    ) -> None:
         """Loads the encoder model from T5"""
         from transformers import MT5EncoderModel
 
@@ -426,7 +530,9 @@ class Transformer(InputModule):
     def __repr__(self) -> str:
         return f"Transformer({dict(self.get_config_dict(), architecture=self.auto_model.__class__.__name__)})"
 
-    def forward(self, features: dict[str, torch.Tensor], **kwargs) -> dict[str, torch.Tensor]:
+    def forward(
+        self, features: dict[str, torch.Tensor], **kwargs
+    ) -> dict[str, torch.Tensor]:
         """Returns token_embeddings, cls_token"""
         trans_features = {
             key: value
@@ -450,9 +556,13 @@ class Transformer(InputModule):
                 batch_size = token_embeddings.size(0)
                 attention_mask = features["attention_mask"]
                 prefix_attention_mask = torch.ones(
-                    batch_size, self.auto_model.active_peft_config.num_virtual_tokens, device=attention_mask.device
+                    batch_size,
+                    self.auto_model.active_peft_config.num_virtual_tokens,
+                    device=attention_mask.device,
                 )
-                features["attention_mask"] = torch.cat((prefix_attention_mask, attention_mask), dim=1)
+                features["attention_mask"] = torch.cat(
+                    (prefix_attention_mask, attention_mask), dim=1
+                )
 
         if self.auto_model.config.output_hidden_states and "hidden_states" in outputs:
             features["all_layer_embeddings"] = outputs["hidden_states"]
@@ -463,7 +573,9 @@ class Transformer(InputModule):
         return self.auto_model.config.hidden_size
 
     def tokenize(
-        self, texts: list[str] | list[dict] | list[tuple[str, str]], padding: str | bool = True
+        self,
+        texts: list[str] | list[dict] | list[tuple[str, str]],
+        padding: str | bool = True,
     ) -> dict[str, torch.Tensor]:
         """Tokenizes a text and maps tokens to token-ids"""
         output = {}
@@ -503,7 +615,9 @@ class Transformer(InputModule):
         return output
 
     def save(self, output_path: str, safe_serialization: bool = True, **kwargs) -> None:
-        self.auto_model.save_pretrained(output_path, safe_serialization=safe_serialization)
+        self.auto_model.save_pretrained(
+            output_path, safe_serialization=safe_serialization
+        )
         self.tokenizer.save_pretrained(output_path)
         self.save_config(output_path)
 
@@ -638,7 +752,10 @@ class Transformer(InputModule):
         # Don't allow configs to set trust_remote_code
         if "model_args" in config and "trust_remote_code" in config["model_args"]:
             config["model_args"].pop("trust_remote_code")
-        if "tokenizer_args" in config and "trust_remote_code" in config["tokenizer_args"]:
+        if (
+            "tokenizer_args" in config
+            and "trust_remote_code" in config["tokenizer_args"]
+        ):
             config["tokenizer_args"].pop("trust_remote_code")
         if "config_args" in config and "trust_remote_code" in config["config_args"]:
             config["config_args"].pop("trust_remote_code")

@@ -15,26 +15,26 @@ Responsibilities:
 - Time series analysis and forecasting
 """
 
-import os
-import sys
 import json
-import time
 import logging
+import os
 import signal
+import sys
+import time
 import uuid
-from typing import Dict, List, Any, Optional, Tuple
-from datetime import datetime
 from collections import defaultdict
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
 
 # RabbitMQ and messaging
 import pika
 
 # Core LOGOS imports
 try:
-    from core.causal.scm import SCM
     from core.causal.counterfactuals import evaluate_counterfactual
     from core.causal.planner import Planner
-    from core.data_structures import TaskDescriptor, OperationResult
+    from core.causal.scm import SCM
+    from core.data_structures import OperationResult, TaskDescriptor
 except ImportError:
     # Fallback implementations if core modules aren't available
     pass
@@ -44,8 +44,8 @@ try:
     import numpy as np
     import pandas as pd
     from scipy import stats
-    from sklearn.linear_model import LinearRegression
     from sklearn.ensemble import RandomForestRegressor
+    from sklearn.linear_model import LinearRegression
 
     NUMPY_AVAILABLE = True
     PANDAS_AVAILABLE = True
@@ -103,7 +103,9 @@ class SCMImplementation:
                 for sample in data:
                     if all(p in sample for p in parents) and node in sample:
                         # Create parent configuration key
-                        parent_key = tuple(sample.get(p) for p in parents) if parents else ()
+                        parent_key = (
+                            tuple(sample.get(p) for p in parents) if parents else ()
+                        )
                         node_value = sample.get(node)
 
                         if node_value is not None:
@@ -117,7 +119,8 @@ class SCMImplementation:
                     total = sum(value_counts.values())
                     if total > 0:
                         self.parameters[node][parent_key] = {
-                            value: count / total for value, count in value_counts.items()
+                            value: count / total
+                            for value, count in value_counts.items()
                         }
 
             return True
@@ -202,18 +205,26 @@ class TelosCoreEngine:
         # Initialize scientific analysis tools
         self._initialize_analysis_tools()
 
-        self.logger.info(f"TELOS Core Engine initialized with worker ID: {self.worker_id}")
+        self.logger.info(
+            f"TELOS Core Engine initialized with worker ID: {self.worker_id}"
+        )
 
     def _initialize_analysis_tools(self):
         """Initialize scientific analysis and forecasting tools."""
         try:
             if SKLEARN_AVAILABLE:
                 self.linear_predictor = LinearRegression()
-                self.rf_predictor = RandomForestRegressor(n_estimators=50, random_state=42)
+                self.rf_predictor = RandomForestRegressor(
+                    n_estimators=50, random_state=42
+                )
                 self.logger.info("Scikit-learn predictors initialized")
 
             # Initialize simple forecasting models
-            self.forecasting_methods = ["linear_trend", "moving_average", "exponential_smoothing"]
+            self.forecasting_methods = [
+                "linear_trend",
+                "moving_average",
+                "exponential_smoothing",
+            ]
 
         except Exception as e:
             self.logger.warning(f"Analysis tools initialization failed: {e}")
@@ -268,13 +279,17 @@ class TelosCoreEngine:
             confidence_scores = {}
 
             for intervention in interventions:
-                intervention_id = intervention.get("id", f"intervention_{len(predictions)}")
+                intervention_id = intervention.get(
+                    "id", f"intervention_{len(predictions)}"
+                )
                 intervention_params = intervention.get("parameters", {})
 
                 # Use SCM if available and trained
                 if hasattr(self, "scm_models") and "default" in self.scm_models:
                     scm = self.scm_models["default"]
-                    effects = scm.predict_intervention_effect(intervention_params, target_variables)
+                    effects = scm.predict_intervention_effect(
+                        intervention_params, target_variables
+                    )
 
                     predictions[intervention_id] = {
                         "intervention": intervention_params,
@@ -335,7 +350,9 @@ class TelosCoreEngine:
 
             for cause in possible_causes:
                 cause_id = cause.get("id", str(cause))
-                cause_params = cause.get("parameters", cause if isinstance(cause, dict) else {})
+                cause_params = cause.get(
+                    "parameters", cause if isinstance(cause, dict) else {}
+                )
 
                 # Calculate likelihood that this cause produced the observed effects
                 likelihood = 0.0
@@ -375,13 +392,17 @@ class TelosCoreEngine:
 
             # Rank causes by likelihood
             ranked_causes = sorted(
-                cause_likelihoods.items(), key=lambda x: x[1]["likelihood"], reverse=True
+                cause_likelihoods.items(),
+                key=lambda x: x[1]["likelihood"],
+                reverse=True,
             )
 
             return {
                 "status": "success",
                 "cause_likelihoods": cause_likelihoods,
-                "ranked_causes": [{"cause_id": cid, **data} for cid, data in ranked_causes],
+                "ranked_causes": [
+                    {"cause_id": cid, **data} for cid, data in ranked_causes
+                ],
                 "most_likely_cause": ranked_causes[0] if ranked_causes else None,
                 "observed_effects": observed_effects,
                 "total_causes_evaluated": len(possible_causes),
@@ -395,7 +416,9 @@ class TelosCoreEngine:
         try:
             intervention = payload.get("intervention", {})
             target_system = payload.get("target_system", {})
-            evaluation_metrics = payload.get("metrics", ["effectiveness", "side_effects"])
+            evaluation_metrics = payload.get(
+                "metrics", ["effectiveness", "side_effects"]
+            )
 
             analysis_results = {}
 
@@ -413,7 +436,9 @@ class TelosCoreEngine:
 
             # Risk assessment
             if "risk_assessment" in evaluation_metrics:
-                risk_assessment = self._assess_intervention_risks(intervention, target_system)
+                risk_assessment = self._assess_intervention_risks(
+                    intervention, target_system
+                )
                 analysis_results["risk_assessment"] = risk_assessment
 
             # Overall recommendation
@@ -421,14 +446,18 @@ class TelosCoreEngine:
             if "effectiveness" in analysis_results:
                 overall_score += analysis_results["effectiveness"].get("score", 0) * 0.5
             if "side_effects" in analysis_results:
-                side_effect_penalty = analysis_results["side_effects"].get("severity", 0)
+                side_effect_penalty = analysis_results["side_effects"].get(
+                    "severity", 0
+                )
                 overall_score -= side_effect_penalty * 0.3
             if "risk_assessment" in analysis_results:
                 risk_penalty = analysis_results["risk_assessment"].get("risk_level", 0)
                 overall_score -= risk_penalty * 0.2
 
             recommendation = (
-                "proceed" if overall_score > 0.6 else "caution" if overall_score > 0.3 else "avoid"
+                "proceed"
+                if overall_score > 0.6
+                else "caution" if overall_score > 0.3 else "avoid"
             )
 
             return {
@@ -441,7 +470,10 @@ class TelosCoreEngine:
             }
 
         except Exception as e:
-            return {"status": "error", "error": f"Intervention analysis failed: {str(e)}"}
+            return {
+                "status": "error",
+                "error": f"Intervention analysis failed: {str(e)}",
+            }
 
     def _evaluate_intervention_effectiveness(
         self, intervention: Dict[str, Any], target_system: Dict[str, Any]
@@ -472,7 +504,9 @@ class TelosCoreEngine:
         intervention_complexity = len(intervention)
         system_complexity = len(target_system.get("components", []))
 
-        side_effect_probability = min(1.0, (intervention_complexity * system_complexity) / 50)
+        side_effect_probability = min(
+            1.0, (intervention_complexity * system_complexity) / 50
+        )
         severity = min(1.0, side_effect_probability * 0.8)
 
         return {
@@ -498,11 +532,9 @@ class TelosCoreEngine:
 
         return {
             "risk_level": risk_level,
-            "risk_category": "high"
-            if risk_level > 0.7
-            else "medium"
-            if risk_level > 0.4
-            else "low",
+            "risk_category": (
+                "high" if risk_level > 0.7 else "medium" if risk_level > 0.4 else "low"
+            ),
             "risk_factors": [
                 "System criticality",
                 "Intervention magnitude",
@@ -524,23 +556,30 @@ class TelosCoreEngine:
 
             # Linear trend forecast
             if method in ["linear_trend", "auto"]:
-                linear_forecast = self._linear_trend_forecast(time_series, forecast_horizon)
+                linear_forecast = self._linear_trend_forecast(
+                    time_series, forecast_horizon
+                )
                 forecasts["linear_trend"] = linear_forecast
 
             # Moving average forecast
             if method in ["moving_average", "auto"]:
-                ma_forecast = self._moving_average_forecast(time_series, forecast_horizon)
+                ma_forecast = self._moving_average_forecast(
+                    time_series, forecast_horizon
+                )
                 forecasts["moving_average"] = ma_forecast
 
             # Exponential smoothing
             if method in ["exponential_smoothing", "auto"]:
-                exp_forecast = self._exponential_smoothing_forecast(time_series, forecast_horizon)
+                exp_forecast = self._exponential_smoothing_forecast(
+                    time_series, forecast_horizon
+                )
                 forecasts["exponential_smoothing"] = exp_forecast
 
             # Select best forecast if auto mode
             if method == "auto":
                 best_method = min(
-                    forecasts.keys(), key=lambda k: forecasts[k].get("mse", float("inf"))
+                    forecasts.keys(),
+                    key=lambda k: forecasts[k].get("mse", float("inf")),
                 )
                 best_forecast = forecasts[best_method]
             else:
@@ -556,9 +595,14 @@ class TelosCoreEngine:
             }
 
         except Exception as e:
-            return {"status": "error", "error": f"Time series forecasting failed: {str(e)}"}
+            return {
+                "status": "error",
+                "error": f"Time series forecasting failed: {str(e)}",
+            }
 
-    def _linear_trend_forecast(self, time_series: List[float], horizon: int) -> Dict[str, Any]:
+    def _linear_trend_forecast(
+        self, time_series: List[float], horizon: int
+    ) -> Dict[str, Any]:
         """Simple linear trend forecasting."""
         if len(time_series) < 2:
             return {
@@ -591,7 +635,12 @@ class TelosCoreEngine:
         predicted = [slope * x[i] + intercept for i in range(n)]
         mse = sum((y[i] - predicted[i]) ** 2 for i in range(n)) / n
 
-        return {"values": forecast_values, "slope": slope, "intercept": intercept, "mse": mse}
+        return {
+            "values": forecast_values,
+            "slope": slope,
+            "intercept": intercept,
+            "mse": mse,
+        }
 
     def _moving_average_forecast(
         self, time_series: List[float], horizon: int, window: int = 3
@@ -646,9 +695,9 @@ class TelosCoreEngine:
         forecast_values = [last_smoothed] * horizon
 
         # Calculate MSE
-        mse = sum((time_series[i] - smoothed[i]) ** 2 for i in range(len(time_series))) / len(
-            time_series
-        )
+        mse = sum(
+            (time_series[i] - smoothed[i]) ** 2 for i in range(len(time_series))
+        ) / len(time_series)
 
         return {
             "values": forecast_values,
@@ -666,7 +715,9 @@ class TelosCoreEngine:
             significance_level = payload.get("significance_level", 0.05)
 
             if test_type == "correlation" and len(data) >= 2:
-                return self._test_correlation_hypothesis(hypothesis, data, significance_level)
+                return self._test_correlation_hypothesis(
+                    hypothesis, data, significance_level
+                )
             elif test_type == "mean_difference" and len(data) >= 2:
                 return self._test_mean_difference(hypothesis, data, significance_level)
             else:
@@ -713,10 +764,13 @@ class TelosCoreEngine:
 
                 if min_len > 1:
                     # Simple correlation calculation
-                    mean1, mean2 = sum(values1) / len(values1), sum(values2) / len(values2)
+                    mean1, mean2 = sum(values1) / len(values1), sum(values2) / len(
+                        values2
+                    )
 
                     numerator = sum(
-                        (values1[k] - mean1) * (values2[k] - mean2) for k in range(min_len)
+                        (values1[k] - mean1) * (values2[k] - mean2)
+                        for k in range(min_len)
                     )
                     denom1 = sum((values1[k] - mean1) ** 2 for k in range(min_len))
                     denom2 = sum((values2[k] - mean2) ** 2 for k in range(min_len))
@@ -737,9 +791,11 @@ class TelosCoreEngine:
             "test_type": "correlation",
             "correlations": correlations,
             "significance_level": significance_level,
-            "conclusion": "Correlations found"
-            if any(c["significant"] for c in correlations.values())
-            else "No significant correlations",
+            "conclusion": (
+                "Correlations found"
+                if any(c["significant"] for c in correlations.values())
+                else "No significant correlations"
+            ),
         }
 
     def _build_causal_model(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -751,7 +807,10 @@ class TelosCoreEngine:
             model_id = payload.get("model_id", "default")
 
             if not data:
-                return {"status": "error", "error": "No data provided for model building"}
+                return {
+                    "status": "error",
+                    "error": "No data provided for model building",
+                }
 
             # Build SCM
             scm = SCMImplementation(dag=causal_structure)
@@ -778,10 +837,16 @@ class TelosCoreEngine:
                     "fitted_successfully": True,
                 }
             else:
-                return {"status": "error", "error": "Failed to fit structural causal model to data"}
+                return {
+                    "status": "error",
+                    "error": "Failed to fit structural causal model to data",
+                }
 
         except Exception as e:
-            return {"status": "error", "error": f"Causal model building failed: {str(e)}"}
+            return {
+                "status": "error",
+                "error": f"Causal model building failed: {str(e)}",
+            }
 
 
 class TelosWorker:
@@ -838,7 +903,9 @@ class TelosWorker:
                     self.logger.info(f"Retrying in {retry_delay} seconds...")
                     time.sleep(retry_delay)
                 else:
-                    self.logger.error("Could not connect to RabbitMQ after all attempts. Exiting.")
+                    self.logger.error(
+                        "Could not connect to RabbitMQ after all attempts. Exiting."
+                    )
                     sys.exit(1)
             except Exception as e:
                 self.logger.error(f"Unexpected error connecting to RabbitMQ: {e}")
@@ -876,7 +943,9 @@ class TelosWorker:
 
             # Execute task using core engine
             result_payload = self.core_engine.execute(task_type, payload)
-            status = "success" if result_payload.get("status") == "success" else "failure"
+            status = (
+                "success" if result_payload.get("status") == "success" else "failure"
+            )
 
             processing_time = time.time() - start_time
 
@@ -941,7 +1010,9 @@ class TelosWorker:
     def start_consuming(self):
         """Start consuming messages from the task queue."""
         try:
-            self.channel.basic_consume(queue=TASK_QUEUE, on_message_callback=self.process_task)
+            self.channel.basic_consume(
+                queue=TASK_QUEUE, on_message_callback=self.process_task
+            )
 
             self.is_running = True
             self.logger.info(

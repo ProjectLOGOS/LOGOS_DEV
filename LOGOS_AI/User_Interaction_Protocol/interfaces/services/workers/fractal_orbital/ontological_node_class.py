@@ -1,11 +1,12 @@
 """Ontological Node Implementation... (rest of your docstring)"""
 
-from typing import Dict, List, Tuple, Optional, Union, Any, Set
-import math
-import uuid
-import time
 import json
+import math
+import time
+import uuid
 from enum import Enum
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
+
 from .ontology.trinity_vector import TrinityVector
 
 
@@ -37,7 +38,9 @@ class OntologicalNode:
         self.node_id = self._generate_id(c_value)
 
         # Core categorization
-        self.category = CategoryType.MATERIAL if self.c.imag == 0 else CategoryType.METAPHYSICAL
+        self.category = (
+            CategoryType.MATERIAL if self.c.imag == 0 else CategoryType.METAPHYSICAL
+        )
         self.trinitarian_domain = (
             DomainType.LOGICAL
             if self.category == CategoryType.MATERIAL
@@ -294,7 +297,8 @@ class OntologicalNode:
         """
         # Create base node from complex value
         c_value = complex(
-            data.get("c_value", {}).get("real", 0), data.get("c_value", {}).get("imag", 0)
+            data.get("c_value", {}).get("real", 0),
+            data.get("c_value", {}).get("imag", 0),
         )
         node = cls(c_value)
 
@@ -330,7 +334,9 @@ class OntologicalNode:
         stability = self.orbit_properties.get("in_set", False)
         stability_factor = 0.9 if stability else 0.5
 
-        domain_factor = 0.9 if self.trinitarian_domain == DomainType.TRANSCENDENTAL else 0.7
+        domain_factor = (
+            0.9 if self.trinitarian_domain == DomainType.TRANSCENDENTAL else 0.7
+        )
 
         # Compute necessity score
         necessity = (

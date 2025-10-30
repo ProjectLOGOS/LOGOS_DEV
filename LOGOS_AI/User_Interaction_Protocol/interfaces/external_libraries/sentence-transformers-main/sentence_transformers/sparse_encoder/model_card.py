@@ -5,9 +5,16 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from sentence_transformers.model_card import SentenceTransformerModelCardCallback, SentenceTransformerModelCardData
+from sentence_transformers.model_card import (
+    SentenceTransformerModelCardCallback,
+    SentenceTransformerModelCardData,
+)
 from sentence_transformers.models import Asym, Module, Router
-from sentence_transformers.sparse_encoder.models import SparseAutoEncoder, SparseStaticEmbedding, SpladePooling
+from sentence_transformers.sparse_encoder.models import (
+    SparseAutoEncoder,
+    SparseStaticEmbedding,
+    SpladePooling,
+)
 
 if TYPE_CHECKING:
     from sentence_transformers.sparse_encoder.SparseEncoder import SparseEncoder
@@ -78,7 +85,9 @@ class SparseEncoderModelCardData(SentenceTransformerModelCardData):
 
     # Computed once, always unchanged
     pipeline_tag: str = field(default=None, init=False)
-    template_path: Path = field(default=Path(__file__).parent / "model_card_template.md", init=False, repr=False)
+    template_path: Path = field(
+        default=Path(__file__).parent / "model_card_template.md", init=False, repr=False
+    )
     model_type: str = field(default="Sparse Encoder", init=False, repr=False)
 
     # Passed via `register_model` only
@@ -92,7 +101,9 @@ class SparseEncoderModelCardData(SentenceTransformerModelCardData):
         if self.pipeline_tag is None:
             self.pipeline_tag = "feature-extraction"
 
-        all_modules = [module.__class__ for module in model.modules() if isinstance(module, Module)]
+        all_modules = [
+            module.__class__ for module in model.modules() if isinstance(module, Module)
+        ]
         model_type = []
         if Asym in all_modules or Router in all_modules:
             model_type += ["Asymmetric"]
@@ -118,7 +129,10 @@ class SparseEncoderModelCardData(SentenceTransformerModelCardData):
                 "dot": "Dot Product",
                 "euclidean": "Euclidean Distance",
                 "manhattan": "Manhattan Distance",
-            }.get(self.model.similarity_fn_name, self.model.similarity_fn_name.replace("_", " ").title())
+            }.get(
+                self.model.similarity_fn_name,
+                self.model.similarity_fn_name.replace("_", " ").title(),
+            )
         return {
             "model_max_length": self.model.get_max_seq_length(),
             "output_dimensionality": self.model.get_sentence_embedding_dimension(),

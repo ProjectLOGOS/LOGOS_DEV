@@ -15,9 +15,14 @@ from transformers.integrations import WandbCallback
 
 from sentence_transformers.cross_encoder import CrossEncoder
 from sentence_transformers.cross_encoder.data_collator import CrossEncoderDataCollator
-from sentence_transformers.cross_encoder.losses import BinaryCrossEntropyLoss, CrossEntropyLoss
+from sentence_transformers.cross_encoder.losses import (
+    BinaryCrossEntropyLoss,
+    CrossEntropyLoss,
+)
 from sentence_transformers.cross_encoder.model_card import CrossEncoderModelCardCallback
-from sentence_transformers.cross_encoder.training_args import CrossEncoderTrainingArguments
+from sentence_transformers.cross_encoder.training_args import (
+    CrossEncoderTrainingArguments,
+)
 from sentence_transformers.evaluation import SentenceEvaluator, SequentialEvaluator
 from sentence_transformers.trainer import SentenceTransformerTrainer
 from sentence_transformers.util import is_datasets_available, is_training_available
@@ -104,19 +109,26 @@ class CrossEncoderTrainer(SentenceTransformerTrainer):
         args: CrossEncoderTrainingArguments | None = None,
         train_dataset: Dataset | DatasetDict | dict[str, Dataset] | None = None,
         eval_dataset: Dataset | DatasetDict | dict[str, Dataset] | None = None,
-        loss: nn.Module
-        | dict[str, nn.Module]
-        | Callable[[CrossEncoder], torch.nn.Module]
-        | dict[str, Callable[[CrossEncoder], torch.nn.Module]]
-        | None = None,
+        loss: (
+            nn.Module
+            | dict[str, nn.Module]
+            | Callable[[CrossEncoder], torch.nn.Module]
+            | dict[str, Callable[[CrossEncoder], torch.nn.Module]]
+            | None
+        ) = None,
         evaluator: SentenceEvaluator | list[SentenceEvaluator] | None = None,
         data_collator: DataCollator | None = None,
         tokenizer: PreTrainedTokenizerBase | Callable | None = None,
         model_init: Callable[[], CrossEncoder] | None = None,
         compute_metrics: Callable[[EvalPrediction], dict] | None = None,
         callbacks: list[TrainerCallback] | None = None,
-        optimizers: tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR] = (None, None),
-        preprocess_logits_for_metrics: Callable[[torch.Tensor, torch.Tensor], torch.Tensor] | None = None,
+        optimizers: tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR] = (
+            None,
+            None,
+        ),
+        preprocess_logits_for_metrics: (
+            Callable[[torch.Tensor, torch.Tensor], torch.Tensor] | None
+        ) = None,
     ) -> None:
         if not is_training_available():
             raise RuntimeError(
@@ -127,17 +139,23 @@ class CrossEncoderTrainer(SentenceTransformerTrainer):
 
         if args is None:
             output_dir = "tmp_trainer"
-            logger.info(f"No `CrossEncoderTrainingArguments` passed, using `output_dir={output_dir}`.")
+            logger.info(
+                f"No `CrossEncoderTrainingArguments` passed, using `output_dir={output_dir}`."
+            )
             args = CrossEncoderTrainingArguments(output_dir=output_dir)
         elif not isinstance(args, CrossEncoderTrainingArguments):
-            raise ValueError("Please use `CrossEncoderTrainingArguments` imported from `sentence_transformers`.")
+            raise ValueError(
+                "Please use `CrossEncoderTrainingArguments` imported from `sentence_transformers`."
+            )
 
         if model is None:
             if model_init is not None:
                 self.model_init = model_init
                 model = self.call_model_init()
             else:
-                raise RuntimeError("`Trainer` requires either a `model` or `model_init` argument")
+                raise RuntimeError(
+                    "`Trainer` requires either a `model` or `model_init` argument"
+                )
         else:
             if model_init is not None:
                 logger.warning(
@@ -167,12 +185,17 @@ class CrossEncoderTrainer(SentenceTransformerTrainer):
 
         if data_collator is None:
             data_collator = CrossEncoderDataCollator(
-                tokenize_fn=partial(tokenizer, padding=True, truncation=True, return_tensors="pt")
+                tokenize_fn=partial(
+                    tokenizer, padding=True, truncation=True, return_tensors="pt"
+                )
             )
 
-        for dataset_name, dataset in zip(["train", "eval"], [train_dataset, eval_dataset]):
+        for dataset_name, dataset in zip(
+            ["train", "eval"], [train_dataset, eval_dataset]
+        ):
             if isinstance(dataset, IterableDataset) or (
-                isinstance(dataset, dict) and any(isinstance(d, IterableDataset) for d in dataset.values())
+                isinstance(dataset, dict)
+                and any(isinstance(d, IterableDataset) for d in dataset.values())
             ):
                 # In short: `accelerate` will concatenate batches from the IterableDataset, expecting every
                 # key-value pair after the data collator to only contain torch.Tensor values. However,
@@ -183,7 +206,9 @@ class CrossEncoderTrainer(SentenceTransformerTrainer):
                     "Please convert the dataset to a `Dataset` or `DatasetDict` before passing it to the trainer."
                 )
 
-        if isinstance(train_dataset, dict) and not isinstance(train_dataset, DatasetDict):
+        if isinstance(train_dataset, dict) and not isinstance(
+            train_dataset, DatasetDict
+        ):
             train_dataset = DatasetDict(train_dataset)
         if isinstance(eval_dataset, dict) and not isinstance(eval_dataset, DatasetDict):
             eval_dataset = DatasetDict(eval_dataset)
@@ -196,7 +221,11 @@ class CrossEncoderTrainer(SentenceTransformerTrainer):
             "args": args,
             "data_collator": data_collator,
             "train_dataset": train_dataset,
-            "eval_dataset": eval_dataset if eval_dataset is not None or evaluator is None else "dummy",
+            "eval_dataset": (
+                eval_dataset
+                if eval_dataset is not None or evaluator is None
+                else "dummy"
+            ),
             "model_init": model_init,
             "compute_metrics": compute_metrics,
             "callbacks": callbacks,
@@ -238,20 +267,34 @@ class CrossEncoderTrainer(SentenceTransformerTrainer):
         self.args: CrossEncoderTrainingArguments
         self.data_collator: CrossEncoderDataCollator
         # Set the W&B project via environment variables if it's not already set
-        if any([isinstance(callback, WandbCallback) for callback in self.callback_handler.callbacks]):
+        if any(
+            [
+                isinstance(callback, WandbCallback)
+                for callback in self.callback_handler.callbacks
+            ]
+        ):
             os.environ.setdefault("WANDB_PROJECT", "sentence-transformers")
 
         if loss is None:
             if self.model.num_labels == 1:
-                logger.info("No `loss` passed, using `losses.BinaryCrossEntropyLoss` as a default option.")
+                logger.info(
+                    "No `loss` passed, using `losses.BinaryCrossEntropyLoss` as a default option."
+                )
                 loss = BinaryCrossEntropyLoss(self.model)
             else:
-                logger.info("No `loss` passed, using `losses.CrossEntropyLoss` as a default option.")
+                logger.info(
+                    "No `loss` passed, using `losses.CrossEntropyLoss` as a default option."
+                )
                 loss = CrossEntropyLoss(self.model)
 
         if isinstance(loss, dict):
-            self.loss = {dataset_name: self.prepare_loss(loss_fn, model) for dataset_name, loss_fn in loss.items()}
-            for dataset_name, dataset in zip(["train", "eval"], [train_dataset, eval_dataset]):
+            self.loss = {
+                dataset_name: self.prepare_loss(loss_fn, model)
+                for dataset_name, loss_fn in loss.items()
+            }
+            for dataset_name, dataset in zip(
+                ["train", "eval"], [train_dataset, eval_dataset]
+            ):
                 if dataset is None:
                     continue
                 if not isinstance(dataset, dict):
@@ -273,11 +316,17 @@ class CrossEncoderTrainer(SentenceTransformerTrainer):
 
         if self.train_dataset is not None:
             self.train_dataset = self.preprocess_dataset(
-                train_dataset, prompts=args.prompts, router_mapping=args.router_mapping, dataset_name="train"
+                train_dataset,
+                prompts=args.prompts,
+                router_mapping=args.router_mapping,
+                dataset_name="train",
             )
         if self.eval_dataset is not None:
             self.eval_dataset = self.preprocess_dataset(
-                eval_dataset, prompts=args.prompts, router_mapping=args.router_mapping, dataset_name="eval"
+                eval_dataset,
+                prompts=args.prompts,
+                router_mapping=args.router_mapping,
+                dataset_name="eval",
             )
         self.add_model_card_callback(default_args_dict)
 
@@ -299,7 +348,9 @@ class CrossEncoderTrainer(SentenceTransformerTrainer):
 
         model_card_callback = CrossEncoderModelCardCallback(default_args_dict)
         self.add_callback(model_card_callback)
-        model_card_callback.on_init_end(self.args, self.state, self.control, model=self.model, trainer=self)
+        model_card_callback.on_init_end(
+            self.args, self.state, self.control, model=self.model, trainer=self
+        )
 
     def collect_features(
         self, inputs: dict[str, torch.Tensor | Any]
@@ -314,7 +365,9 @@ class CrossEncoderTrainer(SentenceTransformerTrainer):
     def _load_from_checkpoint(self, checkpoint_path: str) -> None:
         from sentence_transformers.cross_encoder import CrossEncoder
 
-        loaded_model = CrossEncoder(checkpoint_path, trust_remote_code=self.model.trust_remote_code)
+        loaded_model = CrossEncoder(
+            checkpoint_path, trust_remote_code=self.model.trust_remote_code
+        )
         self.model.load_state_dict(loaded_model.state_dict())
 
     def _load_best_model(self) -> None:

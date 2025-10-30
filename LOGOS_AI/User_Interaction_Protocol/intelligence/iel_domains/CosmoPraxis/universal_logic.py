@@ -6,14 +6,16 @@ including modal logic for necessity/contingency and
 universal quantification over domains.
 """
 
-from typing import Set, Dict, List, Any, Optional, Callable
 from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Set
+
 
 class Modality(Enum):
     NECESSARY = "□"
     POSSIBLE = "◇"
     CONTINGENT = "△"
     IMPOSSIBLE = "⊥"
+
 
 class UniversalLogic:
     """
@@ -37,20 +39,22 @@ class UniversalLogic:
             Modality.NECESSARY: self._necessary,
             Modality.POSSIBLE: self._possible,
             Modality.CONTINGENT: self._contingent,
-            Modality.IMPOSSIBLE: self._impossible
+            Modality.IMPOSSIBLE: self._impossible,
         }
 
     def add_axiom(self, axiom: str, value: bool = True):
         """Add an axiom to the system."""
         self.axioms[axiom] = value
 
-    def add_theorem(self, theorem: str, proof: List[str] = None, modality: Modality = None):
+    def add_theorem(
+        self, theorem: str, proof: List[str] = None, modality: Modality = None
+    ):
         """Add a theorem with optional proof and modality."""
         self.theorems[theorem] = {
-            'proved': proof is not None,
-            'proof': proof or [],
-            'modality': modality,
-            'verified': False
+            "proved": proof is not None,
+            "proof": proof or [],
+            "modality": modality,
+            "verified": False,
         }
 
     def apply_modal_operator(self, proposition: str, modality: Modality) -> bool:
@@ -87,9 +91,9 @@ class UniversalLogic:
     def get_logical_status(self, proposition: str) -> Dict[str, Any]:
         """Get the logical status of a proposition."""
         return {
-            'necessary': self._necessary(proposition),
-            'possible': self._possible(proposition),
-            'contingent': self._contingent(proposition),
-            'impossible': self._impossible(proposition),
-            'in_theorems': proposition in self.theorems
+            "necessary": self._necessary(proposition),
+            "possible": self._possible(proposition),
+            "contingent": self._contingent(proposition),
+            "impossible": self._impossible(proposition),
+            "in_theorems": proposition in self.theorems,
         }

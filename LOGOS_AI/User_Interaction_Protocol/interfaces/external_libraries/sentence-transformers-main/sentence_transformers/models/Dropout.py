@@ -20,8 +20,12 @@ class Dropout(Module):
         self.dropout_layer = nn.Dropout(self.dropout)
 
     def forward(self, features: dict[str, Tensor]):
-        features.update({"sentence_embedding": self.dropout_layer(features["sentence_embedding"])})
+        features.update(
+            {"sentence_embedding": self.dropout_layer(features["sentence_embedding"])}
+        )
         return features
 
-    def save(self, output_path: str, *args, safe_serialization: bool = True, **kwargs) -> None:
+    def save(
+        self, output_path: str, *args, safe_serialization: bool = True, **kwargs
+    ) -> None:
         self.save_config(output_path)

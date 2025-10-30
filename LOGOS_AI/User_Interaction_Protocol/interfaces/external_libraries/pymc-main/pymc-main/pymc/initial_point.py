@@ -59,7 +59,9 @@ def convert_str_to_rv_dict(
         if isinstance(key, str):
             if is_transformed_name(key):
                 rv = model[get_untransformed_name(key)]
-                initvals[rv] = model.rvs_to_transforms[rv].backward(initval, *rv.owner.inputs)
+                initvals[rv] = model.rvs_to_transforms[rv].backward(
+                    initval, *rv.owner.inputs
+                )
             else:
                 initvals[model[key]] = initval
         else:
@@ -172,7 +174,9 @@ def make_initial_point_fn(
     # Replace original rng shared variables so that we don't mess with them
     # when calling the final seeded function
     initial_values = replace_rng_nodes(initial_values)
-    func = compile(inputs=[], outputs=initial_values, mode=pytensor.compile.mode.FAST_COMPILE)
+    func = compile(
+        inputs=[], outputs=initial_values, mode=pytensor.compile.mode.FAST_COMPILE
+    )
 
     varnames = []
     for var in model.free_RVs:
@@ -257,7 +261,9 @@ def make_initial_point_expression(
     # Clone free_rvs so we don't modify the original graph
     initial_point_fgraph = FunctionGraph(outputs=free_rvs, clone=True)
     # Wrap each rv in an initial_point Operation to avoid losing dependency between the RVs
-    replacements = tuple((rv, initial_point_op(rv)) for rv in initial_point_fgraph.outputs)
+    replacements = tuple(
+        (rv, initial_point_op(rv)) for rv in initial_point_fgraph.outputs
+    )
     toposort_replace(initial_point_fgraph, replacements, reverse=True)
 
     # Apply any rewrites necessary to compute the initial points.
@@ -313,7 +319,9 @@ def make_initial_point_expression(
                     f'Invalid string strategy: {strategy}. It must be one of ["support_point", "prior"]'
                 )
         else:
-            if isinstance(strategy, Variable) and (set(free_rvs) & set(ancestors([strategy]))):
+            if isinstance(strategy, Variable) and (
+                set(free_rvs) & set(ancestors([strategy]))
+            ):
                 raise ValueError(
                     f"Initial value of {original_variable} depends on other random variables. This is not supported anymore."
                 )
@@ -351,7 +359,9 @@ def make_initial_point_expression(
     # in the constrained (untransformed) space. We do this in reverse topological
     # order, so that later nodes do not reintroduce expressions with earlier
     # rvs that would need to once again be replaced by their initial_points
-    toposort_replace(initial_point_fgraph, tuple(zip(ip_variables, initial_values)), reverse=True)
+    toposort_replace(
+        initial_point_fgraph, tuple(zip(ip_variables, initial_values)), reverse=True
+    )
 
     if not return_transformed:
         return initial_point_fgraph.outputs[:n_rvs]

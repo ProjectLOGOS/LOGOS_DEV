@@ -92,7 +92,9 @@ def semantic_search_faiss(
     import faiss
 
     if corpus_embeddings is not None and corpus_index is not None:
-        raise ValueError("Only corpus_embeddings or corpus_index should be used, not both.")
+        raise ValueError(
+            "Only corpus_embeddings or corpus_index should be used, not both."
+        )
     if corpus_embeddings is None and corpus_index is None:
         raise ValueError("Either corpus_embeddings or corpus_index should be used.")
 
@@ -147,7 +149,10 @@ def semantic_search_faiss(
     # If rescoring is enabled, we need to rescore the results using the rescore_embeddings
     if rescore_embeddings is not None:
         top_k_embeddings = np.array(
-            [[corpus_index.reconstruct(idx.item()) for idx in query_indices] for query_indices in indices]
+            [
+                [corpus_index.reconstruct(idx.item()) for idx in query_indices]
+                for query_indices in indices
+            ]
         )
         # If the corpus precision is binary, we need to unpack the bits
         if corpus_precision == "ubinary":
@@ -163,7 +168,9 @@ def semantic_search_faiss(
         rescored_scores = np.einsum("ij,ikj->ik", rescore_embeddings, top_k_embeddings)
         rescored_indices = np.argsort(-rescored_scores)[:, :top_k]
         indices = indices[np.arange(len(query_embeddings))[:, None], rescored_indices]
-        scores = rescored_scores[np.arange(len(query_embeddings))[:, None], rescored_indices]
+        scores = rescored_scores[
+            np.arange(len(query_embeddings))[:, None], rescored_indices
+        ]
 
     delta_t = time.time() - start_t
 
@@ -260,11 +267,15 @@ def semantic_search_usearch(
     from usearch.index import Index
 
     if corpus_embeddings is not None and corpus_index is not None:
-        raise ValueError("Only corpus_embeddings or corpus_index should be used, not both.")
+        raise ValueError(
+            "Only corpus_embeddings or corpus_index should be used, not both."
+        )
     if corpus_embeddings is None and corpus_index is None:
         raise ValueError("Either corpus_embeddings or corpus_index should be used.")
     if corpus_precision not in ["float32", "int8", "ubinary", "binary"]:
-        raise ValueError('corpus_precision must be "float32", "int8", "ubinary", "binary" for usearch')
+        raise ValueError(
+            'corpus_precision must be "float32", "int8", "ubinary", "binary" for usearch'
+        )
 
     # If corpus_index is not provided, create a new index
     if corpus_index is None:
@@ -335,7 +346,9 @@ def semantic_search_usearch(
 
     # If rescoring is enabled, we need to rescore the results using the rescore_embeddings
     if rescore_embeddings is not None:
-        top_k_embeddings = np.array([corpus_index.get(query_indices) for query_indices in indices])
+        top_k_embeddings = np.array(
+            [corpus_index.get(query_indices) for query_indices in indices]
+        )
         # If the corpus precision is binary, we need to unpack the bits
         if corpus_precision in ("ubinary", "binary"):
             top_k_embeddings = np.unpackbits(top_k_embeddings.astype(np.uint8), axis=-1)
@@ -349,7 +362,9 @@ def semantic_search_usearch(
         rescored_scores = np.einsum("ij,ikj->ik", rescore_embeddings, top_k_embeddings)
         rescored_indices = np.argsort(-rescored_scores)[:, :top_k]
         indices = indices[np.arange(len(query_embeddings))[:, None], rescored_indices]
-        scores = rescored_scores[np.arange(len(query_embeddings))[:, None], rescored_indices]
+        scores = rescored_scores[
+            np.arange(len(query_embeddings))[:, None], rescored_indices
+        ]
 
     delta_t = time.time() - start_t
 
@@ -407,7 +422,9 @@ def quantize_embeddings(
             embeddings = [embedding.cpu().numpy() for embedding in embeddings]
         embeddings = np.array(embeddings)
     if embeddings.dtype in (np.uint8, np.int8):
-        raise Exception("Embeddings to quantize must be float rather than int8 or uint8.")
+        raise Exception(
+            "Embeddings to quantize must be float rather than int8 or uint8."
+        )
 
     if precision == "float32":
         return embeddings.astype(np.float32)
@@ -416,7 +433,12 @@ def quantize_embeddings(
         # Either use the 1. provided ranges, 2. the calibration dataset or 3. the provided embeddings
         if ranges is None:
             if calibration_embeddings is not None:
-                ranges = np.vstack((np.min(calibration_embeddings, axis=0), np.max(calibration_embeddings, axis=0)))
+                ranges = np.vstack(
+                    (
+                        np.min(calibration_embeddings, axis=0),
+                        np.max(calibration_embeddings, axis=0),
+                    )
+                )
             else:
                 if embeddings.shape[0] < 100:
                     logger.warning(
@@ -424,7 +446,9 @@ def quantize_embeddings(
                         f" {precision} quantization is more stable with `ranges` calculated from more embeddings "
                         "or a `calibration_embeddings` that can be used to calculate the buckets."
                     )
-                ranges = np.vstack((np.min(embeddings, axis=0), np.max(embeddings, axis=0)))
+                ranges = np.vstack(
+                    (np.min(embeddings, axis=0), np.max(embeddings, axis=0))
+                )
         starts = ranges[0, :]
         steps = (ranges[1, :] - ranges[0, :]) / 255
 
@@ -434,7 +458,9 @@ def quantize_embeddings(
             return ((embeddings - starts) / steps - 128).astype(np.int8)
 
     if precision == "binary":
-        return (np.packbits(embeddings > 0).reshape(embeddings.shape[0], -1) - 128).astype(np.int8)
+        return (
+            np.packbits(embeddings > 0).reshape(embeddings.shape[0], -1) - 128
+        ).astype(np.int8)
 
     if precision == "ubinary":
         return np.packbits(embeddings > 0).reshape(embeddings.shape[0], -1)

@@ -150,7 +150,8 @@ def find_constrained_prior(
 
     dist_params = pt.vector("dist_params")
     params_to_optim = {
-        arg_name: dist_params[i] for arg_name, i in zip(init_guess.keys(), range(len(init_guess)))
+        arg_name: dist_params[i]
+        for arg_name, i in zip(init_guess.keys(), range(len(init_guess)))
     }
 
     if fixed_params is not None:
@@ -172,13 +173,17 @@ def find_constrained_prior(
     target_fn = pm.pytensorf.compile([dist_params], target, allow_input_downcast=True)
 
     constraint = pt.exp(logcdf_upper) - pt.exp(logcdf_lower)
-    constraint_fn = pm.pytensorf.compile([dist_params], constraint, allow_input_downcast=True)
+    constraint_fn = pm.pytensorf.compile(
+        [dist_params], constraint, allow_input_downcast=True
+    )
 
     jac: str | Callable
     constraint_jac: str | Callable
     try:
         pytensor_jac = pm.gradient(target, [dist_params])
-        jac = pm.pytensorf.compile([dist_params], pytensor_jac, allow_input_downcast=True)
+        jac = pm.pytensorf.compile(
+            [dist_params], pytensor_jac, allow_input_downcast=True
+        )
         pytensor_constraint_jac = pm.gradient(constraint, [dist_params])
         constraint_jac = pm.pytensorf.compile(
             [dist_params], pytensor_constraint_jac, allow_input_downcast=True
@@ -187,7 +192,9 @@ def find_constrained_prior(
     except (NotImplementedError, NullTypeGradError):
         jac = "2-point"
         constraint_jac = "2-point"
-    cons = optimize.NonlinearConstraint(constraint_fn, lb=mass, ub=mass, jac=constraint_jac)
+    cons = optimize.NonlinearConstraint(
+        constraint_fn, lb=mass, ub=mass, jac=constraint_jac
+    )
 
     opt = optimize.minimize(
         target_fn, x0=list(init_guess.values()), jac=jac, constraints=cons, **kwargs

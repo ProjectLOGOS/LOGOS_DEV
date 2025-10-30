@@ -5,9 +5,10 @@ Provides advanced resource allocation, budgeting, and optimization
 capabilities for ergonomic systems.
 """
 
-from typing import Dict, List, Any, Optional, Tuple
-from collections import defaultdict
 import math
+from collections import defaultdict
+from typing import Any, Dict, List, Optional, Tuple
+
 
 class ResourceManager:
     """
@@ -23,9 +24,14 @@ class ResourceManager:
         self.allocation_history: List[Dict[str, Any]] = []
         self.optimization_goals: Dict[str, Callable] = {}
 
-    def add_resource(self, name: str, initial_quantity: float,
-                    max_quantity: float, regeneration_rate: float = 0.0,
-                    resource_type: str = "continuous"):
+    def add_resource(
+        self,
+        name: str,
+        initial_quantity: float,
+        max_quantity: float,
+        regeneration_rate: float = 0.0,
+        resource_type: str = "continuous",
+    ):
         """Add a resource to the system."""
         self.resources[name] = {
             "quantity": initial_quantity,
@@ -33,11 +39,16 @@ class ResourceManager:
             "regeneration_rate": regeneration_rate,
             "type": resource_type,
             "allocations": defaultdict(float),
-            "history": []
+            "history": [],
         }
 
-    def set_budget(self, resource_name: str, period: str, amount: float,
-                  reset_interval: Optional[float] = None):
+    def set_budget(
+        self,
+        resource_name: str,
+        period: str,
+        amount: float,
+        reset_interval: Optional[float] = None,
+    ):
         """Set a budget for a resource over a time period."""
         if resource_name not in self.resources:
             raise ValueError(f"Resource {resource_name} not found")
@@ -48,11 +59,12 @@ class ResourceManager:
             "amount": amount,
             "used": 0.0,
             "reset_interval": reset_interval,
-            "last_reset": 0.0
+            "last_reset": 0.0,
         }
 
-    def allocate_resource(self, resource_name: str, amount: float,
-                         requester: str, purpose: str = "") -> bool:
+    def allocate_resource(
+        self, resource_name: str, amount: float, requester: str, purpose: str = ""
+    ) -> bool:
         """Allocate resource amount to a requester."""
         if resource_name not in self.resources:
             return False
@@ -82,15 +94,16 @@ class ResourceManager:
             "amount": amount,
             "requester": requester,
             "purpose": purpose,
-            "timestamp": 0.0  # Would use actual timestamp
+            "timestamp": 0.0,  # Would use actual timestamp
         }
         self.allocation_history.append(allocation_record)
         resource["history"].append(allocation_record)
 
         return True
 
-    def deallocate_resource(self, resource_name: str, amount: float,
-                          requester: str) -> bool:
+    def deallocate_resource(
+        self, resource_name: str, amount: float, requester: str
+    ) -> bool:
         """Deallocate resource from a requester."""
         if resource_name not in self.resources:
             return False
@@ -111,11 +124,12 @@ class ResourceManager:
                 old_quantity = resource["quantity"]
                 resource["quantity"] = min(
                     resource["max_quantity"],
-                    resource["quantity"] + resource["regeneration_rate"] * time_delta
+                    resource["quantity"] + resource["regeneration_rate"] * time_delta,
                 )
 
-    def optimize_allocation(self, requirements: Dict[str, float],
-                          constraints: Dict[str, Any] = None) -> Dict[str, float]:
+    def optimize_allocation(
+        self, requirements: Dict[str, float], constraints: Dict[str, Any] = None
+    ) -> Dict[str, float]:
         """Optimize resource allocation given requirements."""
         # Simplified linear programming approach
         allocation = {}
@@ -146,7 +160,7 @@ class ResourceManager:
                 "max_quantity": resource["max_quantity"],
                 "utilization_ratio": resource["quantity"] / resource["max_quantity"],
                 "active_allocations": dict(resource["allocations"]),
-                "total_allocated": sum(resource["allocations"].values())
+                "total_allocated": sum(resource["allocations"].values()),
             }
         return utilization
 
@@ -160,12 +174,15 @@ class ResourceManager:
                 "budget_amount": budget["amount"],
                 "used_amount": budget["used"],
                 "remaining": budget["amount"] - budget["used"],
-                "utilization_ratio": budget["used"] / budget["amount"] if budget["amount"] > 0 else 0
+                "utilization_ratio": (
+                    budget["used"] / budget["amount"] if budget["amount"] > 0 else 0
+                ),
             }
         return status
 
-    def forecast_resource_needs(self, time_horizon: float,
-                              consumption_rate: Dict[str, float]) -> Dict[str, Any]:
+    def forecast_resource_needs(
+        self, time_horizon: float, consumption_rate: Dict[str, float]
+    ) -> Dict[str, Any]:
         """Forecast future resource needs."""
         forecast = {}
 
@@ -182,7 +199,7 @@ class ResourceManager:
                     "projected_consumption": projected_consumption,
                     "projected_regeneration": regeneration,
                     "final_quantity": final_quantity,
-                    "will_be_depleted": final_quantity <= 0
+                    "will_be_depleted": final_quantity <= 0,
                 }
 
         return forecast

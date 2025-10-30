@@ -160,7 +160,9 @@ class StepMethodTester:
 
             step.sampling_state = orig_state
             with warnings.catch_warnings():
-                warnings.filterwarnings("ignore", "More chains .* than draws .*", UserWarning)
+                warnings.filterwarnings(
+                    "ignore", "More chains .* than draws .*", UserWarning
+                )
                 idata = pm.sample(
                     tune=tune,
                     draws=draws,
@@ -203,7 +205,9 @@ class RVsAssignmentStepsTester:
             step_kwargs.setdefault(
                 "initial_point", {"c1_log__": np.array(0.5), "c2_log__": np.array(0.9)}
             )
-            step_kwargs.setdefault("compile_kwargs", {"mode": Mode(linker="py", optimizer=None)})
+            step_kwargs.setdefault(
+                "compile_kwargs", {"mode": Mode(linker="py", optimizer=None)}
+            )
             with pytensor.config.change_flags(mode=fast_unstable_sampling_mode):
                 assert [m.rvs_to_values[c1]] == step([c1], **step_kwargs).vars
                 assert {m.rvs_to_values[c1], m.rvs_to_values[c2]} == set(

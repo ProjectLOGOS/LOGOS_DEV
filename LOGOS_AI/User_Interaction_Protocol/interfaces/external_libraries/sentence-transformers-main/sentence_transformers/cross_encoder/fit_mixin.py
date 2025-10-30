@@ -12,10 +12,17 @@ from torch import Tensor, nn
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 from tqdm.autonotebook import tqdm, trange
-from transformers import TrainerCallback, TrainerControl, TrainerState, is_torch_npu_available
+from transformers import (
+    TrainerCallback,
+    TrainerControl,
+    TrainerState,
+    is_torch_npu_available,
+)
 from transformers.tokenization_utils_base import BatchEncoding
 
-from sentence_transformers.cross_encoder.training_args import CrossEncoderTrainingArguments
+from sentence_transformers.cross_encoder.training_args import (
+    CrossEncoderTrainingArguments,
+)
 from sentence_transformers.datasets.NoDuplicatesDataLoader import NoDuplicatesDataLoader
 from sentence_transformers.datasets.SentenceLabelDataset import SentenceLabelDataset
 from sentence_transformers.evaluation.SentenceEvaluator import SentenceEvaluator
@@ -45,7 +52,12 @@ class SaveModelCallback(TrainerCallback):
     training as well.
     """
 
-    def __init__(self, output_dir: str, evaluator: SentenceEvaluator | None, save_best_model: bool) -> None:
+    def __init__(
+        self,
+        output_dir: str,
+        evaluator: SentenceEvaluator | None,
+        save_best_model: bool,
+    ) -> None:
         super().__init__()
         self.output_dir = output_dir
         self.evaluator = evaluator
@@ -102,7 +114,10 @@ class EvaluatorCallback(TrainerCallback):
         **kwargs,
     ) -> None:
         evaluator_metrics = self.evaluator(
-            model, output_path=self.output_path, epoch=state.epoch, steps=state.global_step
+            model,
+            output_path=self.output_path,
+            epoch=state.epoch,
+            steps=state.global_step,
         )
         if not isinstance(evaluator_metrics, dict):
             evaluator_metrics = {"evaluator": evaluator_metrics}
@@ -110,10 +125,14 @@ class EvaluatorCallback(TrainerCallback):
         # Prefix all keys with metric_key_prefix + '_'
         for key in list(evaluator_metrics.keys()):
             if not key.startswith(f"{self.metric_key_prefix}_"):
-                evaluator_metrics[f"{self.metric_key_prefix}_{key}"] = evaluator_metrics.pop(key)
+                evaluator_metrics[f"{self.metric_key_prefix}_{key}"] = (
+                    evaluator_metrics.pop(key)
+                )
 
         if self.trainer is not None:
-            self.trainer.callback_handler.on_evaluate(args, state, control, metrics=evaluator_metrics)
+            self.trainer.callback_handler.on_evaluate(
+                args, state, control, metrics=evaluator_metrics
+            )
 
 
 class OriginalCallback(TrainerCallback):
@@ -122,7 +141,9 @@ class OriginalCallback(TrainerCallback):
     This callback has the following signature: `(score: float, epoch: int, steps: int) -> None`
     """
 
-    def __init__(self, callback: Callable[[float, int, int], None], evaluator: SentenceEvaluator) -> None:
+    def __init__(
+        self, callback: Callable[[float, int, int], None], evaluator: SentenceEvaluator
+    ) -> None:
         super().__init__()
         self.callback = callback
         self.evaluator = evaluator
@@ -144,7 +165,12 @@ class OriginalCallback(TrainerCallback):
 class FitMixinLoss(nn.Module):
     """A wrapper around the torch loss function that just accepts logits and labels, to be used in CrossEncoder.fit()"""
 
-    def __init__(self, model: CrossEncoder, loss_fct: nn.Module, activation_fn: nn.Module = nn.Identity()) -> None:
+    def __init__(
+        self,
+        model: CrossEncoder,
+        loss_fct: nn.Module,
+        activation_fn: nn.Module = nn.Identity(),
+    ) -> None:
         super().__init__()
         self.model = model
         self.loss_fct = loss_fct
@@ -248,11 +274,17 @@ class FitMixin:
             show_progress_bar: If True, output a tqdm progress bar
         """
         if not is_datasets_available():
-            raise ImportError("Please install `datasets` to use this function: `pip install datasets`.")
+            raise ImportError(
+                "Please install `datasets` to use this function: `pip install datasets`."
+            )
 
         # Delayed import to counter the CrossEncoder -> FitMixin -> CrossEncoderTrainer -> CrossEncoder circular import
-        from sentence_transformers.cross_encoder.losses.BinaryCrossEntropyLoss import BinaryCrossEntropyLoss
-        from sentence_transformers.cross_encoder.losses.CrossEntropyLoss import CrossEntropyLoss
+        from sentence_transformers.cross_encoder.losses.BinaryCrossEntropyLoss import (
+            BinaryCrossEntropyLoss,
+        )
+        from sentence_transformers.cross_encoder.losses.CrossEntropyLoss import (
+            CrossEntropyLoss,
+        )
         from sentence_transformers.cross_encoder.trainer import CrossEncoderTrainer
 
         # Clear the dataloaders from collate functions as we just want raw InputExamples
@@ -264,7 +296,9 @@ class FitMixin:
         batch_size = getattr(train_dataloader, "batch_size", 8)
         if isinstance(train_dataloader, NoDuplicatesDataLoader):
             batch_sampler = BatchSamplers.NO_DUPLICATES
-        elif hasattr(train_dataloader, "dataset") and isinstance(train_dataloader.dataset, SentenceLabelDataset):
+        elif hasattr(train_dataloader, "dataset") and isinstance(
+            train_dataloader.dataset, SentenceLabelDataset
+        ):
             batch_sampler = BatchSamplers.GROUP_BY_LABEL
         else:
             batch_sampler = BatchSamplers.BATCH_SAMPLER
@@ -272,10 +306,14 @@ class FitMixin:
         texts = []
         labels = []
         for batch in train_dataloader:
-            batch_texts, batch_labels = zip(*[(example.texts, example.label) for example in batch])
+            batch_texts, batch_labels = zip(
+                *[(example.texts, example.label) for example in batch]
+            )
             texts += batch_texts
             labels += batch_labels
-        train_dataset = Dataset.from_dict({f"sentence_{idx}": text for idx, text in enumerate(zip(*texts))})
+        train_dataset = Dataset.from_dict(
+            {f"sentence_{idx}": text for idx, text in enumerate(zip(*texts))}
+        )
         # Add label column, unless all labels are 0 (the default value for `labels` in InputExample)
         add_label_column = True
         try:
@@ -307,7 +345,11 @@ class FitMixin:
             per_device_eval_batch_size=batch_size,
             num_train_epochs=epochs,
             **{
-                eval_strategy_key: "steps" if evaluation_steps is not None and evaluation_steps > 0 else "no",
+                eval_strategy_key: (
+                    "steps"
+                    if evaluation_steps is not None and evaluation_steps > 0
+                    else "no"
+                ),
             },
             eval_steps=evaluation_steps,
             max_grad_norm=max_grad_norm,
@@ -322,10 +364,17 @@ class FitMixin:
         no_decay = ["bias", "LayerNorm.bias", "LayerNorm.weight"]
         optimizer_grouped_parameters = [
             {
-                "params": [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)],
+                "params": [
+                    p for n, p in param_optimizer if not any(nd in n for nd in no_decay)
+                ],
                 "weight_decay": weight_decay,
             },
-            {"params": [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], "weight_decay": 0.0},
+            {
+                "params": [
+                    p for n, p in param_optimizer if any(nd in n for nd in no_decay)
+                ],
+                "weight_decay": 0.0,
+            },
         ]
 
         optimizer = optimizer_class(optimizer_grouped_parameters, **optimizer_params)
@@ -333,7 +382,10 @@ class FitMixin:
             steps_per_epoch = len(train_dataset) // batch_size
             num_train_steps = int(steps_per_epoch * epochs)
             scheduler_obj = SentenceTransformer._get_scheduler(
-                optimizer, scheduler=scheduler, warmup_steps=warmup_steps, t_total=num_train_steps
+                optimizer,
+                scheduler=scheduler,
+                warmup_steps=warmup_steps,
+                t_total=num_train_steps,
             )
 
         if loss_fct is None:
@@ -342,7 +394,9 @@ class FitMixin:
             else:
                 loss_fct = CrossEntropyLoss(self, activation_fn=activation_fct)
         else:
-            loss_fct = FitMixinLoss(self, loss_fct=loss_fct, activation_fn=activation_fct)
+            loss_fct = FitMixinLoss(
+                self, loss_fct=loss_fct, activation_fn=activation_fct
+            )
 
         # Create callbacks
         callbacks = []
@@ -363,11 +417,15 @@ class FitMixin:
         )
 
         if output_path is not None:
-            trainer.add_callback(SaveModelCallback(output_path, evaluator, save_best_model))
+            trainer.add_callback(
+                SaveModelCallback(output_path, evaluator, save_best_model)
+            )
 
         trainer.train()
 
-    def smart_batching_collate(self, batch: list[InputExample]) -> tuple[BatchEncoding, Tensor]:
+    def smart_batching_collate(
+        self, batch: list[InputExample]
+    ) -> tuple[BatchEncoding, Tensor]:
         texts = [[] for _ in range(len(batch[0].texts))]
         labels = []
 
@@ -383,17 +441,22 @@ class FitMixin:
             truncation="longest_first",
             return_tensors="pt",
         )
-        assert self.max_length is None or tokenized["input_ids"].shape[0] <= self.max_length
-        labels = torch.tensor(labels, dtype=torch.float if self.config.num_labels == 1 else torch.long).to(
-            self.model.device
+        assert (
+            self.max_length is None
+            or tokenized["input_ids"].shape[0] <= self.max_length
         )
+        labels = torch.tensor(
+            labels, dtype=torch.float if self.config.num_labels == 1 else torch.long
+        ).to(self.model.device)
 
         for name in tokenized:
             tokenized[name] = tokenized[name].to(self.model.device)
 
         return tokenized, labels
 
-    def smart_batching_collate_text_only(self, batch: list[InputExample]) -> BatchEncoding:
+    def smart_batching_collate_text_only(
+        self, batch: list[InputExample]
+    ) -> BatchEncoding:
         texts = [[] for _ in range(len(batch[0]))]
 
         for example in batch:
@@ -406,7 +469,10 @@ class FitMixin:
             truncation=True,
             return_tensors="pt",
         )
-        assert self.max_length is None or tokenized["input_ids"].shape[0] <= self.max_length
+        assert (
+            self.max_length is None
+            or tokenized["input_ids"].shape[0] <= self.max_length
+        )
 
         for name in tokenized:
             tokenized[name] = tokenized[name].to(self.model.device)
@@ -496,21 +562,35 @@ class FitMixin:
         no_decay = ["bias", "LayerNorm.bias", "LayerNorm.weight"]
         optimizer_grouped_parameters = [
             {
-                "params": [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)],
+                "params": [
+                    p for n, p in param_optimizer if not any(nd in n for nd in no_decay)
+                ],
                 "weight_decay": weight_decay,
             },
-            {"params": [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], "weight_decay": 0.0},
+            {
+                "params": [
+                    p for n, p in param_optimizer if any(nd in n for nd in no_decay)
+                ],
+                "weight_decay": 0.0,
+            },
         ]
 
         optimizer = optimizer_class(optimizer_grouped_parameters, **optimizer_params)
 
         if isinstance(scheduler, str):
             scheduler = SentenceTransformer._get_scheduler(
-                optimizer, scheduler=scheduler, warmup_steps=warmup_steps, t_total=num_train_steps
+                optimizer,
+                scheduler=scheduler,
+                warmup_steps=warmup_steps,
+                t_total=num_train_steps,
             )
 
         if loss_fct is None:
-            loss_fct = nn.BCEWithLogitsLoss() if self.config.num_labels == 1 else nn.CrossEntropyLoss()
+            loss_fct = (
+                nn.BCEWithLogitsLoss()
+                if self.config.num_labels == 1
+                else nn.CrossEntropyLoss()
+            )
 
         skip_scheduler = False
         for epoch in trange(epochs, desc="Epoch", disable=not show_progress_bar):
@@ -519,7 +599,10 @@ class FitMixin:
             self.model.train()
 
             for features, labels in tqdm(
-                train_dataloader, desc="Iteration", smoothing=0.05, disable=not show_progress_bar
+                train_dataloader,
+                desc="Iteration",
+                smoothing=0.05,
+                disable=not show_progress_bar,
             ):
                 if use_amp:
                     with torch.autocast(device_type=self.model.device.type):
@@ -532,7 +615,9 @@ class FitMixin:
                     scale_before_step = scaler.get_scale()
                     scaler.scale(loss_value).backward()
                     scaler.unscale_(optimizer)
-                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_grad_norm)
+                    torch.nn.utils.clip_grad_norm_(
+                        self.model.parameters(), max_grad_norm
+                    )
                     scaler.step(optimizer)
                     scaler.update()
 
@@ -544,7 +629,9 @@ class FitMixin:
                         logits = logits.view(-1)
                     loss_value = loss_fct(logits, labels)
                     loss_value.backward()
-                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_grad_norm)
+                    torch.nn.utils.clip_grad_norm_(
+                        self.model.parameters(), max_grad_norm
+                    )
                     optimizer.step()
 
                 optimizer.zero_grad()
@@ -554,24 +641,41 @@ class FitMixin:
 
                 training_steps += 1
 
-                if evaluator is not None and evaluation_steps > 0 and training_steps % evaluation_steps == 0:
+                if (
+                    evaluator is not None
+                    and evaluation_steps > 0
+                    and training_steps % evaluation_steps == 0
+                ):
                     self._eval_during_training(
-                        evaluator, output_path, save_best_model, epoch, training_steps, callback
+                        evaluator,
+                        output_path,
+                        save_best_model,
+                        epoch,
+                        training_steps,
+                        callback,
                     )
 
                     self.model.zero_grad()
                     self.model.train()
 
             if evaluator is not None:
-                self._eval_during_training(evaluator, output_path, save_best_model, epoch, -1, callback)
+                self._eval_during_training(
+                    evaluator, output_path, save_best_model, epoch, -1, callback
+                )
 
-    def _eval_during_training(self, evaluator, output_path, save_best_model, epoch, steps, callback) -> None:
+    def _eval_during_training(
+        self, evaluator, output_path, save_best_model, epoch, steps, callback
+    ) -> None:
         """Runs evaluation during the training"""
         if evaluator is not None:
             score = evaluator(self, output_path=output_path, epoch=epoch, steps=steps)
             if callback is not None:
                 callback(score, epoch, steps)
-            if isinstance(score, dict) and hasattr(evaluator, "primary_metric") and evaluator.primary_metric in score:
+            if (
+                isinstance(score, dict)
+                and hasattr(evaluator, "primary_metric")
+                and evaluator.primary_metric in score
+            ):
                 score = score[evaluator.primary_metric]
             if score > self.best_score:
                 self.best_score = score

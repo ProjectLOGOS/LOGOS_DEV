@@ -11,7 +11,9 @@ from torch.nn import functional as F
 
 from sentence_transformers import SentenceTransformer
 from sentence_transformers.losses.CachedGISTEmbedLoss import CachedGISTEmbedLoss
-from sentence_transformers.losses.CachedMultipleNegativesRankingLoss import CachedMultipleNegativesRankingLoss
+from sentence_transformers.losses.CachedMultipleNegativesRankingLoss import (
+    CachedMultipleNegativesRankingLoss,
+)
 from sentence_transformers.losses.CachedMultipleNegativesSymmetricRankingLoss import (
     CachedMultipleNegativesSymmetricRankingLoss,
 )
@@ -40,7 +42,9 @@ class TransformerDecorator:
         self.call_idx = 0
 
     def get_layer_embeddings(self) -> Tensor:
-        return torch.concat([embedding[self.layer_idx] for embedding in self.embeddings], dim=1)
+        return torch.concat(
+            [embedding[self.layer_idx] for embedding in self.embeddings], dim=1
+        )
 
     def __call__(self, features) -> dict[str, Tensor]:
         if self.layer_idx is None:
@@ -55,7 +59,9 @@ class TransformerDecorator:
         Temporarily sets the output_hidden_states to True, runs the model, and then restores the original setting.
         Use the all_layer_embeddings to get the embeddings of all layers.
         """
-        original_output_hidden_states = self.transformer.auto_model.config.output_hidden_states
+        original_output_hidden_states = (
+            self.transformer.auto_model.config.output_hidden_states
+        )
         self.transformer.auto_model.config.output_hidden_states = True
 
         output = self.original_forward(features)
@@ -65,11 +71,17 @@ class TransformerDecorator:
         self.embeddings.append(output["all_layer_embeddings"][1:-1])
         self.last_embeddings.append(output["token_embeddings"])
         self.features.append(
-            {key: value for key, value in output.items() if key not in ["all_layer_embeddings", "token_embeddings"]}
+            {
+                key: value
+                for key, value in output.items()
+                if key not in ["all_layer_embeddings", "token_embeddings"]
+            }
         )
 
         # Restore original setting
-        self.transformer.auto_model.config.output_hidden_states = original_output_hidden_states
+        self.transformer.auto_model.config.output_hidden_states = (
+            original_output_hidden_states
+        )
 
         if original_output_hidden_states:
             del output["all_layer_embeddings"]
@@ -77,7 +89,10 @@ class TransformerDecorator:
         return output
 
     def call_use_cache(self, features: dict[str, Tensor]) -> dict[str, Tensor]:
-        return {**self.features[self.call_idx], "token_embeddings": self.embeddings[self.call_idx][self.layer_idx]}
+        return {
+            **self.features[self.call_idx],
+            "token_embeddings": self.embeddings[self.call_idx][self.layer_idx],
+        }
 
 
 class ForwardDecorator:
@@ -198,14 +213,25 @@ class AdaptiveLayerLoss(nn.Module):
         assert isinstance(self.model[0], Transformer)
         if isinstance(
             loss,
-            (CachedMultipleNegativesRankingLoss, CachedMultipleNegativesSymmetricRankingLoss, CachedGISTEmbedLoss),
+            (
+                CachedMultipleNegativesRankingLoss,
+                CachedMultipleNegativesSymmetricRankingLoss,
+                CachedGISTEmbedLoss,
+            ),
         ):
-            warnings.warn(f"MatryoshkaLoss is not compatible with {loss.__class__.__name__}.", stacklevel=2)
+            warnings.warn(
+                f"MatryoshkaLoss is not compatible with {loss.__class__.__name__}.",
+                stacklevel=2,
+            )
 
-    def forward(self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor) -> Tensor:
+    def forward(
+        self, sentence_features: Iterable[dict[str, Tensor]], labels: Tensor
+    ) -> Tensor:
         # Decorate the forward function of the transformer to cache the embeddings of all layers
         original_transformer_forward = self.model[0].forward
-        transformer_decorator = TransformerDecorator(self.model[0], original_transformer_forward)
+        transformer_decorator = TransformerDecorator(
+            self.model[0], original_transformer_forward
+        )
         self.model[0].forward = transformer_decorator
 
         # Decorate the forward function of the model to get the embeddings after all modules (e.g. pooling)
@@ -231,7 +257,13 @@ class AdaptiveLayerLoss(nn.Module):
             # Add regular loss for each layer by using the cached embeddings of that layer
             transformer_decorator.set_layer_idx(layer_idx)
             layer_loss = self.loss(sentence_features, labels)
-            loss = loss + layer_loss / (1 + layer_idx) / len(layer_indices) * self.prior_layers_weight
+            loss = (
+                loss
+                + layer_loss
+                / (1 + layer_idx)
+                / len(layer_indices)
+                * self.prior_layers_weight
+            )
 
             # and KL-divergence loss between the current layer and the final layer
             # Note: we use "batchmean" reduction as that aligns with the mathematical definition
