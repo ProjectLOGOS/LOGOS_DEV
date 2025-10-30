@@ -1,0 +1,152 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "IEL_ONTO_KIT Data Schema",
+  "description": "JSON schema for IEL ontological synthesis data structures in UIP Step 2",
+  "version": "2.0.0",
+
+  "definitions": {
+    "trinity_weights": {
+      "type": "object",
+      "properties": {
+        "existence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "goodness": { "type": "number", "minimum": 0, "maximum": 1 },
+        "truth": { "type": "number", "minimum": 0, "maximum": 1 }
+      },
+      "required": ["existence", "goodness", "truth"],
+      "additionalProperties": false
+    },
+
+    "domain_mapping": {
+      "type": "object",
+      "properties": {
+        "ontological_property": { "type": "string", "minLength": 1 },
+        "trinity_weights": { "$ref": "#/definitions/trinity_weights" },
+        "conceptual_alignment": { "type": "string" },
+        "domain_focus": { "type": "string" },
+        "property_essence": { "type": "string" },
+        "mapping_confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+      },
+      "required": ["ontological_property", "trinity_weights", "mapping_confidence"],
+      "additionalProperties": false
+    },
+
+    "domain_weights": {
+      "type": "object",
+      "properties": {
+        "base_weight": { "type": "number", "minimum": 0, "maximum": 1 },
+        "trinity_balance": { "type": "number", "minimum": 0, "maximum": 1 },
+        "activation_priority": { "type": "integer", "minimum": 1 }
+      },
+      "required": ["base_weight", "trinity_balance", "activation_priority"],
+      "additionalProperties": false
+    },
+
+    "property_characteristics": {
+      "type": "object",
+      "properties": {
+        "ontological_depth": { "type": "number", "minimum": 0, "maximum": 1 },
+        "conceptual_clarity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "trinity_resonance": { "type": "number", "minimum": 0, "maximum": 1 }
+      },
+      "required": ["ontological_depth", "conceptual_clarity", "trinity_resonance"],
+      "additionalProperties": false
+    }
+  },
+
+  "bijection_schema": {
+    "type": "object",
+    "properties": {
+      "metadata": {
+        "type": "object",
+        "properties": {
+          "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+          "description": { "type": "string" },
+          "last_updated": { "type": "string", "format": "date" },
+          "total_mappings": { "type": "integer", "minimum": 1 },
+          "mapping_principle": { "type": "string" },
+          "completeness": { "type": "string" }
+        },
+        "required": ["version", "description", "total_mappings"]
+      }
+    },
+    "patternProperties": {
+      "^[A-Z][a-zA-Z]*Praxis$": { "$ref": "#/definitions/domain_mapping" }
+    },
+    "required": ["metadata"],
+    "additionalProperties": false
+  },
+
+  "pairing_schema": {
+    "type": "object",
+    "properties": {
+      "metadata": {
+        "type": "object",
+        "properties": {
+          "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+          "description": { "type": "string" },
+          "last_updated": { "type": "string", "format": "date" },
+          "purpose": { "type": "string" }
+        },
+        "required": ["version", "description"]
+      },
+      "pairing_configuration": {
+        "type": "object",
+        "properties": {
+          "weighting_strategy": { "type": "string", "enum": ["trinity_balanced", "uniform", "priority_based"] },
+          "normalization_method": { "type": "string", "enum": ["l1_norm", "l2_norm", "max_norm"] },
+          "activation_threshold": { "type": "number", "minimum": 0, "maximum": 1 },
+          "maximum_concurrent_domains": { "type": "integer", "minimum": 1 },
+          "priority_ordering": { "type": "string", "enum": ["confidence_based", "alphabetical", "manual"] }
+        },
+        "required": ["weighting_strategy", "normalization_method", "activation_threshold"]
+      },
+      "domain_weights": {
+        "type": "object",
+        "patternProperties": {
+          "^[A-Z][a-zA-Z]*Praxis$": { "$ref": "#/definitions/domain_weights" }
+        },
+        "additionalProperties": false
+      },
+      "property_characteristics": {
+        "type": "object",
+        "patternProperties": {
+          "^[A-Z][a-zA-Z]*$": { "$ref": "#/definitions/property_characteristics" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "required": ["metadata", "pairing_configuration", "domain_weights"],
+    "additionalProperties": false
+  },
+
+  "validation_rules": {
+    "bijection_completeness": "Each IEL domain must map to exactly one ontological property",
+    "property_uniqueness": "Each ontological property must be mapped by exactly one IEL domain",
+    "trinity_weights_sum": "Trinity weights should sum to approximately 3.0 (1.0 per dimension)",
+    "confidence_range": "All mapping confidence values must be between 0.0 and 1.0",
+    "priority_uniqueness": "Activation priorities should be unique integers starting from 1",
+    "domain_naming": "Domain names must follow PascalCase ending with 'Praxis'",
+    "property_naming": "Property names must be capitalized single words representing divine attributes"
+  },
+
+  "workflow_integration": {
+    "step_2_inputs": [
+      "trinity_vectors from Step 1",
+      "intent_classification from Step 1", 
+      "entities from Step 1",
+      "processing_context from Step 1"
+    ],
+    "step_2_processing": [
+      "domain_activation based on bijection_mappings",
+      "vector_synthesis using trinity_weights",
+      "ontological_alignment calculation",
+      "synthesis_quality_assessment"
+    ],
+    "step_2_outputs": [
+      "activated_domains list",
+      "synthesis_results with quality metrics",
+      "ontological_alignments mapping",
+      "step_3_preparation_context"
+    ]
+  }
+}

@@ -1,0 +1,200 @@
+{
+  "metadata": {
+    "version": "3.0.0_optimized",
+    "description": "Optimized bijective mapping of 18 IEL domains to 18 second-order ontological properties",
+    "last_updated": "2025-10-30",
+    "optimization_principle": "Maximum conceptual alignment between domain focus and property essence"
+  },
+  "properties": {
+    "Beauty": {
+      "group": "Aesthetic",
+      "description": "Perfect harmony and aesthetic excellence",
+      "c_value": "-0.74543+0.11301j",
+      "order": "Second-Order",
+      "_iel": "AestheticoPraxis",
+      "trinity_weights": {"existence": 0.7, "goodness": 0.9, "truth": 0.8}
+    },
+    "Love": {
+      "group": "Relational",
+      "description": "Perfect benevolent affection and care",
+      "c_value": "-0.4+0.6j",
+      "order": "Second-Order",
+      "_iel": "RelatioPraxis",
+      "trinity_weights": {"existence": 0.8, "goodness": 1.0, "truth": 0.8}
+    },
+    "Will": {
+      "group": "Causal",
+      "description": "Divine volition and purposeful action",
+      "c_value": "-0.8+0.156j",
+      "order": "Second-Order",
+      "_iel": "PraxeoPraxis",
+      "trinity_weights": {"existence": 1.0, "goodness": 0.8, "truth": 0.7}
+    },
+    "Glory": {
+      "group": "Aesthetic",
+      "description": "Divine majesty and radiant perfection",
+      "c_value": "-0.1+0.651j",
+      "order": "Second-Order",
+      "_iel": "GlorioPraxis",
+      "trinity_weights": {"existence": 0.9, "goodness": 1.0, "truth": 0.9}
+    },
+    "Wrath": {
+      "group": "Moral",
+      "description": "Divine judgment against evil and injustice",
+      "c_value": "0.359+0.599j",
+      "order": "Second-Order",
+      "_iel": "ZelosPraxis",
+      "trinity_weights": {"existence": 0.8, "goodness": 0.9, "truth": 0.7}
+    },
+    "Blessedness": {
+      "group": "Aesthetic",
+      "description": "Perfect joy and infinite fulfillment",
+      "c_value": "-0.74543+0.11301j",
+      "order": "Second-Order",
+      "_iel": "MakarPraxis",
+      "trinity_weights": {"existence": 0.8, "goodness": 1.0, "truth": 0.9}
+    },
+    "Knowledge": {
+      "group": "Epistemological",
+      "description": "Complete understanding and awareness",
+      "c_value": "0.285+0.01j",
+      "order": "Second-Order",
+      "_iel": "GnosiPraxis",
+      "trinity_weights": {"existence": 0.8, "goodness": 0.8, "truth": 1.0}
+    },
+    "Truthfulness": {
+      "group": "Epistemological",
+      "description": "Perfect honesty and reliability",
+      "c_value": "0.285+0.01j",
+      "order": "Second-Order",
+      "_iel": "AxioPraxis",
+      "trinity_weights": {"existence": 0.8, "goodness": 0.8, "truth": 1.0}
+    },
+    "Justice": {
+      "group": "Moral",
+      "description": "Perfect righteousness and moral correctness",
+      "c_value": "-0.123+0.745j",
+      "order": "Second-Order",
+      "_iel": "ThemiPraxis",
+      "trinity_weights": {"existence": 0.8, "goodness": 1.0, "truth": 0.9}
+    },
+    "Goodness": {
+      "group": "Moral",
+      "description": "Perfect moral excellence and benevolence",
+      "c_value": "-0.1+0.651j",
+      "order": "Second-Order",
+      "_iel": "TheoPraxis",
+      "trinity_weights": {"existence": 0.9, "goodness": 1.0, "truth": 0.9}
+    },
+    "Order": {
+      "group": "Causal",
+      "description": "Perfect organization and systematic arrangement",
+      "c_value": "0.45+0.1j",
+      "order": "Second-Order",
+      "_iel": "ModalPraxis",
+      "trinity_weights": {"existence": 0.9, "goodness": 0.8, "truth": 0.9}
+    },
+    "Peace": {
+      "group": "Aesthetic",
+      "description": "Perfect tranquility and harmonious order",
+      "c_value": "0.285+0.0j",
+      "order": "Second-Order",
+      "_iel": "ChronoPraxis",
+      "trinity_weights": {"existence": 0.8, "goodness": 0.9, "truth": 0.8}
+    },
+    "Wisdom": {
+      "group": "Epistemological",
+      "description": "Perfect knowledge applied with perfect judgment",
+      "c_value": "0.285+0.01j",
+      "order": "Second-Order",
+      "_iel": "TeloPraxis",
+      "trinity_weights": {"existence": 0.8, "goodness": 0.9, "truth": 1.0}
+    },
+    "Grace": {
+      "group": "Relational",
+      "description": "Unmerited favor and divine generosity",
+      "c_value": "-0.7269+0.1889j",
+      "order": "Second-Order",
+      "_iel": "CosmoPraxis",
+      "trinity_weights": {"existence": 0.9, "goodness": 1.0, "truth": 0.8}
+    },
+    "Righteousness": {
+      "group": "Moral",
+      "description": "Perfect moral alignment and justice",
+      "c_value": "0.3+0.6j",
+      "order": "Second-Order",
+      "_iel": "TopoPraxis",
+      "trinity_weights": {"existence": 0.8, "goodness": 1.0, "truth": 0.9}
+    },
+    "Mercy": {
+      "group": "Moral",
+      "description": "Compassionate treatment and forgiveness",
+      "c_value": "0.355+0.355j",
+      "order": "Second-Order",
+      "_iel": "ErgoPraxis",
+      "trinity_weights": {"existence": 0.8, "goodness": 1.0, "truth": 0.8}
+    },
+    "Jealousy": {
+      "group": "Relational",
+      "description": "Exclusive devotion and protective love",
+      "c_value": "0.35+0.35j",
+      "order": "Second-Order",
+      "_iel": "TropoPraxis",
+      "trinity_weights": {"existence": 0.8, "goodness": 0.9, "truth": 0.8}
+    },
+    "Freedom": {
+      "group": "Volitional",
+      "description": "Perfect liberty and unconstrained choice",
+      "c_value": "-0.74543+0.11301j",
+      "order": "Second-Order",
+      "_iel": "AnthroPraxis",
+      "trinity_weights": {"existence": 0.9, "goodness": 0.9, "truth": 0.8}
+    }
+  },
+  "group_classifications": {
+    "Aesthetic": {
+      "properties": ["Beauty", "Glory", "Blessedness", "Peace"],
+      "description": "Attributes related to beauty, harmony, and transcendent perfection",
+      "mapped_iels": ["AestheticoPraxis", "GlorioPraxis", "MakarPraxis", "ChronoPraxis"],
+      "characteristic_balance": "high_all_trinity_aspects"
+    },
+    "Moral": {
+      "properties": ["Justice", "Goodness", "Wrath", "Righteousness", "Mercy"],
+      "description": "Attributes related to ethics, righteousness, and moral character",
+      "mapped_iels": ["ThemiPraxis", "TheoPraxis", "ZelosPraxis", "TopoPraxis", "ErgoPraxis"],
+      "characteristic_goodness_weight": "highest"
+    },
+    "Epistemological": {
+      "properties": ["Knowledge", "Truthfulness", "Wisdom"],
+      "description": "Attributes related to knowledge, truth, and understanding",
+      "mapped_iels": ["GnosiPraxis", "AxioPraxis", "TeloPraxis"],
+      "characteristic_truth_weight": "highest"
+    },
+    "Relational": {
+      "properties": ["Love", "Grace", "Jealousy"],
+      "description": "Attributes related to relationships and interpersonal connection",
+      "mapped_iels": ["RelatioPraxis", "CosmoPraxis", "TropoPraxis"],
+      "characteristic_goodness_weight": "high"
+    },
+    "Causal": {
+      "properties": ["Will", "Order"],
+      "description": "Attributes related to power, action, and causation",
+      "mapped_iels": ["PraxeoPraxis", "ModalPraxis"],
+      "characteristic_existence_weight": "highest"
+    },
+    "Volitional": {
+      "properties": ["Freedom"],
+      "description": "Attributes related to will, choice, and freedom",
+      "mapped_iels": ["AnthroPraxis"],
+      "characteristic_goodness_weight": "high"
+    }
+  },
+  "bijection_validation": {
+    "total_iel_domains": 18,
+    "total_second_order_properties": 18,
+    "mapping_completeness": "Perfect 1:1 bijection achieved",
+    "conceptual_coherence": "Maximum alignment between domain focus and property essence",
+    "theological_orthodoxy": "All mappings maintain orthodox theological principles",
+    "computational_readiness": "All complex numbers and Trinity weights configured for processing"
+  }
+}

@@ -1,0 +1,197 @@
+{
+  "metadata": {
+    "version": "3.0.0",
+    "description": "Bijective mapping of IEL domains to second-order ontological properties with maximum conceptual alignment",
+    "last_updated": "2025-10-30",
+    "total_mappings": 18,
+    "mapping_principle": "Closest conceptual and functional relationship between domain focus and ontological property essence",
+    "completeness": "Perfect 1:1 bijection ensuring no gaps or overlaps"
+  },
+
+  "bijective_mappings": {
+    "AestheticoPraxis": {
+      "ontological_property": "Beauty",
+      "c_value": "-0.74543+0.11301j",
+      "trinity_weights": {"existence": 0.7, "goodness": 0.9, "truth": 0.8},
+      "conceptual_alignment": "Perfect match - aesthetic reasoning directly maps to beauty manifestation",
+      "domain_focus": "Aesthetic reasoning, beauty analysis, harmonious perfection",
+      "property_essence": "Perfect harmony and aesthetic excellence"
+    },
+
+    "RelatioPraxis": {
+      "ontological_property": "Love",
+      "c_value": "-0.4+0.6j",
+      "trinity_weights": {"existence": 0.8, "goodness": 1.0, "truth": 0.8},
+      "conceptual_alignment": "Strong match - relational reasoning fundamentally about love connections",
+      "domain_focus": "Relational reasoning, connection analysis, relationship verification",
+      "property_essence": "Perfect benevolent affection and care"
+    },
+
+    "PraxeoPraxis": {
+      "ontological_property": "Will",
+      "c_value": "-0.8+0.156j",
+      "trinity_weights": {"existence": 1.0, "goodness": 0.8, "truth": 0.7},
+      "conceptual_alignment": "Perfect match - action reasoning is expression of divine will",
+      "domain_focus": "Action reasoning, practical decision-making, behavioral analysis",
+      "property_essence": "Divine volition and purposeful action"
+    },
+
+    "GlorioPraxis": {
+      "ontological_property": "Glory",
+      "c_value": "-0.1+0.651j",
+      "trinity_weights": {"existence": 0.9, "goodness": 1.0, "truth": 0.9},
+      "conceptual_alignment": "Perfect match - glory reasoning about divine majesty manifestation",
+      "domain_focus": "Glory reasoning, divine honor analysis, transcendent excellence",
+      "property_essence": "Divine majesty and radiant perfection"
+    },
+
+    "ZelosPraxis": {
+      "ontological_property": "Wrath",
+      "c_value": "0.359+0.599j",
+      "trinity_weights": {"existence": 0.8, "goodness": 0.9, "truth": 0.7},
+      "conceptual_alignment": "Strong match - zeal and divine wrath both express passionate intensity",
+      "domain_focus": "Zeal reasoning, passionate devotion, fervent commitment evaluation",
+      "property_essence": "Divine judgment against evil and injustice"
+    },
+
+    "MakarPraxis": {
+      "ontological_property": "Blessedness",
+      "c_value": "-0.74543+0.11301j",
+      "trinity_weights": {"existence": 0.8, "goodness": 1.0, "truth": 0.9},
+      "conceptual_alignment": "Perfect match - divine favor reasoning directly about blessedness",
+      "domain_focus": "Blessedness reasoning, divine favor analysis, beatific excellence",
+      "property_essence": "Perfect joy and infinite fulfillment"
+    },
+
+    "GnosiPraxis": {
+      "ontological_property": "Knowledge",
+      "c_value": "0.285+0.01j",
+      "trinity_weights": {"existence": 0.8, "goodness": 0.8, "truth": 1.0},
+      "conceptual_alignment": "Perfect match - epistemic reasoning is knowledge manifestation",
+      "domain_focus": "Epistemic reasoning, knowledge verification, truth analysis",
+      "property_essence": "Complete understanding and awareness"
+    },
+
+    "AxioPraxis": {
+      "ontological_property": "Truthfulness",
+      "c_value": "0.285+0.01j",
+      "trinity_weights": {"existence": 0.8, "goodness": 0.8, "truth": 1.0},
+      "conceptual_alignment": "Perfect match - axiological reasoning about truth and value foundations",
+      "domain_focus": "Axiological reasoning, value analysis, foundational principles",
+      "property_essence": "Perfect honesty and reliability"
+    },
+
+    "ThemiPraxis": {
+      "ontological_property": "Justice",
+      "c_value": "-0.123+0.745j",
+      "trinity_weights": {"existence": 0.8, "goodness": 1.0, "truth": 0.9},
+      "conceptual_alignment": "Perfect match - normative reasoning about justice and moral order",
+      "domain_focus": "Normative reasoning, moral analysis, ethical standards",
+      "property_essence": "Perfect righteousness and moral correctness"
+    },
+
+    "TheoPraxis": {
+      "ontological_property": "Goodness",
+      "c_value": "-0.1+0.651j",
+      "trinity_weights": {"existence": 0.9, "goodness": 1.0, "truth": 0.9},
+      "conceptual_alignment": "Perfect match - theological reasoning about divine goodness",
+      "domain_focus": "Theological reasoning, divine attribute analysis, sacred truth",
+      "property_essence": "Perfect moral excellence and benevolence"
+    },
+
+    "ModalPraxis": {
+      "ontological_property": "Order",
+      "c_value": "0.45+0.1j",
+      "trinity_weights": {"existence": 0.9, "goodness": 0.8, "truth": 0.9},
+      "conceptual_alignment": "Strong match - modal logic provides systematic ordering of possibilities",
+      "domain_focus": "Modal reasoning, necessity analysis, possibility frameworks",
+      "property_essence": "Perfect organization and systematic arrangement"
+    },
+
+    "ChronoPraxis": {
+      "ontological_property": "Peace",
+      "c_value": "0.285+0.0j",
+      "trinity_weights": {"existence": 0.8, "goodness": 0.9, "truth": 0.8},
+      "conceptual_alignment": "Strong match - temporal reasoning about eternal peace and harmony",
+      "domain_focus": "Temporal reasoning, time analysis, chronological structures",
+      "property_essence": "Perfect tranquility and harmonious order"
+    },
+
+    "TeloPraxis": {
+      "ontological_property": "Wisdom",
+      "c_value": "0.285+0.01j",
+      "trinity_weights": {"existence": 0.8, "goodness": 0.9, "truth": 1.0},
+      "conceptual_alignment": "Perfect match - teleological reasoning about divine wisdom and purpose",
+      "domain_focus": "Teleological reasoning, purpose analysis, goal-directed systems",
+      "property_essence": "Perfect knowledge applied with perfect judgment"
+    },
+
+    "CosmoPraxis": {
+      "ontological_property": "Grace",
+      "c_value": "-0.7269+0.1889j",
+      "trinity_weights": {"existence": 0.9, "goodness": 1.0, "truth": 0.8},
+      "conceptual_alignment": "Strong match - cosmological reasoning about divine grace in creation",
+      "domain_focus": "Cosmological reasoning, universe analysis, cosmic structures",
+      "property_essence": "Unmerited favor and divine generosity"
+    },
+
+    "TopoPraxis": {
+      "ontological_property": "Righteousness",
+      "c_value": "0.3+0.6j",
+      "trinity_weights": {"existence": 0.8, "goodness": 1.0, "truth": 0.9},
+      "conceptual_alignment": "Strong match - topological reasoning about moral topology and righteous structures",
+      "domain_focus": "Topological reasoning, spatial analysis, structural relationships",
+      "property_essence": "Perfect moral alignment and justice"
+    },
+
+    "ErgoPraxis": {
+      "ontological_property": "Mercy",
+      "c_value": "0.355+0.355j",
+      "trinity_weights": {"existence": 0.8, "goodness": 1.0, "truth": 0.8},
+      "conceptual_alignment": "Strong match - energetic reasoning about merciful action and compassionate work",
+      "domain_focus": "Energetic reasoning, work analysis, efficiency optimization",
+      "property_essence": "Compassionate treatment and forgiveness"
+    },
+
+    "TropoPraxis": {
+      "ontological_property": "Jealousy",
+      "c_value": "0.35+0.35j",
+      "trinity_weights": {"existence": 0.8, "goodness": 0.9, "truth": 0.8},
+      "conceptual_alignment": "Moderate match - transformational reasoning about divine jealousy and exclusive devotion",
+      "domain_focus": "Transformational reasoning, change analysis, metamorphic processes",
+      "property_essence": "Exclusive devotion and protective love"
+    },
+
+    "AnthroPraxis": {
+      "ontological_property": "Freedom",
+      "c_value": "-0.74543+0.11301j",
+      "trinity_weights": {"existence": 0.9, "goodness": 0.9, "truth": 0.8},
+      "conceptual_alignment": "Perfect match - anthropological reasoning about human freedom and divine liberty",
+      "domain_focus": "Anthropological reasoning, human analysis, cultural structures",
+      "property_essence": "Perfect liberty and unconstrained choice"
+    }
+  },
+
+  "validation_metrics": {
+    "conceptual_coherence": "Each mapping preserves essential conceptual relationships",
+    "functional_alignment": "Domain operations align with property manifestations",
+    "theological_orthodoxy": "All mappings maintain orthodox theological principles",
+    "mathematical_precision": "Complex numbers and Trinity weights ensure computational accuracy",
+    "bijection_completeness": "Perfect 1:1 mapping with no gaps or overlaps",
+    "cross_domain_consistency": "Mappings enable coherent inter-domain reasoning"
+  },
+
+  "optimization_criteria": {
+    "primary": "Maximize conceptual alignment between domain focus and property essence",
+    "secondary": "Ensure Trinity weight vectors reflect theological priorities",
+    "tertiary": "Maintain mathematical coherence in complex number representations",
+    "quaternary": "Enable seamless integration with Trinity Nexus processing"
+  },
+
+  "integration_notes": {
+    "trinity_nexus_compatibility": "All mappings designed for Trinity Nexus multi-pass processing",
+    "uip_workflow_integration": "Mappings enable ontological property activation in UIP Steps 4-8",
+    "cross_domain_reasoning": "Bijective structure supports composite reasoning across domains",
+    "computational_efficiency": "Complex number representations enable fast mathematical operations"
+  }
+}

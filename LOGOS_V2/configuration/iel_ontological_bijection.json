@@ -1,0 +1,332 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "description": "Bijective mapping between 18 IEL domains and 18 second-order ontological properties",
+    "created": "2025-10-30",
+    "total_mappings": 18,
+    "mathematical_foundation": "Complex number representations with Trinity vector projections",
+    "theological_foundation": "Orthodox theological ontology with classical divine attributes"
+  },
+
+  "bijective_mapping": {
+    "TheoPraxis": {
+      "ontological_property": "Goodness",
+      "c_value": "-0.1+0.651j",
+      "group": "Moral",
+      "order": "Second-Order",
+      "description": "Perfect moral excellence and benevolence",
+      "trinity_weight": {"existence": 0.3, "goodness": 0.9, "truth": 0.7},
+      "pillar": "Theology",
+      "domain_focus": "Fundamental theological goodness and divine nature"
+    },
+    
+    "AxioPraxis": {
+      "ontological_property": "Justice", 
+      "c_value": "-0.123+0.745j",
+      "group": "Moral",
+      "order": "Second-Order", 
+      "description": "Perfect righteousness and moral correctness",
+      "trinity_weight": {"existence": 0.6, "goodness": 0.9, "truth": 0.8},
+      "pillar": "Axiology",
+      "domain_focus": "Value-based justice and moral righteousness"
+    },
+    
+    "GnosiPraxis": {
+      "ontological_property": "Knowledge",
+      "c_value": "0.285+0.01j",
+      "group": "Epistemological", 
+      "order": "Second-Order",
+      "description": "Complete understanding and awareness",
+      "trinity_weight": {"existence": 0.7, "goodness": 0.6, "truth": 0.9},
+      "pillar": "Epistemology", 
+      "domain_focus": "Comprehensive knowledge and understanding"
+    },
+    
+    "TeloPraxis": {
+      "ontological_property": "Will",
+      "c_value": "-0.8+0.156j", 
+      "group": "Causal",
+      "order": "Second-Order",
+      "description": "Divine volition and purposeful action",
+      "trinity_weight": {"existence": 0.8, "goodness": 0.7, "truth": 0.6},
+      "pillar": "Teleology",
+      "domain_focus": "Divine purpose and teleological will"
+    },
+    
+    "ChronoPraxis": {
+      "ontological_property": "Peace",
+      "c_value": "0.285+0.0j",
+      "group": "Aesthetic", 
+      "order": "Second-Order",
+      "description": "Perfect tranquility and harmonious order",
+      "trinity_weight": {"existence": 0.5, "goodness": 0.8, "truth": 0.7},
+      "pillar": "Temporality",
+      "domain_focus": "Temporal harmony and peaceful order"
+    },
+    
+    "CosmoPraxis": {
+      "ontological_property": "Order",
+      "c_value": "0.45+0.1j",
+      "group": "Causal", 
+      "order": "Second-Order",
+      "description": "Perfect organization and systematic arrangement", 
+      "trinity_weight": {"existence": 0.9, "goodness": 0.7, "truth": 0.8},
+      "pillar": "Cosmology",
+      "domain_focus": "Universal order and systematic arrangement"
+    },
+    
+    "AnthroPraxis": {
+      "ontological_property": "Mercy",
+      "c_value": "0.355+0.355j",
+      "group": "Moral",
+      "order": "Second-Order", 
+      "description": "Compassionate treatment and forgiveness",
+      "trinity_weight": {"existence": 0.5, "goodness": 0.9, "truth": 0.6},
+      "pillar": "Anthropology",
+      "domain_focus": "Human-divine compassion and mercy interface"
+    },
+    
+    "ThemiPraxis": {
+      "ontological_property": "Righteousness", 
+      "c_value": "0.3+0.6j",
+      "group": "Moral",
+      "order": "Second-Order",
+      "description": "Perfect moral alignment and justice",
+      "trinity_weight": {"existence": 0.7, "goodness": 0.9, "truth": 0.8},
+      "pillar": "Legal/Justice",
+      "domain_focus": "Legal righteousness and moral alignment"
+    },
+    
+    "TopoPraxis": {
+      "ontological_property": "Wisdom",
+      "c_value": "0.285+0.01j",
+      "group": "Epistemological",
+      "order": "Second-Order", 
+      "description": "Perfect knowledge applied with perfect judgment",
+      "trinity_weight": {"existence": 0.6, "goodness": 0.8, "truth": 0.9},
+      "pillar": "Topology/Spatial",
+      "domain_focus": "Spatial wisdom and applied judgment"
+    },
+    
+    "TropoPraxis": {
+      "ontological_property": "Truthfulness",
+      "c_value": "0.285+0.01j",
+      "group": "Epistemological",
+      "order": "Second-Order",
+      "description": "Perfect honesty and reliability", 
+      "trinity_weight": {"existence": 0.6, "goodness": 0.7, "truth": 0.95},
+      "pillar": "Tropological/Metaphor",
+      "domain_focus": "Metaphorical truth and symbolic honesty"
+    },
+    
+    "ErgoPraxis": {
+      "ontological_property": "Wrath",
+      "c_value": "0.359+0.599j",
+      "group": "Moral",
+      "order": "Second-Order",
+      "description": "Divine judgment against evil and injustice",
+      "trinity_weight": {"existence": 0.7, "goodness": 0.8, "truth": 0.9},
+      "pillar": "Ergological/Work",
+      "domain_focus": "Energetic divine judgment and corrective action"
+    },
+    
+    "ModalPraxis": {
+      "ontological_property": "Freedom",
+      "c_value": "-0.74543+0.11301j", 
+      "group": "Volitional",
+      "order": "Second-Order",
+      "description": "Perfect liberty and unconstrained choice",
+      "trinity_weight": {"existence": 0.8, "goodness": 0.8, "truth": 0.7},
+      "pillar": "Modal Logic",
+      "domain_focus": "Modal freedom and logical possibility"
+    },
+    
+    "AestheticoPraxis": {
+      "ontological_property": "Beauty",
+      "c_value": "-0.74543+0.11301j",
+      "group": "Aesthetic", 
+      "order": "Second-Order",
+      "description": "Perfect harmony and aesthetic excellence",
+      "trinity_weight": {"existence": 0.7, "goodness": 0.9, "truth": 0.8},
+      "pillar": "Aesthetics",
+      "domain_focus": "Aesthetic perfection and harmonious beauty"
+    },
+    
+    "RelatioPraxis": {
+      "ontological_property": "Love",
+      "c_value": "-0.4+0.6j",
+      "group": "Relational", 
+      "order": "Second-Order",
+      "description": "Perfect benevolent affection and care",
+      "trinity_weight": {"existence": 0.8, "goodness": 0.95, "truth": 0.8},
+      "pillar": "Relationality",
+      "domain_focus": "Relational love and interpersonal connection"
+    },
+    
+    "PraxeoPraxis": {
+      "ontological_property": "Grace",
+      "c_value": "-0.7269+0.1889j",
+      "group": "Relational",
+      "order": "Second-Order", 
+      "description": "Unmerited favor and divine generosity",
+      "trinity_weight": {"existence": 0.6, "goodness": 0.9, "truth": 0.7},
+      "pillar": "Practical Action", 
+      "domain_focus": "Practical grace and unmerited divine favor"
+    },
+    
+    "GlorioPraxis": {
+      "ontological_property": "Glory",
+      "c_value": "-0.1+0.651j",
+      "group": "Aesthetic",
+      "order": "Second-Order",
+      "description": "Divine majesty and radiant perfection", 
+      "trinity_weight": {"existence": 0.9, "goodness": 0.9, "truth": 0.9},
+      "pillar": "Glory/Manifestation",
+      "domain_focus": "Divine glory and majestic manifestation"
+    },
+    
+    "ZelosPraxis": {
+      "ontological_property": "Jealousy",
+      "c_value": "0.35+0.35j",
+      "group": "Relational",
+      "order": "Second-Order", 
+      "description": "Exclusive devotion and protective love",
+      "trinity_weight": {"existence": 0.8, "goodness": 0.8, "truth": 0.9},
+      "pillar": "Zeal/Devotion",
+      "domain_focus": "Zealous devotion and exclusive divine commitment"
+    },
+    
+    "MakarPraxis": {
+      "ontological_property": "Blessedness", 
+      "c_value": "-0.74543+0.11301j",
+      "group": "Aesthetic",
+      "order": "Second-Order",
+      "description": "Perfect joy and infinite fulfillment",
+      "trinity_weight": {"existence": 0.7, "goodness": 0.9, "truth": 0.8},
+      "pillar": "Beatitude/Blessedness", 
+      "domain_focus": "Beatitudinal joy and perfect fulfillment"
+    }
+  },
+
+  "reverse_mapping": {
+    "Goodness": "TheoPraxis",
+    "Justice": "AxioPraxis", 
+    "Knowledge": "GnosiPraxis",
+    "Will": "TeloPraxis",
+    "Peace": "ChronoPraxis", 
+    "Order": "CosmoPraxis",
+    "Mercy": "AnthroPraxis",
+    "Righteousness": "ThemiPraxis",
+    "Wisdom": "TopoPraxis",
+    "Truthfulness": "TropoPraxis", 
+    "Wrath": "ErgoPraxis",
+    "Freedom": "ModalPraxis",
+    "Beauty": "AestheticoPraxis",
+    "Love": "RelatioPraxis", 
+    "Grace": "PraxeoPraxis",
+    "Glory": "GlorioPraxis",
+    "Jealousy": "ZelosPraxis",
+    "Blessedness": "MakarPraxis"
+  },
+
+  "group_classifications": {
+    "Moral": {
+      "domains": ["TheoPraxis", "AxioPraxis", "AnthroPraxis", "ThemiPraxis", "ErgoPraxis"],
+      "properties": ["Goodness", "Justice", "Mercy", "Righteousness", "Wrath"],
+      "trinity_emphasis": "goodness",
+      "description": "Moral and ethical attributes with high goodness weighting"
+    },
+    
+    "Epistemological": {
+      "domains": ["GnosiPraxis", "TopoPraxis", "TropoPraxis"], 
+      "properties": ["Knowledge", "Wisdom", "Truthfulness"],
+      "trinity_emphasis": "truth",
+      "description": "Knowledge and truth attributes with high truth weighting"
+    },
+    
+    "Causal": {
+      "domains": ["TeloPraxis", "CosmoPraxis"],
+      "properties": ["Will", "Order"], 
+      "trinity_emphasis": "existence",
+      "description": "Causal and organizational attributes with high existence weighting"
+    },
+    
+    "Aesthetic": {
+      "domains": ["ChronoPraxis", "AestheticoPraxis", "GlorioPraxis", "MakarPraxis"],
+      "properties": ["Peace", "Beauty", "Glory", "Blessedness"],
+      "trinity_emphasis": "balanced",
+      "description": "Aesthetic and harmonious attributes with balanced trinity weighting"
+    },
+    
+    "Relational": {
+      "domains": ["RelatioPraxis", "PraxeoPraxis", "ZelosPraxis"],
+      "properties": ["Love", "Grace", "Jealousy"], 
+      "trinity_emphasis": "goodness",
+      "description": "Relational and interpersonal attributes with high goodness weighting"
+    },
+    
+    "Volitional": {
+      "domains": ["ModalPraxis"],
+      "properties": ["Freedom"],
+      "trinity_emphasis": "balanced", 
+      "description": "Volitional attributes related to will and choice"
+    }
+  },
+
+  "pillar_mappings": {
+    "Theology": ["TheoPraxis"],
+    "Axiology": ["AxioPraxis"], 
+    "Epistemology": ["GnosiPraxis"],
+    "Teleology": ["TeloPraxis"],
+    "Temporality": ["ChronoPraxis"],
+    "Cosmology": ["CosmoPraxis"], 
+    "Anthropology": ["AnthroPraxis"],
+    "Legal/Justice": ["ThemiPraxis"],
+    "Topology/Spatial": ["TopoPraxis"],
+    "Tropological/Metaphor": ["TropoPraxis"],
+    "Ergological/Work": ["ErgoPraxis"], 
+    "Modal Logic": ["ModalPraxis"],
+    "Aesthetics": ["AestheticoPraxis"],
+    "Relationality": ["RelatioPraxis"],
+    "Practical Action": ["PraxeoPraxis"],
+    "Glory/Manifestation": ["GlorioPraxis"],
+    "Zeal/Devotion": ["ZelosPraxis"],
+    "Beatitude/Blessedness": ["MakarPraxis"]
+  },
+
+  "trinity_projections": {
+    "high_existence": ["CosmoPraxis", "TeloPraxis", "GlorioPraxis", "RelatioPraxis", "ModalPraxis", "ZelosPraxis"],
+    "high_goodness": ["TheoPraxis", "AxioPraxis", "AnthroPraxis", "ThemiPraxis", "AestheticoPraxis", "RelatioPraxis", "PraxeoPraxis", "GlorioPraxis", "MakarPraxis"], 
+    "high_truth": ["GnosiPraxis", "TopoPraxis", "TropoPraxis", "ErgoPraxis", "GlorioPraxis", "ZelosPraxis"]
+  },
+
+  "validation": {
+    "bijective_completeness": true,
+    "total_domains": 18,
+    "total_properties": 18, 
+    "unmapped_domains": [],
+    "unmapped_properties": [],
+    "mathematical_consistency": true,
+    "theological_orthodoxy": true,
+    "trinity_balance": "optimal"
+  },
+
+  "implementation_notes": {
+    "new_domains_required": [
+      "AestheticoPraxis - Aesthetic and beauty reasoning",
+      "RelatioPraxis - Relational and interpersonal dynamics", 
+      "PraxeoPraxis - Practical action and implementation",
+      "GlorioPraxis - Divine glory and manifestation",
+      "ZelosPraxis - Zealous devotion and exclusive commitment", 
+      "MakarPraxis - Beatitude and blessedness reasoning"
+    ],
+    "integration_points": [
+      "UIP Step 3 IEL overlay enhancement",
+      "Trinity Nexus Step 4 integration", 
+      "Semantic vector generation",
+      "Ontological property activation mapping"
+    ],
+    "complex_number_integration": "Each mapping includes complex number representation for mathematical precision",
+    "trinity_weight_optimization": "Trinity weights optimized for each domain's theological emphasis"
+  }
+}

@@ -8,4 +8,3 @@ End ThemiPraxis.
 (* Exported capabilities *)
 Class Cap_SafeDetachment : Prop := { safe_detachment : forall p, Box ThemiPraxis.V p -> ThemiPraxis.V p }.
 Global Instance Cap_SafeDetachment_inst : Cap_SafeDetachment := {| safe_detachment := ThemiPraxis.DeonticDetachmentSafe |}.
-Export Cap_SafeDetachment.

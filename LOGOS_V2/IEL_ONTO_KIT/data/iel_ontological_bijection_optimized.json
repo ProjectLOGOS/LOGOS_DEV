@@ -1,0 +1,182 @@
+{
+  "metadata": {
+    "version": "2.0.0",
+    "description": "Clean bijective mapping of IEL domains to second-order ontological properties for UIP Step 2",
+    "last_updated": "2025-10-30",
+    "total_mappings": 18,
+    "mapping_principle": "Closest conceptual and functional relationship between domain focus and ontological property essence",
+    "completeness": "Perfect 1:1 bijection ensuring no gaps or overlaps",
+    "refactor_notes": "Cleaned version - removed complex values and Mandelbrot constants per IEL_ONTO_KIT refactor"
+  },
+
+  "AestheticoPraxis": {
+    "ontological_property": "Beauty",
+    "trinity_weights": {"existence": 0.7, "goodness": 0.9, "truth": 0.8},
+    "conceptual_alignment": "Perfect match - aesthetic reasoning directly maps to beauty manifestation",
+    "domain_focus": "Aesthetic reasoning, beauty analysis, harmonious perfection",
+    "property_essence": "Perfect harmony and aesthetic excellence",
+    "mapping_confidence": 0.95
+  },
+
+  "RelatioPraxis": {
+    "ontological_property": "Love",
+    "trinity_weights": {"existence": 0.8, "goodness": 1.0, "truth": 0.8},
+    "conceptual_alignment": "Strong match - relational reasoning fundamentally about love connections",
+    "domain_focus": "Relational reasoning, connection analysis, relationship verification",
+    "property_essence": "Perfect benevolent affection and care",
+    "mapping_confidence": 0.92
+  },
+
+  "PraxeoPraxis": {
+    "ontological_property": "Will",
+    "trinity_weights": {"existence": 1.0, "goodness": 0.8, "truth": 0.7},
+    "conceptual_alignment": "Perfect match - action reasoning is expression of divine will",
+    "domain_focus": "Action reasoning, practical decision-making, behavioral analysis",
+    "property_essence": "Divine volition and purposeful action",
+    "mapping_confidence": 0.96
+  },
+
+  "GlorioPraxis": {
+    "ontological_property": "Glory",
+    "trinity_weights": {"existence": 0.9, "goodness": 1.0, "truth": 0.9},
+    "conceptual_alignment": "Perfect match - glory reasoning about divine majesty manifestation",
+    "domain_focus": "Glory reasoning, divine honor analysis, transcendent excellence",
+    "property_essence": "Divine majesty and radiant perfection",
+    "mapping_confidence": 0.94
+  },
+
+  "ZelosPraxis": {
+    "ontological_property": "Wrath",
+    "trinity_weights": {"existence": 0.8, "goodness": 0.9, "truth": 0.7},
+    "conceptual_alignment": "Strong match - zeal and divine wrath both express passionate intensity",
+    "domain_focus": "Zeal reasoning, passionate devotion, fervent commitment evaluation",
+    "property_essence": "Divine judgment against evil and injustice",
+    "mapping_confidence": 0.88
+  },
+
+  "MakarPraxis": {
+    "ontological_property": "Blessedness",
+    "trinity_weights": {"existence": 0.8, "goodness": 1.0, "truth": 0.9},
+    "conceptual_alignment": "Perfect match - divine favor reasoning directly about blessedness",
+    "domain_focus": "Blessedness reasoning, divine favor analysis, beatific excellence",
+    "property_essence": "Perfect joy and infinite fulfillment",
+    "mapping_confidence": 0.93
+  },
+
+  "GnosiPraxis": {
+    "ontological_property": "Knowledge",
+    "trinity_weights": {"existence": 0.8, "goodness": 0.8, "truth": 1.0},
+    "conceptual_alignment": "Perfect match - epistemic reasoning is knowledge manifestation",
+    "domain_focus": "Epistemic reasoning, knowledge verification, truth analysis",
+    "property_essence": "Complete understanding and awareness",
+    "mapping_confidence": 0.97
+  },
+
+  "AxioPraxis": {
+    "ontological_property": "Truthfulness",
+    "trinity_weights": {"existence": 0.8, "goodness": 0.8, "truth": 1.0},
+    "conceptual_alignment": "Perfect match - axiological reasoning about truth and value foundations",
+    "domain_focus": "Axiological reasoning, value analysis, foundational principles",
+    "property_essence": "Perfect honesty and reliability",
+    "mapping_confidence": 0.95
+  },
+
+  "ThemiPraxis": {
+    "ontological_property": "Justice",
+    "trinity_weights": {"existence": 0.8, "goodness": 1.0, "truth": 0.9},
+    "conceptual_alignment": "Perfect match - normative reasoning about justice and moral order",
+    "domain_focus": "Normative reasoning, moral analysis, ethical standards",
+    "property_essence": "Perfect righteousness and moral correctness",
+    "mapping_confidence": 0.96
+  },
+
+  "TheoPraxis": {
+    "ontological_property": "Goodness",
+    "trinity_weights": {"existence": 0.9, "goodness": 1.0, "truth": 0.9},
+    "conceptual_alignment": "Perfect match - theological reasoning about divine goodness",
+    "domain_focus": "Theological reasoning, divine attribute analysis, sacred truth",
+    "property_essence": "Perfect moral excellence and benevolence",
+    "mapping_confidence": 0.98
+  },
+
+  "ModalPraxis": {
+    "ontological_property": "Necessity",
+    "trinity_weights": {"existence": 0.9, "goodness": 0.7, "truth": 0.9},
+    "conceptual_alignment": "Strong match - modal reasoning about necessary truths and logical necessity",
+    "domain_focus": "Modal reasoning, necessity analysis, possibility evaluation",
+    "property_essence": "Logical and metaphysical necessity",
+    "mapping_confidence": 0.91
+  },
+
+  "DynaPraxis": {
+    "ontological_property": "Power",
+    "trinity_weights": {"existence": 1.0, "goodness": 0.8, "truth": 0.8},
+    "conceptual_alignment": "Perfect match - dynamic reasoning about power and capability",
+    "domain_focus": "Dynamic reasoning, power analysis, capability assessment",
+    "property_essence": "Infinite capacity and sovereign authority",
+    "mapping_confidence": 0.94
+  },
+
+  "HexiPraxis": {
+    "ontological_property": "Wisdom",
+    "trinity_weights": {"existence": 0.8, "goodness": 0.9, "truth": 1.0},
+    "conceptual_alignment": "Strong match - habitual reasoning patterns reflect accumulated wisdom",
+    "domain_focus": "Habitual reasoning, pattern recognition, expertise development",
+    "property_essence": "Perfect practical knowledge and sound judgment",
+    "mapping_confidence": 0.89
+  },
+
+  "ChremaPraxis": {
+    "ontological_property": "Eternity", 
+    "trinity_weights": {"existence": 1.0, "goodness": 0.8, "truth": 0.9},
+    "conceptual_alignment": "Strong match - temporal phase reasoning about eternal aspects",
+    "domain_focus": "Temporal phase reasoning, timing analysis, chronological evaluation",
+    "property_essence": "Timeless existence beyond temporal limitations",
+    "mapping_confidence": 0.87
+  },
+
+  "MuPraxis": {
+    "ontological_property": "Unity",
+    "trinity_weights": {"existence": 0.9, "goodness": 0.9, "truth": 0.9},
+    "conceptual_alignment": "Strong match - recursive reasoning about self-referential unity",
+    "domain_focus": "Recursive reasoning, self-reference analysis, fixed-point evaluation",
+    "property_essence": "Perfect simplicity and indivisible oneness",
+    "mapping_confidence": 0.90
+  },
+
+  "TychePraxis": {
+    "ontological_property": "Providence",
+    "trinity_weights": {"existence": 0.9, "goodness": 1.0, "truth": 0.8},
+    "conceptual_alignment": "Strong match - probabilistic reasoning about divine providence over chance",
+    "domain_focus": "Probabilistic reasoning, chance analysis, uncertainty evaluation",
+    "property_essence": "Divine governance over seemingly random events",
+    "mapping_confidence": 0.86
+  },
+
+  "ErgoPraxis": {
+    "ontological_property": "Actuality",
+    "trinity_weights": {"existence": 1.0, "goodness": 0.8, "truth": 0.8},
+    "conceptual_alignment": "Perfect match - work reasoning about actual accomplishment",
+    "domain_focus": "Work reasoning, efficiency analysis, productive capability",
+    "property_essence": "Pure actuality without potentiality",
+    "mapping_confidence": 0.93
+  },
+
+  "AnthropPraxis": {
+    "ontological_property": "Perfection",
+    "trinity_weights": {"existence": 0.9, "goodness": 1.0, "truth": 0.9},
+    "conceptual_alignment": "Strong match - human-centered reasoning about ultimate perfection",
+    "domain_focus": "Anthropological reasoning, human nature analysis, personal development",
+    "property_essence": "Complete excellence lacking nothing",
+    "mapping_confidence": 0.91
+  },
+
+  "TeloPraxis": {
+    "ontological_property": "Purpose",
+    "trinity_weights": {"existence": 0.9, "goodness": 0.9, "truth": 0.8},
+    "conceptual_alignment": "Perfect match - teleological reasoning directly about divine purpose",
+    "domain_focus": "Teleological reasoning, purpose analysis, goal-directed evaluation",
+    "property_essence": "Ultimate final cause and supreme end",
+    "mapping_confidence": 0.97
+  }
+}
