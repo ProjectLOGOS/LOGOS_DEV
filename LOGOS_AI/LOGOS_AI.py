@@ -75,6 +75,16 @@ from User_Interaction_Protocol.protocols.shared.message_formats import (
     UIPResponse,
 )
 
+# Import OpenAI integrated pipeline
+try:
+    from User_Interaction_Protocol.interfaces.external.openai_integrated_pipeline import (
+        initialize_pipeline, get_pipeline, OpenAIConfig, quick_text_interaction
+    )
+    OPENAI_PIPELINE_AVAILABLE = True
+except ImportError as e:
+    logging.warning(f"OpenAI pipeline not available: {e}")
+    OPENAI_PIPELINE_AVAILABLE = False
+
 
 @dataclass
 class LOGOSSystemConfiguration:
@@ -110,12 +120,16 @@ class LOGOSSystemConfiguration:
     # Security settings
     enable_authentication: bool = False
     api_key_required: bool = False
-
+    
+    # OpenAI Integration settings
+    enable_openai_pipeline: bool = True
+    openai_api_key: Optional[str] = None
+    openai_gpt_model: str = "gpt-4o"
+    openai_tts_voice: str = "nova"
+    
     # Development settings
     debug_mode: bool = False
     development_mode: bool = False
-
-
 @dataclass
 class LOGOSSystemStatus:
     """Comprehensive LOGOS system status"""
@@ -314,29 +328,46 @@ class LOGOSMasterController:
                     )
                     # AGP failure is non-fatal - system can operate without it
 
-            # Phase 4: System Integration and Validation
-            self.logger.info("🔗 Phase 4: System Integration and Validation")
-
+            # Phase 4: OpenAI Pipeline Integration (Optional)
+            if self.config.enable_openai_pipeline and OPENAI_PIPELINE_AVAILABLE:
+                self.logger.info("🤖 Phase 4: Initializing OpenAI Integration Pipeline")
+                
+                openai_config = OpenAIConfig(
+                    api_key=self.config.openai_api_key,
+                    gpt_model=self.config.openai_gpt_model,
+                    tts_voice=self.config.openai_tts_voice
+                )
+                
+                if initialize_pipeline(openai_config):
+                    self.logger.info("✅ OpenAI Pipeline initialized successfully")
+                    self.logger.info("   🎤 Whisper Speech-to-Text: Available")
+                    self.logger.info("   🧠 GPT-4 Processing: Available") 
+                    self.logger.info("   🔊 High-Quality TTS: Available")
+                    self.logger.info("   🛠️ LOGOS Tool Integration: Active")
+                else:
+                    self.logger.warning("⚠️ OpenAI Pipeline initialization failed - continuing without enhanced AI")
+            
+            # Phase 5: System Integration and Validation
+            self.logger.info("🔗 Phase 5: System Integration and Validation")
+            
             if await self._validate_system_integration():
                 self.startup_complete = True
                 self.status.system_mode = "operational"
-
+                
                 # Start monitoring systems
                 self._start_monitoring_systems()
-
+                
                 # Display startup summary
                 self._display_startup_summary()
-
+                
                 self.logger.info("=" * 60)
                 self.logger.info("🎉 LOGOS AI SYSTEM STARTUP COMPLETE")
                 self.logger.info("=" * 60)
-
+                
                 return True
             else:
                 self.logger.error("❌ System integration validation failed")
-                return False
-
-        except Exception as e:
+                return False        except Exception as e:
             self.logger.error(f"❌ LOGOS system startup failed: {e}")
             self.status.system_mode = "failed"
             return False
@@ -544,8 +575,32 @@ class LOGOSMasterController:
                 "status": "processing",
             }
 
-            # Process through UIP pipeline
-            response = await process_user_request(request)
+            # Choose processing pipeline
+            if self.config.enable_openai_pipeline and OPENAI_PIPELINE_AVAILABLE and get_pipeline():
+                # Use enhanced OpenAI pipeline
+                self.logger.debug(f"Processing request via OpenAI pipeline: {request.user_input[:50]}...")
+                pipeline = get_pipeline()
+                response = await pipeline.text_interaction(
+                    request.user_input, 
+                    session_id=request.session_id
+                )
+                
+                # Add pipeline indicator to metadata
+                if not hasattr(response, 'metadata'):
+                    response.metadata = {}
+                response.metadata["pipeline"] = "openai_integrated"
+                response.metadata["enhanced_ai"] = True
+                
+            else:
+                # Fallback to standard UIP pipeline
+                self.logger.debug(f"Processing request via standard UIP: {request.user_input[:50]}...")
+                response = await process_user_request(request)
+                
+                # Add pipeline indicator to metadata  
+                if not hasattr(response, 'metadata'):
+                    response.metadata = {}
+                response.metadata["pipeline"] = "standard_uip"
+                response.metadata["enhanced_ai"] = False
 
             # Update statistics
             processing_time = (time.time() - start_time) * 1000
