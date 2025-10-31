@@ -1,0 +1,492 @@
+{
+  "extraction_date": "2025-10-30T20:40:03.677509",
+  "total_files_processed": 79,
+  "successful_extractions": 78,
+  "failed_extractions": 1,
+  "files_by_type": {
+    ".docx": 30,
+    ".zip": 3,
+    ".txt": 1,
+    ".pdf": 23,
+    ".thy": 6,
+    ".v": 6,
+    ".md": 10
+  },
+  "extraction_log": [
+    {
+      "file": "Mathematical_Framework.docx",
+      "type": ".docx",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:08.354055"
+    },
+    {
+      "file": "universalism.zip",
+      "type": ".zip",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:08.365761"
+    },
+    {
+      "file": "3PDN Derived Arguments and Tool\\0. Interactive Argument Tool.docx",
+      "type": ".docx",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:08.551321"
+    },
+    {
+      "file": "3PDN Derived Arguments and Tool\\Argument From Agency.docx",
+      "type": ".docx",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:08.645206"
+    },
+    {
+      "file": "3PDN Derived Arguments and Tool\\Argument From Escatology (3PDN).docx",
+      "type": ".docx",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:08.686537"
+    },
+    {
+      "file": "3PDN Derived Arguments and Tool\\Argument From Evil (3PDN).docx",
+      "type": ".docx",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:08.710509"
+    },
+    {
+      "file": "3PDN Derived Arguments and Tool\\Argument From Knowledge (3PDN).docx",
+      "type": ".docx",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:08.720663"
+    },
+    {
+      "file": "3PDN Derived Arguments and Tool\\Argument From Logic (3PDN).docx",
+      "type": ".docx",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:08.731888"
+    },
+    {
+      "file": "3PDN Derived Arguments and Tool\\Argument From Morality (3PDN).docx",
+      "type": ".docx",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:08.736195"
+    },
+    {
+      "file": "3PDN Derived Arguments and Tool\\Argument From Ontology (3PDN).docx",
+      "type": ".docx",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:08.749690"
+    },
+    {
+      "file": "3PDN Derived Arguments and Tool\\Cosmological Argument (3PDN).docx",
+      "type": ".docx",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:08.758792"
+    },
+    {
+      "file": "3PDN Derived Arguments and Tool\\Integrity Check.txt",
+      "type": ".txt",
+      "status": "failed",
+      "error": "Copy failed",
+      "timestamp": "2025-10-30T20:40:08.768061"
+    },
+    {
+      "file": "Corpus Derived Arguments\\Argument From Agency.docx",
+      "type": ".docx",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:08.993845"
+    },
+    {
+      "file": "Corpus Derived Arguments\\Argument From Escatology (3PDN).docx",
+      "type": ".docx",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:09.181120"
+    },
+    {
+      "file": "Corpus Derived Arguments\\Argument From Evil (3PDN).docx",
+      "type": ".docx",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:09.308093"
+    },
+    {
+      "file": "Corpus Derived Arguments\\Argument From Knowledge (3PDN).docx",
+      "type": ".docx",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:09.385055"
+    },
+    {
+      "file": "Corpus Derived Arguments\\Argument From Logic (3PDN).docx",
+      "type": ".docx",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:09.658854"
+    },
+    {
+      "file": "Corpus Derived Arguments\\Argument From Morality (3PDN).docx",
+      "type": ".docx",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:09.890813"
+    },
+    {
+      "file": "Corpus Derived Arguments\\Argument From Ontology (3PDN).docx",
+      "type": ".docx",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:10.057499"
+    },
+    {
+      "file": "Corpus Derived Arguments\\Cosmological Argument (3PDN).docx",
+      "type": ".docx",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:10.152224"
+    },
+    {
+      "file": "DOCX\\0.1. Packet Guide.docx",
+      "type": ".docx",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:10.199315"
+    },
+    {
+      "file": "DOCX\\0.2. 3PDN Interactive AI Tool.docx",
+      "type": ".docx",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:10.253971"
+    },
+    {
+      "file": "DOCX\\1. Three Pillars of Divine Necessity.docx",
+      "type": ".docx",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:10.861573"
+    },
+    {
+      "file": "DOCX\\2. Objections, Resolutions & Experts.docx",
+      "type": ".docx",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:11.016615"
+    },
+    {
+      "file": "DOCX\\3. Three Pillars Formalization Axiomatic and Computational Framework.docx",
+      "type": ".docx",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:11.444858"
+    },
+    {
+      "file": "DOCX\\4. Derivations, Probabilities, and Integrations.docx",
+      "type": ".docx",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:11.549101"
+    },
+    {
+      "file": "DOCX\\5. Comparative Analysis.docx",
+      "type": ".docx",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:11.600293"
+    },
+    {
+      "file": "DOCX\\6. GLOSSARY OF CORE PRINCIPLES AND TERMS.docx",
+      "type": ".docx",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:11.668780"
+    },
+    {
+      "file": "DOCX\\7. Comprehensive Bibliography.docx",
+      "type": ".docx",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:11.741740"
+    },
+    {
+      "file": "DOCX\\8. 3 Pillars Corpus.zip",
+      "type": ".zip",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:11.743125"
+    },
+    {
+      "file": "DOCX\\enhancements.zip",
+      "type": ".zip",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:11.747370"
+    },
+    {
+      "file": "PDF\\0.1. Packet Guide.pdf",
+      "type": ".pdf",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:11.750942"
+    },
+    {
+      "file": "PDF\\0.2. 3PDN Interactive AI Tool.pdf",
+      "type": ".pdf",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:11.753455"
+    },
+    {
+      "file": "PDF\\1. Three Pillars of Divine Necessity.pdf",
+      "type": ".pdf",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:11.756259"
+    },
+    {
+      "file": "PDF\\2. Objections, Resolutions & Experts.pdf",
+      "type": ".pdf",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:11.759597"
+    },
+    {
+      "file": "PDF\\3. Three Pillars Formalization Axiomtic and Computational Closure.pdf",
+      "type": ".pdf",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:11.763166"
+    },
+    {
+      "file": "PDF\\4. Derivations, Probabilities, and Integrations.pdf",
+      "type": ".pdf",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:11.766071"
+    },
+    {
+      "file": "PDF\\5. Comparative Analysis.pdf",
+      "type": ".pdf",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:11.768851"
+    },
+    {
+      "file": "PDF\\6. Glossary and Index.pdf",
+      "type": ".pdf",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:11.771856"
+    },
+    {
+      "file": "PDF\\7. Comprehensive Bibliography.pdf",
+      "type": ".pdf",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:11.782740"
+    },
+    {
+      "file": "universalism\\3PDN_Universal_Reconciliation.thy",
+      "type": ".thy",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:11.797538"
+    },
+    {
+      "file": "universalism\\3pdn_universal_reconciliation.v",
+      "type": ".v",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:11.804471"
+    },
+    {
+      "file": "universalism\\archival_master_privation_list.md",
+      "type": ".md",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:11.826538"
+    },
+    {
+      "file": "universalism\\core_component_privations.md",
+      "type": ".md",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:11.835017"
+    },
+    {
+      "file": "universalism\\empirical_validation_framework.md",
+      "type": ".md",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:11.841539"
+    },
+    {
+      "file": "universalism\\extended_privation_developments.md",
+      "type": ".md",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:11.848966"
+    },
+    {
+      "file": "universalism\\incoherence_privation_formalism.md",
+      "type": ".md",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:11.854098"
+    },
+    {
+      "file": "universalism\\Logic_Modal_Coherence.docx",
+      "type": ".docx",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:11.944310"
+    },
+    {
+      "file": "universalism\\Math Formalisms.docx",
+      "type": ".docx",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:12.123839"
+    },
+    {
+      "file": "universalism\\Nothing_Privation.docx",
+      "type": ".docx",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:12.201756"
+    },
+    {
+      "file": "universalism\\privations_coq.v",
+      "type": ".v",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:12.207386"
+    },
+    {
+      "file": "universalism\\Privations_Examples.thy",
+      "type": ".thy",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:12.215318"
+    },
+    {
+      "file": "universalism\\privations_examples_coq.v",
+      "type": ".v",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:12.220203"
+    },
+    {
+      "file": "universalism\\Privations_Full.thy",
+      "type": ".thy",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:12.223844"
+    },
+    {
+      "file": "universalism\\privations_full_coq.v",
+      "type": ".v",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:12.232708"
+    },
+    {
+      "file": "universalism\\Privations_Instances.thy",
+      "type": ".thy",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:12.236271"
+    },
+    {
+      "file": "universalism\\privations_instances_coq.v",
+      "type": ".v",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:12.240649"
+    },
+    {
+      "file": "universalism\\privations_isabelle.thy",
+      "type": ".thy",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:12.251303"
+    },
+    {
+      "file": "universalism\\privation_list.md",
+      "type": ".md",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:12.256911"
+    },
+    {
+      "file": "universalism\\privative_forms_master.md",
+      "type": ".md",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:12.267735"
+    },
+    {
+      "file": "universalism\\quantitative_privation_refinement.md",
+      "type": ".md",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:12.271743"
+    },
+    {
+      "file": "universalism\\README_PRIVATIONS.md",
+      "type": ".md",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:12.276280"
+    },
+    {
+      "file": "universalism\\temporal_privation_dynamics.md",
+      "type": ".md",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:12.283771"
+    },
+    {
+      "file": "universalism\\Universal_Reconciliation_Core.thy",
+      "type": ".thy",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:12.287540"
+    },
+    {
+      "file": "universalism\\universal_reconciliation_core.v",
+      "type": ".v",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:12.301727"
+    },
+    {
+      "file": "DOCX\\enhancements\\Appendix_Bayesian_and_Measure_Analyses.tex.pdf",
+      "type": ".pdf",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:12.308908"
+    },
+    {
+      "file": "DOCX\\enhancements\\Appendix_BRIDGE_Conditions_and_Example.tex.pdf",
+      "type": ".pdf",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:12.316431"
+    },
+    {
+      "file": "DOCX\\enhancements\\Appendix_Measure_Transforms_Constructive_Alt.tex.pdf",
+      "type": ".pdf",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:12.318916"
+    },
+    {
+      "file": "DOCX\\enhancements\\Figure_and_Text_BRIDGE_Transition_Map.tex.pdf",
+      "type": ".pdf",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:12.323393"
+    },
+    {
+      "file": "DOCX\\enhancements\\Note_CI_Status_Proof_or_Conjecture.tex.pdf",
+      "type": ".pdf",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:12.325939"
+    },
+    {
+      "file": "DOCX\\enhancements\\Note_Lattice_Distributivity_Proof.tex.pdf",
+      "type": ".pdf",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:12.340722"
+    },
+    {
+      "file": "DOCX\\enhancements\\Note_PSR_Defense_for_BRIDGE.tex.pdf",
+      "type": ".pdf",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:12.343930"
+    },
+    {
+      "file": "DOCX\\enhancements\\Note_S5_Rationale_and_S4_Backup.tex.pdf",
+      "type": ".pdf",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:12.349912"
+    },
+    {
+      "file": "DOCX\\enhancements\\Note_Trinity_Choice_vs_Classical_AC.tex.pdf",
+      "type": ".pdf",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:12.352313"
+    },
+    {
+      "file": "DOCX\\enhancements\\Section_3OT_Expanded_Proofs_and_Sensitivity.tex.pdf",
+      "type": ".pdf",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:12.355000"
+    },
+    {
+      "file": "DOCX\\enhancements\\Section_Unitarian_Alternatives_Rebuttal.tex.pdf",
+      "type": ".pdf",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:12.357780"
+    },
+    {
+      "file": "DOCX\\enhancements\\Sheet_Claims_Taxonomy.tex.pdf",
+      "type": ".pdf",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:12.360153"
+    },
+    {
+      "file": "DOCX\\enhancements\\Sheet_Operators_DomainCodomain_Invariants.tex.pdf",
+      "type": ".pdf",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:12.367470"
+    },
+    {
+      "file": "DOCX\\enhancements\\Tables_Nontheist_Evidence_Sources.tex.pdf",
+      "type": ".pdf",
+      "status": "success",
+      "timestamp": "2025-10-30T20:40:12.370275"
+    }
+  ]
+}
