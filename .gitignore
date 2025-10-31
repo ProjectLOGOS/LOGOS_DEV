@@ -13,6 +13,9 @@ __pycache__/
 *.tar.gz
 *.rar
 
+# 3PDN Source Directory (binary files already extracted to 3PDN_Training_Data/)
+Three_Pillars_of_Divine_Necessity/
+
 # Distribution / packaging
 .Python
 build/
