@@ -101,13 +101,13 @@ except ImportError:
 
 # Import Enhanced Bayesian Components
 try:
-    # Import from UIP external_libraries - gap_fillers directory
+    # Import from UIP system_resources - gap_fillers directory
     import numpy as np
-    from ...interfaces.external_libraries.gap_fillers.bayesian_predictor import run_mcmc_model
-    from ...interfaces.external_libraries.gap_fillers.bayesian_predictor.bayes_update_real_time import (
+    from ...interfaces.system_resources.gap_fillers.bayesian_predictor import run_mcmc_model
+    from ...interfaces.system_resources.gap_fillers.bayesian_predictor.bayes_update_real_time import (
         RealTimeBayesUpdater,
     )
-    from ...interfaces.external_libraries.gap_fillers.bayesian_predictor.hierarchical_bayes_network import (
+    from ...interfaces.system_resources.gap_fillers.bayesian_predictor.hierarchical_bayes_network import (
         HierarchicalBayesNetwork,
     )
 
@@ -136,8 +136,8 @@ except ImportError as e:
 
 # Import Translation Engine for multi-language synthesis
 try:
-    from ...interfaces.external_libraries.gap_fillers.translation.pdn_bridge import PDNBridge
-    from ...interfaces.external_libraries.gap_fillers.translation.translation_engine import TranslationEngine
+    from ...interfaces.system_resources.gap_fillers.translation.pdn_bridge import PDNBridge
+    from ...interfaces.system_resources.gap_fillers.translation.translation_engine import TranslationEngine
 
     TRANSLATION_ENGINE_AVAILABLE = True
 except ImportError as e:

@@ -70,8 +70,8 @@ These components are integrated throughout the LOGOS AI system:
 Components are imported using relative paths from the UIP structure:
 
 ```python
-from ...interfaces.external_libraries.gap_fillers.bayesian_predictor import run_mcmc_model
-from ...interfaces.external_libraries.gap_fillers.translation.pdn_bridge import PDNBridge
+from ...interfaces.system_resources.gap_fillers.bayesian_predictor import run_mcmc_model
+from ...interfaces.system_resources.gap_fillers.translation.pdn_bridge import PDNBridge
 ```
 
 ## Status
@@ -82,4 +82,4 @@ from ...interfaces.external_libraries.gap_fillers.translation.pdn_bridge import 
 
 ---
 
-*Relocated from root directory to proper UIP external libraries structure for improved organization and maintainability.*
+*Relocated from root directory to proper UIP system resources structure for improved organization and maintainability.*
