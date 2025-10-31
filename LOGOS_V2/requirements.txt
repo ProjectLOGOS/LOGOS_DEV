@@ -1,0 +1,48 @@
+# LOGOS V2 Intelligence Module Requirements
+# Specialized dependencies for LOGOS_V2 intelligence systems
+
+# === CRITICAL MISSING DEPENDENCIES IDENTIFIED IN V2 AUDIT ===
+
+# Core Scientific Computing (required by multiple modules)
+numpy>=1.24.0
+sympy>=1.12.0
+scipy>=1.10.0
+
+# AI/ML Dependencies for Intelligence Modules
+torch>=2.0.0
+torch-audio>=0.13.0
+sentence-transformers>=2.2.0
+transformers>=4.30.0
+
+# Bayesian Inference System (reasoning_engines/bayesian_inference.py)
+pymc>=5.0.0
+arviz>=0.15.0
+pytensor>=2.8.0
+
+# Graph Processing (modal_inference.py)
+networkx>=3.0.0
+
+# System Performance Monitoring
+psutil>=5.9.0
+
+# Web and API Support
+requests>=2.28.0
+aiohttp>=3.8.0
+
+# Data Processing & Analysis
+pandas>=1.5.0
+matplotlib>=3.6.0
+
+# Optional: Enhanced Mathematical Support
+mpmath>=1.3.0
+numba>=0.56.0
+
+# Development Dependencies
+pytest>=8.0.0
+black>=24.0.0
+mypy>=1.8.0
+
+# Formal Logic Dependencies (for Coq integration)
+# Note: Coq dependencies require separate installation
+# coq>=8.17.0  # Install separately with opam/conda
+# coq-mathcomp-ssreflect  # Install separately

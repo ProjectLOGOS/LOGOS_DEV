@@ -45,11 +45,28 @@ try:
     from interfaces.services.api_service import APIService
     from interfaces.services.gui_interfaces.logos_gui import LogosGUI
     from mathematics.pxl.core.pxl_core import PXLCore
-    from protocols.shared.message_formats import UIPRequest, UIPResponse
+    from User_Interaction_Protocol.protocols.shared.message_formats import UIPRequest, UIPResponse
     from protocols.user_interaction.uip_registry import UIPRegistry, UIPStatus
 except ImportError as e:
     logging.warning(f"Some UIP components not available: {e}")
     # Fallback implementations for development
+    
+    @dataclass
+    class UIPRequest:
+        """Fallback UIPRequest for development"""
+        request_id: str = ""
+        user_input: str = ""
+        context: Dict[str, Any] = field(default_factory=dict)
+        timestamp: float = 0.0
+        
+    @dataclass
+    class UIPResponse:
+        """Fallback UIPResponse for development"""
+        response_id: str = ""
+        content: str = ""
+        status: str = "success"
+        metadata: Dict[str, Any] = field(default_factory=dict)
+        timestamp: float = 0.0
 
 
 @dataclass

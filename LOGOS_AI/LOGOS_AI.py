@@ -231,12 +231,14 @@ class LOGOSMasterController:
         handlers = [logging.StreamHandler(sys.stdout)]
 
         if self.config.enable_file_logging:
+            # Create error handler with specific level
+            error_handler = logging.FileHandler(log_dir / "logos_errors.log")
+            error_handler.setLevel(logging.ERROR)
+            
             handlers.extend(
                 [
                     logging.FileHandler(log_dir / "logos_master.log"),
-                    logging.FileHandler(
-                        log_dir / "logos_errors.log", level=logging.ERROR
-                    ),
+                    error_handler,
                 ]
             )
 
@@ -367,7 +369,9 @@ class LOGOSMasterController:
                 return True
             else:
                 self.logger.error("❌ System integration validation failed")
-                return False        except Exception as e:
+                return False
+                
+        except Exception as e:
             self.logger.error(f"❌ LOGOS system startup failed: {e}")
             self.status.system_mode = "failed"
             return False
