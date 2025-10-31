@@ -6,6 +6,13 @@ __pycache__/
 # C extensions
 *.so
 
+# Binary documents that can't be tracked properly
+*.docx
+*.pdf
+*.zip
+*.tar.gz
+*.rar
+
 # Distribution / packaging
 .Python
 build/

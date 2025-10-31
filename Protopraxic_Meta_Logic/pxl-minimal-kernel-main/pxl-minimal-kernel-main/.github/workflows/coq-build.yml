@@ -1,0 +1,20 @@
+﻿name: coq-build
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Coq
+        uses: coq-community/docker-coq-action@v1
+        with:
+          opam_file: ''
+          custom_script: |
+            sudo apt-get update
+            sudo apt-get install -y coq=8.20.1-*
+            coqc -v
+      - name: Build
+        run: |
+          find coq -name '*.v' -print0 | sort -z | xargs -0 -n1 coqc -q -Q coq PXLs
+      - name: Kernel check
+        run: coqchk -R coq PXLs
