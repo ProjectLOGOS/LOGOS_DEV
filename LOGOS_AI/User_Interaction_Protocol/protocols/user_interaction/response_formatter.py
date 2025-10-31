@@ -101,21 +101,13 @@ except ImportError:
 
 # Import Enhanced Bayesian Components
 try:
-    # Fix import path - V2_Possible_Gap_Fillers is in root directory
-    import os
-    import sys
-
-    gap_fillers_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "..")
-    if gap_fillers_path not in sys.path:
-        sys.path.insert(0, gap_fillers_path)
-
-    # Import MCMC functions (note: file is named 1mcmc_engine.py)
+    # Import from UIP external_libraries - gap_fillers directory
     import numpy as np
-    from V2_Possible_Gap_Fillers.bayesian_predictor import run_mcmc_model
-    from V2_Possible_Gap_Fillers.bayesian_predictor.bayes_update_real_time import (
+    from ...interfaces.external_libraries.gap_fillers.bayesian_predictor import run_mcmc_model
+    from ...interfaces.external_libraries.gap_fillers.bayesian_predictor.bayes_update_real_time import (
         RealTimeBayesUpdater,
     )
-    from V2_Possible_Gap_Fillers.bayesian_predictor.hierarchical_bayes_network import (
+    from ...interfaces.external_libraries.gap_fillers.bayesian_predictor.hierarchical_bayes_network import (
         HierarchicalBayesNetwork,
     )
 
@@ -144,8 +136,8 @@ except ImportError as e:
 
 # Import Translation Engine for multi-language synthesis
 try:
-    from V2_Possible_Gap_Fillers.translation.pdn_bridge import PDNBridge
-    from V2_Possible_Gap_Fillers.translation.translation_engine import TranslationEngine
+    from ...interfaces.external_libraries.gap_fillers.translation.pdn_bridge import PDNBridge
+    from ...interfaces.external_libraries.gap_fillers.translation.translation_engine import TranslationEngine
 
     TRANSLATION_ENGINE_AVAILABLE = True
 except ImportError as e:
