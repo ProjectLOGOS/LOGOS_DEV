@@ -41,8 +41,7 @@ except ImportError:
 
 # Import reasoning engines for synthesis coordination
 try:
-    # Updated path for UIP location - interfaces are now in Advanced_Reasoning_Protocol
-    from ....Advanced_Reasoning_Protocol.reasoning_pipeline.interfaces.services.workers.unified_formalisms import (
+    from ...interfaces.services.workers.unified_formalisms import (
         UnifiedFormalismValidator,
     )
 
@@ -52,8 +51,7 @@ except ImportError:
     logging.warning("UnifiedFormalismValidator not available - using mock validator")
 
 try:
-    # Updated path for UIP location - intelligence now in Advanced_Reasoning_Protocol
-    from ....Advanced_Reasoning_Protocol.reasoning_pipeline.intelligence.reasoning_engines.temporal_predictor import TemporalPredictor
+    from ...intelligence.reasoning_engines.temporal_predictor import TemporalPredictor
 
     TEMPORAL_PREDICTOR_AVAILABLE = True
 except ImportError:
@@ -62,11 +60,10 @@ except ImportError:
 
 # Import Fractal Orbital Predictor for enhanced synthesis
 try:
-    # Updated path for UIP location - intelligence now in Advanced_Reasoning_Protocol
-    from ....Advanced_Reasoning_Protocol.reasoning_pipeline.intelligence.trinity.thonoc.fractal_orbital.class_fractal_orbital_predictor import (
+    from ...intelligence.trinity.thonoc.fractal_orbital.class_fractal_orbital_predictor import (
         TrinityPredictionEngine,
     )
-    from ....Advanced_Reasoning_Protocol.reasoning_pipeline.intelligence.trinity.thonoc.fractal_orbital.fractal_nexus import (
+    from ...intelligence.trinity.thonoc.fractal_orbital.fractal_nexus import (
         FractalNexus,
     )
 
@@ -79,8 +76,7 @@ except ImportError:
 
 # Import Lambda Calculus Engine for symbolic reasoning
 try:
-    # Updated path for UIP location - intelligence now in Advanced_Reasoning_Protocol
-    from ....Advanced_Reasoning_Protocol.reasoning_pipeline.intelligence.trinity.thonoc.symbolic_engine.lambda_engine.logos_lambda_core import (
+    from ...intelligence.trinity.thonoc.symbolic_engine.lambda_engine.logos_lambda_core import (
         LambdaLogosEngine,
     )
 
@@ -91,8 +87,7 @@ except ImportError:
 
 # Import Mathematical Frameworks for advanced analysis
 try:
-    # Updated path for UIP location - mathematics now in Advanced_Reasoning_Protocol
-    from ....Advanced_Reasoning_Protocol.reasoning_pipeline.mathematics.math_cats import (
+    from ...mathematics.math_cats import (
         ENHANCED_COMPONENTS_AVAILABLE,
         get_enhanced_arithmetic_engine,
         get_enhanced_proof_engine,
@@ -106,13 +101,13 @@ except ImportError:
 
 # Import Enhanced Bayesian Components
 try:
-    # Updated path for UIP location - interfaces now in Advanced_Reasoning_Protocol
+    # Import from UIP system_resources - gap_fillers directory
     import numpy as np
-    from ....Advanced_Reasoning_Protocol.reasoning_pipeline.interfaces.system_resources.gap_fillers.bayesian_predictor import run_mcmc_model
-    from ....Advanced_Reasoning_Protocol.reasoning_pipeline.interfaces.system_resources.gap_fillers.bayesian_predictor.bayes_update_real_time import (
+    from ...interfaces.system_resources.gap_fillers.bayesian_predictor import run_mcmc_model
+    from ...interfaces.system_resources.gap_fillers.bayesian_predictor.bayes_update_real_time import (
         RealTimeBayesUpdater,
     )
-    from ....Advanced_Reasoning_Protocol.reasoning_pipeline.interfaces.system_resources.gap_fillers.bayesian_predictor.hierarchical_bayes_network import (
+    from ...interfaces.system_resources.gap_fillers.bayesian_predictor.hierarchical_bayes_network import (
         HierarchicalBayesNetwork,
     )
 
@@ -141,9 +136,8 @@ except ImportError as e:
 
 # Import Translation Engine for multi-language synthesis
 try:
-    # Updated path for UIP location - interfaces now in Advanced_Reasoning_Protocol
-    from ....Advanced_Reasoning_Protocol.reasoning_pipeline.interfaces.system_resources.gap_fillers.translation.pdn_bridge import PDNBridge
-    from ....Advanced_Reasoning_Protocol.reasoning_pipeline.interfaces.system_resources.gap_fillers.translation.translation_engine import TranslationEngine
+    from ...interfaces.system_resources.gap_fillers.translation.pdn_bridge import PDNBridge
+    from ...interfaces.system_resources.gap_fillers.translation.translation_engine import TranslationEngine
 
     TRANSLATION_ENGINE_AVAILABLE = True
 except ImportError as e:
@@ -152,8 +146,7 @@ except ImportError as e:
 
 # Import audit logging for Step 6 tracking
 try:
-    # Updated path for UIP location - audit now likely in System_Operations_Protocol
-    from ....System_Operations_Protocol.audit.audit_logger import log_event, log_step5_event
+    from audit.audit_logger import log_event, log_step5_event
 
     AUDIT_LOGGING_AVAILABLE = True
 except ImportError:

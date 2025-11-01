@@ -1,0 +1,24 @@
+{
+  "system_name": "LOGOS",
+  "architecture": "single_agent",
+  "version": "2.0.0",
+  "protocols": {
+    "SOP": {
+      "status": "always_active",
+      "role": "infrastructure"
+    },
+    "UIP": {
+      "status": "on_demand",
+      "role": "reasoning"
+    },
+    "AGP": {
+      "status": "default_active",
+      "role": "cognitive"
+    }
+  },
+  "agent": {
+    "type": "system_agent",
+    "authority": "full_control",
+    "gui_interface": true
+  }
+}

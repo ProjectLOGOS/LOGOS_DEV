@@ -1,0 +1,40 @@
+{
+  "SOP": {
+    "description": "System Operations Protocol - Infrastructure and maintenance hub",
+    "responsibilities": [
+      "infrastructure",
+      "maintenance",
+      "token_system",
+      "gap_detection",
+      "file_management"
+    ],
+    "access": "system_agent_only",
+    "lifecycle": "always_active"
+  },
+  "UIP": {
+    "description": "User Interaction Protocol - Reasoning pipeline and data analysis",
+    "responsibilities": [
+      "reasoning",
+      "data_parsing",
+      "output_validation"
+    ],
+    "access": "system_agent_only",
+    "lifecycle": "on_demand",
+    "modes": [
+      "inactive",
+      "active_targeted",
+      "active_persistent"
+    ]
+  },
+  "AGP": {
+    "description": "Advanced General Protocol - Cognitive systems and self-improvement",
+    "responsibilities": [
+      "cognitive_processing",
+      "self_improvement",
+      "todo_processing",
+      "bdn_mvs_integration"
+    ],
+    "access": "system_agent_only",
+    "lifecycle": "default_active"
+  }
+}

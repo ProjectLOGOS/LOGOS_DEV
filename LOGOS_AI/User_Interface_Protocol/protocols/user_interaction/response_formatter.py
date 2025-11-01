@@ -41,8 +41,8 @@ except ImportError:
 
 # Import reasoning engines for synthesis coordination
 try:
-    # Updated path for UIP location - interfaces are now in Advanced_Reasoning_Protocol
-    from ....Advanced_Reasoning_Protocol.reasoning_pipeline.interfaces.services.workers.unified_formalisms import (
+    # Updated path for reorganized ARP structure
+    from ....Advanced_Reasoning_Protocol.reasoning_engines.unified_formalisms import (
         UnifiedFormalismValidator,
     )
 
@@ -52,8 +52,8 @@ except ImportError:
     logging.warning("UnifiedFormalismValidator not available - using mock validator")
 
 try:
-    # Updated path for UIP location - intelligence now in Advanced_Reasoning_Protocol
-    from ....Advanced_Reasoning_Protocol.reasoning_pipeline.intelligence.reasoning_engines.temporal_predictor import TemporalPredictor
+    # Updated path for reorganized ARP structure
+    from ....Advanced_Reasoning_Protocol.reasoning_engines.temporal.temporal_predictor import TemporalPredictor
 
     TEMPORAL_PREDICTOR_AVAILABLE = True
 except ImportError:
