@@ -1,0 +1,43 @@
+# ontological_lattice.py
+
+from core.iel_overlay import IELOverlay
+from core.properties import (
+    Identity, NonContradiction, ExcludedMiddle,
+    Distinction, Relation, Agency,
+    Coherence, Truth, Existence, Goodness
+)
+
+class OntologicalLattice:
+    def __init__(self):
+        self.first_order = {
+            'Identity': Identity(),
+            'NonContradiction': NonContradiction(),
+            'ExcludedMiddle': ExcludedMiddle()
+        }
+        self.second_order = {
+            'Distinction': Distinction(),
+            'Relation': Relation(),
+            'Agency': Agency()
+        }
+        self.transcendentals = {
+            'Coherence': Coherence(),
+            'Truth': Truth(),
+            'Existence': Existence(),
+            'Goodness': Goodness()
+        }
+        self.iel = IELOverlay()
+
+    def validate_interdependencies(self):
+        assert self.iel.verify_dependency('Identity', 'Distinction')
+        assert self.iel.verify_dependency('NonContradiction', 'Relation')
+        assert self.iel.verify_dependency('ExcludedMiddle', 'Agency')
+        assert self.iel.verify_isomorphism('Coherence', 'Truth')
+        assert self.iel.verify_isomorphism('Existence', 'Goodness')
+
+    def export(self):
+        return {
+            "first_order": list(self.first_order.keys()),
+            "second_order": list(self.second_order.keys()),
+            "transcendentals": list(self.transcendentals.keys()),
+            "iel_bindings": self.iel.export()
+        }

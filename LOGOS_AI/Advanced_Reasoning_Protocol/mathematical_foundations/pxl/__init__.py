@@ -14,9 +14,25 @@ Enhanced with V2_Possible_Gap_Fillers integration:
 - Translation Engine for semantic mathematical processing
 """
 
-from .arithmetic_engine import ArithmeticEngine, TrinityArithmeticEngine
-from .proof_engine import OntologicalProofEngine, ProofEngine, ProofResult, ProofStatus
-from .symbolic_math import FractalSymbolicMath, SymbolicMath
+"""
+Enhanced Arithmopraxis Infrastructure: Mathematical Reasoning Praxis
+
+This infrastructure focuses on the praxis of mathematical reasoning, including:
+- Trinity-grounded arithmetic computation and symbolic manipulation
+- Ontologically-validated proof generation and verification
+- Fractal-enhanced mathematical modeling and analysis
+- Lambda calculus-integrated algorithmic mathematics
+
+Enhanced with V2_Possible_Gap_Fillers integration:
+- Lambda Engine for ontological computation
+- Fractal Orbital Predictor for mathematical optimization
+- Ontological Validator for proof verification
+- Translation Engine for semantic mathematical processing
+"""
+
+from .arithmopraxis.arithmetic_engine import ArithmeticEngine, TrinityArithmeticEngine
+from .arithmopraxis.proof_engine import OntologicalProofEngine, ProofEngine, ProofResult, ProofStatus
+from .arithmopraxis.symbolic_math import FractalSymbolicMath, SymbolicMath
 
 __all__ = [
     "TrinityArithmeticEngine",

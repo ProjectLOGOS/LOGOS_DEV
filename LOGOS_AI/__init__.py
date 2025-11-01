@@ -29,7 +29,7 @@ from .LOGOS_AI import LOGOS_AI
 
 # Protocol interfaces 
 try:
-    from .User_Interface_Protocol import UIP
+    from .User_Interaction_Protocol import UIP
 except ImportError:
     pass  # Handle missing components gracefully
 

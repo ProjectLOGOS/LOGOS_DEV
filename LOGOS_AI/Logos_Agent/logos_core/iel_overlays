@@ -1,0 +1,63 @@
+# iel_overlay.py
+
+from enum import Enum, auto
+from modal_privative_overlay import ModalPrivativeOverlay, Modality, Privation
+
+class IELDomain(Enum):
+    COHERENCE = auto()
+    TRUTH = auto()
+    EXISTENCE = auto()
+    GOODNESS = auto()
+    IDENTITY = auto()
+    NON_CONTRADICTION = auto()
+    EXCLUDED_MIDDLE = auto()
+    DISTINCTION = auto()
+    RELATION = auto()
+    AGENCY = auto()
+
+class IELOverlay:
+    def __init__(self):
+        self.overlay = {}
+        self.modal_overlay = ModalPrivativeOverlay()
+
+    def define_iel(self, domain: IELDomain, modality: Modality, privation: Privation = Privation.PRESENT):
+        self.overlay[domain] = {
+            "modality": modality,
+            "privation": privation
+        }
+        self.modal_overlay.register(domain.name, modality, privation)
+
+    def is_viable(self, domain: IELDomain) -> bool:
+        return not self.modal_overlay.check_violation(domain.name)
+
+    def get_profile(self):
+        profile = {}
+        for domain in IELDomain:
+            viable = self.is_viable(domain)
+            profile[domain.name] = {
+                "Modality": self.overlay[domain]["modality"].name,
+                "Privation": self.overlay[domain]["privation"].name,
+                "Viable": viable
+            }
+        return profile
+
+    def print_profile(self):
+        for k, v in self.get_profile().items():
+            status = "✓" if v["Viable"] else "✗"
+            print(f"{status} {k}: {v['Modality']}, {v['Privation']}")
+
+# Example IEL registration
+if __name__ == "__main__":
+    iel = IELOverlay()
+    iel.define_iel(IELDomain.COHERENCE, Modality.NECESSARY)
+    iel.define_iel(IELDomain.TRUTH, Modality.NECESSARY)
+    iel.define_iel(IELDomain.EXISTENCE, Modality.NECESSARY)
+    iel.define_iel(IELDomain.GOODNESS, Modality.NECESSARY)
+    iel.define_iel(IELDomain.IDENTITY, Modality.NECESSARY)
+    iel.define_iel(IELDomain.NON_CONTRADICTION, Modality.NECESSARY)
+    iel.define_iel(IELDomain.EXCLUDED_MIDDLE, Modality.NECESSARY)
+    iel.define_iel(IELDomain.DISTINCTION, Modality.NECESSARY)
+    iel.define_iel(IELDomain.RELATION, Modality.NECESSARY)
+    iel.define_iel(IELDomain.AGENCY, Modality.NECESSARY)
+
+    iel.print_profile()

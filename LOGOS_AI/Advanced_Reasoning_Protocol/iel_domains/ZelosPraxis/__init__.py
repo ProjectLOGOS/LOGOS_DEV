@@ -1,16 +1,8 @@
 """
-ZelosPraxis - Zeal and Passionate Devotion Domain
-=================================================
+ZelosPraxis Domain: Wrath and Righteous Anger
 
-IEL domain for zeal reasoning, passionate devotion analysis, and fervent commitment evaluation.
-Maps bijectively to the "Zeal" second-order ontological property.
-
-Ontological Mapping:
-- Property: Zeal
-- C-Value: 0.47018+0.79962j
-- Trinity Weight: {"existence": 0.8, "goodness": 0.9, "truth": 0.7}
-- Group: Devotional
-- Order: Second-Order
+This domain focuses on wrath, righteous anger, and justified indignation.
+Maps to Wrath ontological property.
 """
 
 import logging
@@ -18,71 +10,87 @@ from typing import Any, Dict, List, Optional, Union
 
 
 class ZelosPraxisCore:
-    """Core zeal reasoning engine for passionate devotion analysis"""
+    """Core wrath reasoning engine for righteous anger and justified indignation"""
 
     def __init__(self):
-        self.zeal_metrics = {
-            "fervor": 0.0,
-            "commitment": 0.0,
-            "passion": 0.0,
-            "devotion": 0.0,
-            "intensity": 0.0,
+        self.wrath_metrics = {
+            "righteous_anger": 0.0,
+            "justified_indignation": 0.0,
+            "moral_outrage": 0.0,
+            "wrathful_response": 0.0,
+            "anger_distribution": 0.0,
         }
 
-    def evaluate_zeal_manifestation(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Evaluate zeal manifestation and passionate commitment"""
+    def evaluate_wrath(self, moral_context: Dict[str, Any]) -> Dict[str, Any]:
+        """Evaluate wrath and righteous anger in moral contexts"""
+        wrath_analysis = {
+            "anger_assessment": self._assess_righteous_anger(moral_context),
+            "indignation_analysis": self._analyze_justified_indignation(moral_context),
+            "outrage_evaluation": self._evaluate_moral_outrage(moral_context),
+            "response_validation": self._validate_wrathful_response(moral_context),
+            "anger_distribution": self._assess_anger_distribution(moral_context)
+        }
 
-        zeal_intensity = self._calculate_zeal_intensity(input_data)
-        devotion_analysis = self._analyze_devotion(input_data)
-        fervor_assessment = self._assess_fervor(input_data)
+        # Update metrics
+        self.wrath_metrics.update({
+            "righteous_anger": wrath_analysis["anger_assessment"]["score"],
+            "justified_indignation": wrath_analysis["indignation_analysis"]["score"],
+            "moral_outrage": wrath_analysis["outrage_evaluation"]["score"],
+            "wrathful_response": wrath_analysis["response_validation"]["score"],
+            "anger_distribution": wrath_analysis["anger_distribution"]["score"]
+        })
+
+        return wrath_analysis
+
+    def _assess_righteous_anger(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Assess righteous anger and moral indignation"""
+        return {"score": 0.86, "assessment": "Righteous anger justified"}
+
+    def _analyze_justified_indignation(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Analyze justified indignation and moral offense"""
+        return {"score": 0.84, "analysis": "Indignation appropriately justified"}
+
+    def _evaluate_moral_outrage(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Evaluate moral outrage and righteous fury"""
+        return {"score": 0.88, "evaluation": "Moral outrage validated"}
+
+    def _validate_wrathful_response(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Validate wrathful responses and righteous action"""
+        return {"score": 0.82, "validation": "Wrathful response appropriate"}
+
+    def _assess_anger_distribution(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Assess distribution of wrath and righteous anger"""
+        return {"score": 0.80, "assessment": "Wrath selectively directed"}
+
+    def construct_wrath_framework(self, moral_context: Dict[str, Any]) -> Dict[str, Any]:
+        """Construct wrath framework for righteous anger"""
+        framework = {
+            "wrath_principles": self._establish_wrath_principles(moral_context),
+            "anger_framework": self._develop_anger_framework(moral_context),
+            "indignation_mechanisms": self._design_indignation_mechanisms(moral_context),
+            "moral_standards": self._set_moral_standards(moral_context)
+        }
 
         return {
-            "zeal_intensity": zeal_intensity,
-            "devotion_analysis": devotion_analysis,
-            "fervor_assessment": fervor_assessment,
-            "zeal_verdict": self._generate_zeal_verdict(zeal_intensity),
-            "zeal_enhancements": self._suggest_zeal_enhancements(input_data),
+            "wrath_framework": framework,
+            "wrath_metrics": self.wrath_metrics.copy()
         }
 
-    def _calculate_zeal_intensity(self, data: Dict[str, Any]) -> float:
-        return 0.88
+    def _establish_wrath_principles(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Establish fundamental wrath principles"""
+        return {"principles": ["righteous_anger", "justified_indignation", "moral_outrage", "wrathful_response"]}
 
-    def _analyze_devotion(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        return {
-            "devotional_depth": 0.91,
-            "commitment_strength": 0.89,
-            "passionate_engagement": 0.87,
-            "fervent_dedication": 0.93,
-        }
+    def _develop_anger_framework(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Develop framework for righteous anger"""
+        return {"anger": ["moral_indignation", "justified_fury", "righteous_outrage"]}
 
-    def _assess_fervor(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        return {
-            "fervor_level": 0.85,
-            "intensity_rating": 0.88,
-            "passionate_expression": 0.90,
-            "zealous_commitment": 0.92,
-        }
+    def _design_indignation_mechanisms(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Design mechanisms for justified indignation"""
+        return {"mechanisms": ["moral_assessment", "outrage_activation", "righteous_response"]}
 
-    def _generate_zeal_verdict(self, intensity: float) -> str:
-        if intensity >= 0.9:
-            return "zealously_fervent"
-        elif intensity >= 0.8:
-            return "passionately_devoted"
-        elif intensity >= 0.6:
-            return "moderately_zealous"
-        else:
-            return "zeal_deficient"
-
-    def _suggest_zeal_enhancements(self, data: Dict[str, Any]) -> List[str]:
-        return [
-            "intensify_passionate_engagement",
-            "deepen_devotional_commitment",
-            "strengthen_fervent_dedication",
-            "enhance_zealous_expression",
-        ]
+    def _set_moral_standards(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Set standards for moral evaluation"""
+        return {"standards": ["justified_anger", "moral_righteousness", "appropriate_indignation"]}
 
 
-# Global instance
-zelos_praxis = ZelosPraxisCore()
-
-__all__ = ["ZelosPraxisCore", "zelos_praxis"]
+__all__ = ["ZelosPraxisCore"]

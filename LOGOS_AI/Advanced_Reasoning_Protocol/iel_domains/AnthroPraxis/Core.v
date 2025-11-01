@@ -1,6 +1,6 @@
-From PXLs.Internal Emergent Logics.Source.TheoPraxis Require Import Props Core.
-From PXLs.Internal Emergent Logics.Pillars.Axiopraxis Require Import Core as AxiopraxisCore.
-From PXLs.Internal Emergent Logics.Pillars.GnosiPraxis Require Import Core as GnosiPraxisCore.
+From PXLs.Internal.Emergent.Logics.Source.TheoPraxis Require Import Props Core.
+From PXLs.Internal.Emergent.Logics.Pillars.Axiopraxis Require Import Core as AxiopraxisCore.
+From PXLs.Internal.Emergent.Logics.Pillars.GnosiPraxis Require Import Core as GnosiPraxisCore.
 (* Human-situated reasoning may depend on Life, Will, Truth carriers etc. *)
 
 Module AnthroPraxis.

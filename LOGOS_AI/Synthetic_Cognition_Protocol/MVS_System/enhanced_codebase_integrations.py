@@ -69,7 +69,7 @@ class MoralSetValidator:
         return self._combine_moral_results(goodness_result, evil_result)
 
 # =============================================================================
-# REALITY SET: OBJECTIVE TRUTH AND FALSEHOOD PRIVATION ENFORCEMENT
+# TRUTH SET: OBJECTIVE TRUTH AND FALSEHOOD PRIVATION ENFORCEMENT
 # Purpose: Prevents deception optimization, maintains reality correspondence
 # =============================================================================
 
@@ -115,9 +115,9 @@ class FalsehoodPrivationHandler:
         
         return self._process_true_proposition(proposition, operation)
 
-class RealitySetValidator:
+class TruthSetValidator:
     """
-    Unified reality validation maintaining truth-reality correspondence.
+    Unified truth validation maintaining truth-reality correspondence.
     Prevents epistemological disasters while enabling proper truth reasoning.
     """
     def __init__(self):
@@ -355,7 +355,7 @@ class UnifiedFormalismValidator:
     """
     def __init__(self):
         self.moral_set = MoralSetValidator()
-        self.reality_set = RealitySetValidator()
+        self.reality_set = TruthSetValidator()
         self.boundary_set = BoundarySetValidator()
         self.existence_set = ExistenceSetValidator()
         self.relational_set = RelationalSetValidator()

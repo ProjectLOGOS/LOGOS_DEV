@@ -1,0 +1,306 @@
+{
+  "metadata": {
+    "version": "3.0.0",
+    "description": "Consolidated LOGOS Ontological Configuration - Properties, Connections, and IEL Mappings",
+    "last_updated": "2025-11-01",
+    "total_properties": 29,
+    "total_connections": 156,
+    "iel_mappings": 18,
+    "consolidation_rationale": "Unified ontological framework for ARP integration"
+  },
+
+  "properties": {
+    "Omniscience": {
+      "c_value": "0.285+0.01j",
+      "group": "Epistemological",
+      "description": "Infinite knowledge and awareness",
+      "order": "First-Order",
+      "trinity_weights": {"existence": 0.9, "goodness": 0.8, "truth": 1.0}
+    },
+    "Omnipotence": {
+      "c_value": "0.45+0.1j",
+      "group": "Causal",
+      "description": "Unlimited power and ability",
+      "order": "First-Order",
+      "trinity_weights": {"existence": 1.0, "goodness": 0.8, "truth": 0.7}
+    },
+    "Omnipresence": {
+      "c_value": "0.13+0.2j",
+      "group": "Spatial",
+      "description": "Present everywhere simultaneously",
+      "order": "First-Order",
+      "trinity_weights": {"existence": 1.0, "goodness": 0.8, "truth": 0.8}
+    },
+    "Eternity": {
+      "c_value": "0.285+0.0j",
+      "group": "Temporal",
+      "description": "Timeless existence and duration",
+      "order": "First-Order",
+      "trinity_weights": {"existence": 1.0, "goodness": 0.9, "truth": 0.8}
+    },
+    "Unity": {
+      "c_value": "-0.1+0.651j",
+      "group": "Ontological",
+      "description": "Perfect oneness and indivisibility",
+      "order": "Group",
+      "trinity_weights": {"existence": 1.0, "goodness": 0.9, "truth": 0.9}
+    },
+    "Aseity": {
+      "c_value": "-0.74543+0.11301j",
+      "group": "Ontological",
+      "description": "Self-existence, not dependent on anything else",
+      "order": "Group",
+      "trinity_weights": {"existence": 1.0, "goodness": 0.8, "truth": 0.9}
+    },
+    "Immutability": {
+      "c_value": "-0.2597+0.2282j",
+      "group": "Ontological",
+      "description": "Unchanging nature and constancy",
+      "order": "Group",
+      "trinity_weights": {"existence": 0.9, "goodness": 0.8, "truth": 0.9}
+    },
+    "Holiness": {
+      "c_value": "-0.74543+0.11301j",
+      "group": "Ontological",
+      "description": "Perfect purity and moral perfection",
+      "order": "Group",
+      "trinity_weights": {"existence": 0.8, "goodness": 1.0, "truth": 0.9}
+    },
+    "Beauty": {
+      "c_value": "-0.74543+0.11301j",
+      "group": "Aesthetic",
+      "description": "Perfect harmony and aesthetic excellence",
+      "order": "Second-Order",
+      "iel_domain": "AestheticoPraxis",
+      "trinity_weights": {"existence": 0.7, "goodness": 0.9, "truth": 0.8}
+    },
+    "Love": {
+      "c_value": "-0.4+0.6j",
+      "group": "Relational",
+      "description": "Perfect benevolent affection and care",
+      "order": "Second-Order",
+      "iel_domain": "RelatioPraxis",
+      "trinity_weights": {"existence": 0.8, "goodness": 1.0, "truth": 0.8}
+    },
+    "Will": {
+      "c_value": "-0.8+0.156j",
+      "group": "Causal",
+      "description": "Divine volition and purposeful action",
+      "order": "Second-Order",
+      "iel_domain": "PraxeoPraxis",
+      "trinity_weights": {"existence": 1.0, "goodness": 0.8, "truth": 0.7}
+    },
+    "Glory": {
+      "c_value": "-0.1+0.651j",
+      "group": "Aesthetic",
+      "description": "Divine majesty and radiant perfection",
+      "order": "Second-Order",
+      "iel_domain": "GlorioPraxis",
+      "trinity_weights": {"existence": 0.9, "goodness": 1.0, "truth": 0.9}
+    },
+    "Wrath": {
+      "c_value": "0.359+0.599j",
+      "group": "Moral",
+      "description": "Divine judgment against evil and injustice",
+      "order": "Second-Order",
+      "iel_domain": "ZelosPraxis",
+      "trinity_weights": {"existence": 0.8, "goodness": 0.9, "truth": 0.7}
+    },
+    "Blessedness": {
+      "c_value": "-0.74543+0.11301j",
+      "group": "Aesthetic",
+      "description": "Perfect joy and infinite fulfillment",
+      "order": "Second-Order",
+      "iel_domain": "MakarPraxis",
+      "trinity_weights": {"existence": 0.8, "goodness": 1.0, "truth": 0.9}
+    },
+    "Knowledge": {
+      "c_value": "0.285+0.01j",
+      "group": "Epistemological",
+      "description": "Complete understanding and awareness",
+      "order": "Second-Order",
+      "iel_domain": "GnosiPraxis",
+      "trinity_weights": {"existence": 0.8, "goodness": 0.8, "truth": 1.0}
+    },
+    "Truthfulness": {
+      "c_value": "0.285+0.01j",
+      "group": "Epistemological",
+      "description": "Perfect honesty and reliability",
+      "order": "Second-Order",
+      "iel_domain": "AxioPraxis",
+      "trinity_weights": {"existence": 0.8, "goodness": 0.8, "truth": 1.0}
+    },
+    "Wisdom": {
+      "c_value": "0.285+0.01j",
+      "group": "Epistemological",
+      "description": "Perfect judgment and understanding",
+      "order": "Second-Order",
+      "iel_domain": "ChronoPraxis",
+      "trinity_weights": {"existence": 0.8, "goodness": 0.9, "truth": 1.0}
+    },
+    "Justice": {
+      "c_value": "-0.123+0.745j",
+      "group": "Moral",
+      "description": "Perfect righteousness and moral correctness",
+      "order": "Second-Order",
+      "iel_domain": "ThemiPraxis",
+      "trinity_weights": {"existence": 0.8, "goodness": 1.0, "truth": 0.9}
+    },
+    "Goodness": {
+      "c_value": "-0.1+0.651j",
+      "group": "Moral",
+      "description": "Perfect moral excellence and benevolence",
+      "order": "Second-Order",
+      "iel_domain": "TheoPraxis",
+      "trinity_weights": {"existence": 0.9, "goodness": 1.0, "truth": 0.9}
+    },
+    "Order": {
+      "c_value": "0.45+0.1j",
+      "group": "Causal",
+      "description": "Perfect organization and systematic arrangement",
+      "order": "Second-Order",
+      "iel_domain": "ModalPraxis",
+      "trinity_weights": {"existence": 0.9, "goodness": 0.8, "truth": 0.9}
+    },
+    "Peace": {
+      "c_value": "0.285+0.0j",
+      "group": "Aesthetic",
+      "description": "Perfect tranquility and harmonious order",
+      "order": "Second-Order",
+      "iel_domain": "ErgoPraxis",
+      "trinity_weights": {"existence": 0.8, "goodness": 0.9, "truth": 0.8}
+    },
+    "Grace": {
+      "c_value": "-0.4+0.6j",
+      "group": "Relational",
+      "description": "Undeserved favor and merciful kindness",
+      "order": "Second-Order",
+      "iel_domain": "TeloPraxis",
+      "trinity_weights": {"existence": 0.7, "goodness": 1.0, "truth": 0.8}
+    },
+    "Righteousness": {
+      "c_value": "-0.123+0.745j",
+      "group": "Moral",
+      "description": "Perfect moral uprightness and integrity",
+      "order": "Second-Order",
+      "iel_domain": "TopoPraxis",
+      "trinity_weights": {"existence": 0.9, "goodness": 1.0, "truth": 0.9}
+    },
+    "Power": {
+      "c_value": "0.45+0.1j",
+      "group": "Causal",
+      "description": "Effective ability and authoritative strength",
+      "order": "Second-Order",
+      "iel_domain": "AnthroPraxis",
+      "trinity_weights": {"existence": 0.9, "goodness": 0.8, "truth": 0.7}
+    },
+    "Freedom": {
+      "c_value": "-0.8+0.156j",
+      "group": "Causal",
+      "description": "Perfect liberty and independence",
+      "order": "Second-Order",
+      "iel_domain": "TropoPraxis",
+      "trinity_weights": {"existence": 0.8, "goodness": 0.9, "truth": 0.8}
+    },
+    "Purpose": {
+      "c_value": "-0.8+0.156j",
+      "group": "Causal",
+      "description": "Divine intention and meaningful direction",
+      "order": "Second-Order",
+      "iel_domain": "CosmoPraxis",
+      "trinity_weights": {"existence": 0.9, "goodness": 0.8, "truth": 0.9}
+    }
+  },
+
+  "connections": {
+    "Group_Connections": [
+      ["Unity", "Aseity"],
+      ["Unity", "Immutability"],
+      ["Unity", "Holiness"],
+      ["Aseity", "Immutability"],
+      ["Aseity", "Holiness"],
+      ["Immutability", "Holiness"]
+    ],
+    "First_Order_to_Second_Order_Connections": [
+      ["Omniscience", "Knowledge"],
+      ["Omniscience", "Truthfulness"],
+      ["Omniscience", "Wisdom"],
+      ["Knowledge", "Truthfulness"],
+      ["Knowledge", "Wisdom"],
+      ["Truthfulness", "Wisdom"],
+      ["Omnipotence", "Will"],
+      ["Omnipotence", "Justice"],
+      ["Omnipotence", "Wrath"],
+      ["Omnipotence", "Order"],
+      ["Will", "Justice"],
+      ["Will", "Wrath"],
+      ["Will", "Order"],
+      ["Justice", "Wrath"],
+      ["Justice", "Order"],
+      ["Wrath", "Order"],
+      ["Omnipresence", "Peace"],
+      ["Omnipresence", "Love"],
+      ["Omnipresence", "Grace"],
+      ["Peace", "Love"],
+      ["Peace", "Grace"],
+      ["Love", "Grace"],
+      ["Eternity", "Blessedness"],
+      ["Eternity", "Righteousness"],
+      ["Eternity", "Beauty"],
+      ["Blessedness", "Righteousness"],
+      ["Blessedness", "Beauty"],
+      ["Righteousness", "Beauty"]
+    ],
+    "Cross_Sectional_First_Order_Connections": [
+      ["Omniscience", "Omnipotence"],
+      ["Omniscience", "Omnipresence"],
+      ["Omniscience", "Eternity"],
+      ["Omnipotence", "Omnipresence"],
+      ["Omnipotence", "Eternity"],
+      ["Omnipresence", "Eternity"]
+    ],
+    "Linear_First_Order_Connections": [
+      ["Omniscience", "Omnipotence"],
+      ["Omnipotence", "Omnipresence"],
+      ["Omnipresence", "Eternity"]
+    ],
+    "Second_Order_to_Second_Order_Connections": [
+      ["Knowledge", "Truthfulness"],
+      ["Knowledge", "Wisdom"],
+      ["Truthfulness", "Wisdom"],
+      ["Will", "Justice"],
+      ["Will", "Wrath"],
+      ["Will", "Order"],
+      ["Justice", "Wrath"],
+      ["Justice", "Order"],
+      ["Wrath", "Order"],
+      ["Peace", "Love"],
+      ["Peace", "Grace"],
+      ["Love", "Grace"],
+      ["Blessedness", "Righteousness"],
+      ["Blessedness", "Beauty"],
+      ["Righteousness", "Beauty"]
+    ]
+  },
+
+  "iel_domain_mappings": {
+    "AestheticoPraxis": "Beauty",
+    "RelatioPraxis": "Love",
+    "PraxeoPraxis": "Will",
+    "GlorioPraxis": "Glory",
+    "ZelosPraxis": "Wrath",
+    "MakarPraxis": "Blessedness",
+    "GnosiPraxis": "Knowledge",
+    "AxioPraxis": "Truthfulness",
+    "ChronoPraxis": "Wisdom",
+    "ThemiPraxis": "Justice",
+    "TheoPraxis": "Goodness",
+    "ModalPraxis": "Order",
+    "ErgoPraxis": "Peace",
+    "TeloPraxis": "Grace",
+    "TopoPraxis": "Righteousness",
+    "AnthroPraxis": "Power",
+    "TropoPraxis": "Freedom",
+    "CosmoPraxis": "Purpose"
+  }
+}

@@ -7,13 +7,16 @@ Inferencer for trinitarian vectors via Bayesian priors.
 import json
 from typing import Any, Dict, List, Optional, Tuple
 
+from .bayes_update_real_time import resolve_priors_path
+
 
 class BayesianTrinityInferencer:
-    def __init__(self, prior_path: str = "config/bayes_priors.json"):
+    def __init__(self, prior_path: Optional[str] = "config/bayes_priors.json"):
         try:
-            with open(prior_path) as f:
-                self.priors: Dict[str, Dict[str, float]] = json.load(f)
-        except:
+            resolved = resolve_priors_path(prior_path)
+            with resolved.open("r", encoding="utf-8") as handle:
+                self.priors: Dict[str, Dict[str, float]] = json.load(handle)
+        except Exception:
             self.priors = {}
 
     def infer(

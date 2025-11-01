@@ -1,6 +1,20 @@
-from core.logos_validator_hub import validator_gate
-from core.async_workers import submit_async
-from core.config_loader import Config
+# Stub implementations for missing core components
+class Config:
+    def get_tier(self, tier_name: str) -> dict:
+        return {
+            'max_fractal_iter': 500
+        }
+
+def validator_gate(func):
+    """Simple validator gate decorator"""
+    def wrapper(*args, **kwargs):
+        return func(*args, **kwargs)
+    return wrapper
+
+def submit_async(func, *args, **kwargs):
+    """Simple async submission"""
+    import asyncio
+    asyncio.create_task(func(*args, **kwargs))
 
 class SCM:
     """

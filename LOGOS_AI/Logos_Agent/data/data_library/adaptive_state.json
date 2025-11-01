@@ -1,0 +1,70 @@
+{
+  "posterior": {
+    "beliefs": {
+      "error": "'UnifiedBayesianInferencer' object has no attribute 'logger'"
+    },
+    "confidence": 0.5,
+    "variance": 0.8,
+    "epistemic_state": "uncertain",
+    "coherence_level": "degraded",
+    "meta": {
+      "inference_method": "fallback",
+      "error": "'UnifiedBayesianInferencer' object has no attribute 'logger'"
+    }
+  },
+  "embeddings": {
+    "shape": [
+      14
+    ]
+  },
+  "drift": {
+    "drift_detected": true,
+    "delta": 0.6,
+    "confidence": 0.8,
+    "embedding_analysis": {
+      "shape": [
+        14
+      ],
+      "size": 14,
+      "is_fallback": false,
+      "is_error": false
+    },
+    "drift_indicators": {
+      "size_anomaly": true,
+      "fallback_mode": false,
+      "error_mode": false
+    },
+    "meta": {
+      "detection_method": "heuristic_analysis",
+      "detection_timestamp": "2025-10-30T10:17:56.030443"
+    }
+  },
+  "rl": {
+    "avg_regret": 0.02,
+    "updates": 1,
+    "fallback": true
+  },
+  "improvement": {
+    "updated": true,
+    "coherence_target": 0.92,
+    "latency_target_sec": 6,
+    "state_hash": "19bf557d7a9fd90409c53bb6834ab46c7b71b99d402362398b8004e6cef53481",
+    "fallback": true
+  },
+  "meta": {
+    "step": 5,
+    "status": "ok",
+    "pxl_constraints": {
+      "identity_hash": "19bf557d7a9fd90409c53bb6834ab46c7b71b99d402362398b8004e6cef53481",
+      "coherence_target": 0.92,
+      "causal_updates": 1,
+      "embedding_consistency": false
+    }
+  },
+  "persistence_meta": {
+    "timestamp": "2025-10-30T10:17:56.031605",
+    "version": "1.0.0",
+    "source": "adaptive_inference_layer",
+    "checksum": "a2a2f6d0a0024e6f0eb590d1e9f718f7d26db081ebf525bb39751ac583566982"
+  }
+}

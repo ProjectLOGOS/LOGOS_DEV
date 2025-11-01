@@ -7,7 +7,7 @@ from typing import Dict, Any
 
 # Core LOGOS Imports
 from ...core.mathematics.formalisms import UnifiedFormalismValidator
-from .self_improvement_manager import SelfImprovementManager
+from ...Logos_Agentic_Protocol.self_improvement_manager import SelfImprovementManager
 from .diagnostics_kit import DiagnosticsKit
 
 # Subsystem-specific imports for context generation

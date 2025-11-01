@@ -7,8 +7,8 @@ Toolkit-level Nexus orchestrator for Fractal Orbital Predictor.
 import traceback
 import json
 
-from class_fractal_orbital_predictor import TrinityPredictionEngine
-from divergence_calculator import DivergenceEngine
+from LOGOS_AI.Synthetic_Cognition_Protocol.MVS_System.fractal_orbital.predictors.class_fractal_orbital_predictor import TrinityPredictionEngine
+from LOGOS_AI.Synthetic_Cognition_Protocol.MVS_System.predictors.divergence_calculator import DivergenceEngine
 from fractal_orbital_node_generator import FractalNodeGenerator
 from orbital_recursion_engine import OntologicalSpace
 

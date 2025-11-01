@@ -1,0 +1,52 @@
+# logos_agent.py
+
+from logic.pxl_core import PXLLogicCore
+from logic.dual_bijection import DualBijectionLogic
+from overlays.iel_overlay_manager import IELOverlayManager
+from ontology.lattice import OntologicalLattice
+from evaluator.reflexive_evaluator import ReflexiveSelfEvaluator
+
+class LogosAgent:
+    def __init__(self, name: str):
+        self.name = name
+        self.pxl = PXLLogicCore()
+        self.bijections = DualBijectionLogic()
+        self.iel = IELOverlayManager()
+        self.ontology = OntologicalLattice()
+        self.evaluator = ReflexiveSelfEvaluator(agent_identity=name, lattice=self.ontology)
+        self.initialized = False
+
+    def initialize_agent(self):
+        """Run all required system bindings, overlays, and ontology population."""
+        self.pxl.initialize_axioms()
+        self.bijections.map_bijections()
+        self.ontology.load_properties()
+        self.iel.bind_all_to_lattice(self.ontology)
+        self.initialized = True
+
+    def run_self_diagnostics(self) -> dict:
+        """Run reflexive self-evaluation and return structured report."""
+        if not self.initialized:
+            raise RuntimeError("Agent must be initialized before self-evaluation.")
+        return self.evaluator.self_reflexive_report()
+
+    def assert_coherence(self, input_form: dict) -> bool:
+        """Validate logical coherence of agent input using PXL and bijection structures."""
+        if not self.initialized:
+            raise RuntimeError("Agent not initialized.")
+        return self.pxl.check_coherence(input_form) and self.bijections.check_bijection_alignment(input_form)
+
+    def receive_directive(self, directive: str) -> str:
+        """Receive and assess high-level directive for possible execution."""
+        if not self.initialized:
+            raise RuntimeError("Agent not initialized.")
+        if not self.pxl.validate_directive(directive):
+            return "Directive rejected: fails PXL constraints."
+        return f"Directive accepted and aligned with agent ontology: {directive}"
+
+    def introspect(self):
+        """Print or log self-status."""
+        report = self.run_self_diagnostics()
+        print(f"[{self.name}] Reflexive Introspection Report:")
+        for key, value in report.items():
+            print(f"{key}: {value}")

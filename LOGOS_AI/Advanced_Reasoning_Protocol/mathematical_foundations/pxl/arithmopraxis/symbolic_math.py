@@ -1,553 +1,263 @@
 """
-Enhanced SymbolicMath Framework with Fractal Integration
+Fractal-Enhanced Symbolic Mathematics Engine
 
-Advanced symbolic mathematics with Trinity-grounded computation and
-fractal orbital analysis integration.
+Provides symbolic mathematical computation with fractal analysis and Trinity grounding.
+Integrates with Lambda calculus for ontological symbolic processing.
 """
 
 import logging
+import math
+import re
 from typing import Any, Dict, List, Optional, Tuple, Union
+from dataclasses import dataclass
+from abc import ABC, abstractmethod
 
-import numpy as np
 import sympy as sp
-from sympy import (
-    Matrix,
-    cancel,
-    diff,
-    expand,
-    factor,
-    integrate,
-    latex,
-    limit,
-    series,
-    simplify,
-    solve,
-    symbols,
-    sympify,
-)
-
-# Fractal Orbital Predictor Integration
-try:
-    from ....interfaces.services.workers.fractal_orbital.divergence_calculator import (
-        DivergenceEngine,
-    )
-    from ....interfaces.services.workers.fractal_orbital.trinity_vector import (
-        TrinityVector,
-    )
-
-    FRACTAL_ORBITAL_AVAILABLE = True
-except ImportError:
-    FRACTAL_ORBITAL_AVAILABLE = False
+import numpy as np
 
 # Lambda Engine Integration
 try:
-    from ....intelligence.trinity.thonoc.symbolic_engine.lambda_engine.logos_lambda_core import (
-        LambdaLogosEngine,
+    from ....intelligence.trinity.thonoc.symbolic_engine.lambda_engine.lambda_engine import (
+        LambdaEngine,
     )
-
     LAMBDA_ENGINE_AVAILABLE = True
 except ImportError:
     LAMBDA_ENGINE_AVAILABLE = False
 
+# Fractal Orbital Integration
+try:
+    from ....Synthetic_Cognition_Protocol.MVS_System.fractal_orbital.fractal_orbital_predictor import (
+        FractalOrbitalPredictor,
+    )
+    FRACTAL_ORBITAL_AVAILABLE = True
+except ImportError:
+    FRACTAL_ORBITAL_AVAILABLE = False
 
-class FractalSymbolicMath:
+
+@dataclass
+class SymbolicResult:
+    """Result of symbolic computation"""
+    expression: str
+    simplified: str
+    numerical_value: Optional[float] = None
+    variables: List[str] = None
+    trinity_coherence: float = 0.0
+    fractal_dimension: Optional[float] = None
+
+    def __post_init__(self):
+        if self.variables is None:
+            self.variables = []
+
+
+class SymbolicMath:
     """
-    Enhanced symbolic mathematics engine with fractal orbital optimization
-    and Trinity-grounded symbolic computation.
+    Basic symbolic mathematics engine with Trinity grounding.
+
+    Provides symbolic computation capabilities with ontological validation.
     """
 
     def __init__(self):
-        """Initialize Fractal Symbolic Math engine."""
         self.logger = logging.getLogger(__name__)
+        self.symbols = {}
 
-        # Fractal integration
-        if FRACTAL_ORBITAL_AVAILABLE:
-            self.divergence_engine = DivergenceEngine()
+    def create_symbol(self, name: str) -> sp.Symbol:
+        """Create a symbolic variable"""
+        if name not in self.symbols:
+            self.symbols[name] = sp.Symbol(name)
+        return self.symbols[name]
+
+    def parse_expression(self, expr_str: str) -> sp.Expr:
+        """Parse a string expression into sympy format"""
+        try:
+            # Replace common mathematical notation
+            expr_str = expr_str.replace('^', '**')
+            expr_str = expr_str.replace('pi', 'sp.pi')
+            expr_str = expr_str.replace('e', 'sp.E')
+
+            # Create symbols for variables
+            variables = re.findall(r'\b[a-zA-Z_][a-zA-Z0-9_]*\b', expr_str)
+            for var in variables:
+                if var not in ['pi', 'e', 'sp', 'sqrt', 'sin', 'cos', 'tan', 'log', 'exp']:
+                    self.create_symbol(var)
+
+            # Evaluate the expression
+            return eval(expr_str, {"sp": sp, **self.symbols})
+        except Exception as e:
+            self.logger.error(f"Failed to parse expression '{expr_str}': {e}")
+            return sp.Symbol(expr_str)
+
+    def simplify(self, expression: Union[str, sp.Expr]) -> SymbolicResult:
+        """Simplify a symbolic expression"""
+        if isinstance(expression, str):
+            expr = self.parse_expression(expression)
         else:
-            self.divergence_engine = None
+            expr = expression
 
-        # Lambda integration
-        if LAMBDA_ENGINE_AVAILABLE:
-            self.lambda_engine = LambdaLogosEngine()
-        else:
-            self.lambda_engine = None
+        simplified = sp.simplify(expr)
+        variables = list(expr.free_symbols)
+        var_names = [str(v) for v in variables]
 
-        # Symbolic computation cache
-        self._symbolic_cache = {}
+        # Calculate Trinity coherence (simplicity measure)
+        complexity = len(str(simplified))
+        trinity_coherence = 1.0 / (1.0 + complexity / 100.0)
 
-        # Trinity symbolic constants
-        self.TRINITY_SYMBOLS = {
-            "E": symbols("E"),  # Existence
-            "G": symbols("G"),  # Goodness
-            "T": symbols("T"),  # Truth
-            "Unity": symbols("Unity"),
-            "Trinity": symbols("Trinity"),
-        }
-
-    def optimize_symbolic_expression(
-        self,
-        expr: Union[str, sp.Expr],
-        trinity_context: Optional[Tuple[float, float, float]] = None,
-        optimization_depth: int = 5,
-    ) -> Dict[str, Any]:
-        """
-        Optimize symbolic expression using fractal divergence analysis.
-
-        Args:
-            expr: Symbolic expression to optimize
-            trinity_context: Trinity vector context for optimization
-            optimization_depth: Number of fractal variants to analyze
-
-        Returns:
-            Optimization results with fractal analysis
-        """
-        # Parse expression if string
-        if isinstance(expr, str):
-            try:
-                parsed_expr = sympify(expr)
-            except Exception as e:
-                return {"error": f"Failed to parse expression: {str(e)}"}
-        else:
-            parsed_expr = expr
-
-        # Standard symbolic optimizations
-        standard_optimizations = {
-            "original": parsed_expr,
-            "simplified": simplify(parsed_expr),
-            "expanded": expand(parsed_expr),
-            "factored": (
-                factor(parsed_expr) if parsed_expr.is_polynomial() else parsed_expr
-            ),
-            "canceled": (
-                cancel(parsed_expr)
-                if parsed_expr.is_rational_function()
-                else parsed_expr
-            ),
-        }
-
-        result = {
-            "original_expression": str(parsed_expr),
-            "standard_optimizations": {
-                k: str(v) for k, v in standard_optimizations.items()
-            },
-            "fractal_enhanced": False,
-        }
-
-        # Fractal enhancement if available
-        if trinity_context and FRACTAL_ORBITAL_AVAILABLE:
-            try:
-                # Create Trinity vector for fractal analysis
-                trinity_vector = TrinityVector(
-                    existence=trinity_context[0],
-                    goodness=trinity_context[1],
-                    truth=trinity_context[2],
-                )
-
-                # Generate optimization variants using fractal divergence
-                optimization_variants = self.divergence_engine.analyze_divergence(
-                    trinity_vector, sort_by="coherence", num_results=optimization_depth
-                )
-
-                # Apply fractal-inspired symbolic transformations
-                fractal_optimizations = []
-                for i, variant in enumerate(optimization_variants[:3]):  # Top 3
-                    variant_vector = variant.get("variant_vector")
-                    if variant_vector:
-                        # Map fractal parameters to symbolic transformations
-                        fractal_transform = self._apply_fractal_transformation(
-                            parsed_expr, variant_vector
-                        )
-                        fractal_optimizations.append(
-                            {
-                                "variant_index": i,
-                                "coherence": variant.get("coherence", 0),
-                                "transformed_expression": str(fractal_transform),
-                                "transformation_parameters": {
-                                    "existence_factor": variant_vector.existence,
-                                    "goodness_factor": variant_vector.goodness,
-                                    "truth_factor": variant_vector.truth,
-                                },
-                            }
-                        )
-
-                result.update(
-                    {
-                        "fractal_enhanced": True,
-                        "fractal_optimizations": fractal_optimizations,
-                        "optimization_variants": len(optimization_variants),
-                    }
-                )
-
-            except Exception as e:
-                result["fractal_error"] = str(e)
+        result = SymbolicResult(
+            expression=str(expr),
+            simplified=str(simplified),
+            variables=var_names,
+            trinity_coherence=trinity_coherence
+        )
 
         return result
 
-    def _apply_fractal_transformation(
-        self, expr: sp.Expr, trinity_vector: "TrinityVector"
-    ) -> sp.Expr:
-        """
-        Apply fractal-inspired transformations to symbolic expression.
-
-        Args:
-            expr: Expression to transform
-            trinity_vector: Trinity parameters for transformation
-
-        Returns:
-            Transformed expression
-        """
-        try:
-            # Create transformation parameters based on Trinity vector
-            E_factor = trinity_vector.existence
-            G_factor = trinity_vector.goodness
-            T_factor = trinity_vector.truth
-
-            # Apply Trinity-weighted transformations
-            transformed = expr
-
-            # Existence transformation: scaling
-            if abs(E_factor - 1.0) > 0.01:
-                transformed = transformed * E_factor
-
-            # Goodness transformation: rational adjustment
-            if abs(G_factor - 1.0) > 0.01 and G_factor > 0:
-                transformed = transformed ** (G_factor / 2.0)
-
-            # Truth transformation: additive Trinity constant
-            if abs(T_factor - 1.0) > 0.01:
-                transformed = (
-                    transformed + (T_factor - 1.0) * self.TRINITY_SYMBOLS["Trinity"]
-                )
-
-            # Simplify result
-            return simplify(transformed)
-
-        except Exception:
-            return expr  # Return original on error
-
-    def trinity_equation_solver(
-        self,
-        equations: Union[str, sp.Eq, List[Union[str, sp.Eq]]],
-        variables: Optional[List[str]] = None,
-        trinity_constraints: Optional[Dict[str, float]] = None,
-    ) -> Dict[str, Any]:
-        """
-        Enhanced equation solving with Trinity constraints.
-
-        Args:
-            equations: Equation(s) to solve
-            variables: Variables to solve for
-            trinity_constraints: Trinity-based constraints
-
-        Returns:
-            Solution results with Trinity analysis
-        """
-        # Parse equations
-        if isinstance(equations, str):
-            eq_list = [sympify(equations)]
-        elif isinstance(equations, sp.Eq):
-            eq_list = [equations]
-        elif isinstance(equations, list):
-            eq_list = []
-            for eq in equations:
-                if isinstance(eq, str):
-                    eq_list.append(sympify(eq))
-                else:
-                    eq_list.append(eq)
-        else:
-            return {"error": "Invalid equation format"}
-
-        # Determine variables if not provided
-        if variables is None:
-            all_symbols = set()
-            for eq in eq_list:
-                all_symbols.update(eq.free_symbols)
-            variables = [str(sym) for sym in all_symbols]
-
-        # Convert variable names to symbols
-        var_symbols = [symbols(var) for var in variables]
-
-        try:
-            # Standard solve
-            solutions = solve(eq_list, var_symbols, dict=True)
-
-            result = {
-                "equations": [str(eq) for eq in eq_list],
-                "variables": variables,
-                "solutions": [],
-            }
-
-            # Process solutions
-            for sol in solutions:
-                solution_dict = {str(k): str(v) for k, v in sol.items()}
-                result["solutions"].append(solution_dict)
-
-            # Trinity constraint analysis
-            if trinity_constraints and LAMBDA_ENGINE_AVAILABLE:
-                try:
-                    # Validate solutions against Trinity constraints
-                    constraint_analysis = []
-
-                    for sol in solutions:
-                        constraint_satisfaction = self._check_trinity_constraints(
-                            sol, trinity_constraints
-                        )
-                        constraint_analysis.append(constraint_satisfaction)
-
-                    result["trinity_constraint_analysis"] = constraint_analysis
-                    result["trinity_enhanced"] = True
-
-                except Exception as e:
-                    result["constraint_error"] = str(e)
-
-            return result
-
-        except Exception as e:
-            return {"error": f"Failed to solve equations: {str(e)}"}
-
-    def _check_trinity_constraints(
-        self, solution: Dict[sp.Symbol, sp.Expr], constraints: Dict[str, float]
-    ) -> Dict[str, Any]:
-        """Check if solution satisfies Trinity constraints."""
-        try:
-            constraint_check = {
-                "satisfies_constraints": True,
-                "constraint_violations": [],
-                "constraint_score": 1.0,
-            }
-
-            # Check each constraint
-            for constraint_name, constraint_value in constraints.items():
-                # Simple constraint checking (can be enhanced)
-                if constraint_name in ["existence", "goodness", "truth"]:
-                    # Check if constraint is satisfied within tolerance
-                    tolerance = 0.1
-                    if not (
-                        constraint_value - tolerance
-                        <= constraint_value
-                        <= constraint_value + tolerance
-                    ):
-                        constraint_check["satisfies_constraints"] = False
-                        constraint_check["constraint_violations"].append(
-                            constraint_name
-                        )
-
-            # Calculate overall constraint satisfaction score
-            if constraint_check["constraint_violations"]:
-                violation_ratio = len(constraint_check["constraint_violations"]) / len(
-                    constraints
-                )
-                constraint_check["constraint_score"] = 1.0 - violation_ratio
-
-            return constraint_check
-
-        except Exception as e:
-            return {"error": str(e)}
-
-    def symbolic_differentiation_enhanced(
-        self,
-        expression: Union[str, sp.Expr],
-        variable: str,
-        order: int = 1,
-        fractal_context: Optional[Tuple[float, float, float]] = None,
-    ) -> Dict[str, Any]:
-        """
-        Enhanced symbolic differentiation with fractal analysis.
-
-        Args:
-            expression: Expression to differentiate
-            variable: Variable to differentiate with respect to
-            order: Order of differentiation
-            fractal_context: Trinity context for fractal enhancement
-
-        Returns:
-            Differentiation results with fractal analysis
-        """
-        # Parse expression
+    def differentiate(self, expression: Union[str, sp.Expr], variable: str) -> SymbolicResult:
+        """Compute derivative of expression with respect to variable"""
         if isinstance(expression, str):
-            expr = sympify(expression)
+            expr = self.parse_expression(expression)
         else:
             expr = expression
 
-        var_symbol = symbols(variable)
+        var = self.create_symbol(variable)
+        derivative = sp.diff(expr, var)
 
-        try:
-            # Standard differentiation
-            derivative = diff(expr, var_symbol, order)
+        return SymbolicResult(
+            expression=f"d/d{variable}({expr})",
+            simplified=str(derivative),
+            variables=[variable]
+        )
 
-            result = {
-                "original_expression": str(expr),
-                "variable": variable,
-                "order": order,
-                "derivative": str(derivative),
-                "simplified_derivative": str(simplify(derivative)),
-            }
-
-            # Fractal enhancement
-            if fractal_context and FRACTAL_ORBITAL_AVAILABLE:
-                try:
-                    # Analyze derivative using fractal orbital patterns
-                    trinity_vector = TrinityVector(
-                        existence=fractal_context[0],
-                        goodness=fractal_context[1],
-                        truth=fractal_context[2],
-                    )
-
-                    # Generate fractal-enhanced derivatives
-                    fractal_variants = self.divergence_engine.analyze_divergence(
-                        trinity_vector, num_results=3
-                    )
-
-                    fractal_derivatives = []
-                    for variant in fractal_variants:
-                        variant_vector = variant.get("variant_vector")
-                        if variant_vector:
-                            enhanced_expr = self._apply_fractal_transformation(
-                                expr, variant_vector
-                            )
-                            enhanced_derivative = diff(enhanced_expr, var_symbol, order)
-
-                            fractal_derivatives.append(
-                                {
-                                    "variant_coherence": variant.get("coherence", 0),
-                                    "enhanced_expression": str(enhanced_expr),
-                                    "enhanced_derivative": str(enhanced_derivative),
-                                    "variant_parameters": {
-                                        "existence": variant_vector.existence,
-                                        "goodness": variant_vector.goodness,
-                                        "truth": variant_vector.truth,
-                                    },
-                                }
-                            )
-
-                    result.update(
-                        {
-                            "fractal_enhanced": True,
-                            "fractal_derivatives": fractal_derivatives,
-                        }
-                    )
-
-                except Exception as e:
-                    result["fractal_error"] = str(e)
-
-            return result
-
-        except Exception as e:
-            return {"error": f"Differentiation failed: {str(e)}"}
-
-    def symbolic_integration_enhanced(
-        self,
-        expression: Union[str, sp.Expr],
-        variable: str,
-        bounds: Optional[Tuple[Union[str, float], Union[str, float]]] = None,
-        trinity_optimization: bool = True,
-    ) -> Dict[str, Any]:
-        """
-        Enhanced symbolic integration with Trinity optimization.
-
-        Args:
-            expression: Expression to integrate
-            variable: Variable to integrate with respect to
-            bounds: Integration bounds (for definite integration)
-            trinity_optimization: Apply Trinity-based optimizations
-
-        Returns:
-            Integration results with Trinity enhancement
-        """
-        # Parse expression
+    def integrate(self, expression: Union[str, sp.Expr], variable: str) -> SymbolicResult:
+        """Compute indefinite integral of expression"""
         if isinstance(expression, str):
-            expr = sympify(expression)
+            expr = self.parse_expression(expression)
         else:
             expr = expression
 
-        var_symbol = symbols(variable)
+        var = self.create_symbol(variable)
+        integral = sp.integrate(expr, var)
 
+        return SymbolicResult(
+            expression=f"∫({expr})d{variable}",
+            simplified=str(integral),
+            variables=[variable]
+        )
+
+    def solve_equation(self, equation: str, variable: str) -> List[SymbolicResult]:
+        """Solve an equation for a given variable"""
         try:
-            # Perform integration
-            if bounds:
-                # Definite integration
-                lower, upper = bounds
-                if isinstance(lower, str):
-                    lower = sympify(lower)
-                if isinstance(upper, str):
-                    upper = sympify(upper)
-
-                integral_result = integrate(expr, (var_symbol, lower, upper))
-                integration_type = "definite"
+            # Parse equation (assume form "expr = 0")
+            if '=' in equation:
+                left, right = equation.split('=', 1)
+                expr = self.parse_expression(left) - self.parse_expression(right)
             else:
-                # Indefinite integration
-                integral_result = integrate(expr, var_symbol)
-                integration_type = "indefinite"
-                bounds = None
+                expr = self.parse_expression(equation)
 
-            result = {
-                "original_expression": str(expr),
-                "variable": variable,
-                "integration_type": integration_type,
-                "bounds": bounds,
-                "integral": str(integral_result),
-                "simplified_integral": str(simplify(integral_result)),
-            }
+            var = self.create_symbol(variable)
+            solutions = sp.solve(expr, var)
 
-            # Trinity optimization analysis
-            if trinity_optimization and LAMBDA_ENGINE_AVAILABLE:
-                try:
-                    # Analyze integral for Trinity patterns
-                    trinity_analysis = {
-                        "contains_trinity_symbols": any(
-                            str(sym) in str(integral_result)
-                            for sym in self.TRINITY_SYMBOLS.values()
-                        ),
-                        "integral_complexity": len(str(integral_result)),
-                        "optimization_applicable": len(str(integral_result))
-                        > 50,  # Heuristic
-                    }
+            results = []
+            for i, sol in enumerate(solutions):
+                results.append(SymbolicResult(
+                    expression=f"Solution {i+1} for {equation}",
+                    simplified=str(sol),
+                    variables=[variable]
+                ))
 
-                    if trinity_analysis["optimization_applicable"]:
-                        # Apply Trinity-based simplifications
-                        trinity_simplified = self._apply_trinity_simplification(
-                            integral_result
-                        )
-                        trinity_analysis["trinity_simplified"] = str(trinity_simplified)
+            return results
+        except Exception as e:
+            self.logger.error(f"Failed to solve equation '{equation}': {e}")
+            return []
 
-                    result["trinity_analysis"] = trinity_analysis
-                    result["trinity_enhanced"] = True
 
-                except Exception as e:
-                    result["trinity_error"] = str(e)
+class FractalSymbolicMath(SymbolicMath):
+    """
+    Enhanced symbolic mathematics with fractal analysis and Lambda integration.
+
+    Extends basic symbolic math with fractal orbital prediction and ontological processing.
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.lambda_engine = None
+        self.fractal_predictor = None
+
+        if LAMBDA_ENGINE_AVAILABLE:
+            try:
+                self.lambda_engine = LambdaEngine()
+            except Exception as e:
+                self.logger.warning(f"Failed to initialize Lambda engine: {e}")
+
+        if FRACTAL_ORBITAL_AVAILABLE:
+            try:
+                self.fractal_predictor = FractalOrbitalPredictor()
+            except Exception as e:
+                self.logger.warning(f"Failed to initialize fractal predictor: {e}")
+
+    def simplify(self, expression: Union[str, sp.Expr]) -> SymbolicResult:
+        """Enhanced simplification with fractal analysis"""
+        result = super().simplify(expression)
+
+        # Add fractal dimension analysis
+        if self.fractal_predictor and result.simplified:
+            try:
+                # Use fractal analysis to assess expression complexity
+                complexity_score = len(result.simplified) / 100.0
+                fractal_dim = self.fractal_predictor.predict_fractal_dimension(complexity_score)
+                result.fractal_dimension = fractal_dim
+
+                # Adjust Trinity coherence based on fractal analysis
+                result.trinity_coherence *= (1.0 + fractal_dim / 10.0)
+            except Exception as e:
+                self.logger.debug(f"Fractal analysis failed: {e}")
+
+        return result
+
+    def evaluate_with_lambda(self, expression: str, context: Dict[str, Any] = None) -> SymbolicResult:
+        """Evaluate expression using Lambda calculus integration"""
+        if not self.lambda_engine:
+            return self.simplify(expression)
+
+        try:
+            # Use Lambda engine for ontological evaluation
+            lambda_result = self.lambda_engine.evaluate_expression(expression, context or {})
+
+            result = SymbolicResult(
+                expression=expression,
+                simplified=str(lambda_result.get('result', expression)),
+                trinity_coherence=lambda_result.get('coherence', 0.5)
+            )
 
             return result
-
         except Exception as e:
-            return {"error": f"Integration failed: {str(e)}"}
+            self.logger.error(f"Lambda evaluation failed: {e}")
+            return self.simplify(expression)
 
-    def _apply_trinity_simplification(self, expr: sp.Expr) -> sp.Expr:
-        """Apply Trinity-based simplification patterns."""
-        try:
-            # Substitute Trinity symbols with their canonical values where appropriate
-            simplified = expr
+    def analyze_trinity_structure(self, expression: Union[str, sp.Expr]) -> Dict[str, Any]:
+        """Analyze expression for Trinity structure (Existence, Goodness, Truth)"""
+        if isinstance(expression, str):
+            expr = self.parse_expression(expression)
+        else:
+            expr = expression
 
-            # Apply Trinity-based substitutions
-            trinity_subs = {
-                self.TRINITY_SYMBOLS["Unity"]: 1,
-                self.TRINITY_SYMBOLS["Trinity"]: 3,
-            }
+        # Analyze structural components
+        terms = expr.as_ordered_factors()
+        existence_terms = []
+        goodness_terms = []
+        truth_terms = []
 
-            simplified = simplified.subs(trinity_subs)
-            return simplify(simplified)
+        for term in terms:
+            term_str = str(term)
+            if any(x in term_str.lower() for x in ['exist', 'being', 'entity']):
+                existence_terms.append(term)
+            elif any(x in term_str.lower() for x in ['good', 'value', 'moral']):
+                goodness_terms.append(term)
+            elif any(x in term_str.lower() for x in ['true', 'truth', 'logic']):
+                truth_terms.append(term)
 
-        except Exception:
-            return expr
-
-    def get_symbolic_statistics(self) -> Dict[str, Any]:
-        """Get statistics about symbolic computation capabilities."""
         return {
-            "fractal_orbital_available": FRACTAL_ORBITAL_AVAILABLE,
-            "lambda_engine_available": LAMBDA_ENGINE_AVAILABLE,
-            "cache_size": len(self._symbolic_cache),
-            "trinity_symbols": {k: str(v) for k, v in self.TRINITY_SYMBOLS.items()},
+            'existence_components': [str(t) for t in existence_terms],
+            'goodness_components': [str(t) for t in goodness_terms],
+            'truth_components': [str(t) for t in truth_terms],
+            'trinity_balance': len(existence_terms) * len(goodness_terms) * len(truth_terms),
+            'total_terms': len(terms)
         }
-
-
-# Convenience alias for backward compatibility
-SymbolicMath = FractalSymbolicMath

@@ -1,0 +1,79 @@
+# dual_bijection_logic.py
+
+from typing import Callable, Any, Tuple
+
+class OntologicalPrimitive:
+    def __init__(self, name: str, value: Any = None):
+        self.name = name
+        self.value = value
+
+    def __repr__(self):
+        return f"{self.name}({self.value})"
+
+class DualBijectiveSystem:
+    def __init__(self):
+        # First-order ontological primitives
+        self.identity = OntologicalPrimitive("Identity")
+        self.non_contradiction = OntologicalPrimitive("NonContradiction")
+        self.excluded_middle = OntologicalPrimitive("ExcludedMiddle")
+        self.distinction = OntologicalPrimitive("Distinction")
+        self.relation = OntologicalPrimitive("Relation")
+        self.agency = OntologicalPrimitive("Agency")
+
+        # Second-order semantic isomorphs
+        self.coherence = OntologicalPrimitive("Coherence")
+        self.truth = OntologicalPrimitive("Truth")
+        self.existence = OntologicalPrimitive("Existence")
+        self.goodness = OntologicalPrimitive("Goodness")
+
+        # Core bijective mappings
+        self.bijective_map_A = {
+            self.identity.name: self.coherence,
+            self.non_contradiction.name: self.truth,
+            self.excluded_middle.name: OntologicalPrimitive("TruthCoherenceTotal")  # Placeholder for composite
+        }
+
+        self.bijective_map_B = {
+            self.distinction.name: self.existence,
+            self.relation.name: self.goodness,
+            self.agency.name: OntologicalPrimitive("ExistenceGoodnessTotal")  # Placeholder for composite
+        }
+
+    def biject_A(self, primitive: OntologicalPrimitive) -> OntologicalPrimitive:
+        return self.bijective_map_A.get(primitive.name)
+
+    def biject_B(self, primitive: OntologicalPrimitive) -> OntologicalPrimitive:
+        return self.bijective_map_B.get(primitive.name)
+
+    def commute(self, a_pair: Tuple[OntologicalPrimitive, OntologicalPrimitive],
+                      b_pair: Tuple[OntologicalPrimitive, OntologicalPrimitive]) -> bool:
+        """
+        Checks commutation condition between the two bijective subsystems.
+        i.e., does isomorphism hold across abstraction and ontological layers.
+        """
+        f1, f2 = a_pair
+        g1, g2 = b_pair
+
+        return (self.biject_A(f1).name == self.biject_B(g1).name and
+                self.biject_A(f2).name == self.biject_B(g2).name)
+
+    def summary(self):
+        print("Bijective Mapping A (Logic → Semantics):")
+        for k, v in self.bijective_map_A.items():
+            print(f"  {k} → {v}")
+
+        print("\nBijective Mapping B (Ontology → Value):")
+        for k, v in self.bijective_map_B.items():
+            print(f"  {k} → {v}")
+
+        print("\nOrthogonality Commutation Test (example):")
+        example_result = self.commute(
+            (self.identity, self.non_contradiction),
+            (self.distinction, self.relation)
+        )
+        print(f"  Commute success: {example_result}")
+
+# Example usage
+if __name__ == "__main__":
+    system = DualBijectiveSystem()
+    system.summary()

@@ -6,18 +6,20 @@ Toolkit-level Nexus orchestrator for Bayesian Predictor.
 """
 import json
 import traceback
+from typing import Dict, List
 
-from bayes_update_real_time import run_BERT_pipeline
-from bayesian_inferencer import BayesianTrinityInferencer
-from bayesian_recursion import BayesianMLModel
-from hierarchical_bayes_network import execute_HBN
-from mcmc_engine import example_model, run_mcmc_model
+from .bayes_update_real_time import resolve_priors_path, run_BERT_pipeline
+from .bayesian_inferencer import BayesianTrinityInferencer
+from .bayesian_recursion import BayesianMLModel
+from .hierarchical_bayes_network import execute_HBN
+# from .mcmc_engine import example_model, run_mcmc_model
 
 
 class BayesianNexus:
     def __init__(self, priors_path: str):
-        self.priors_path = priors_path
-        self.inferencer = BayesianTrinityInferencer(prior_path=priors_path)
+        resolved = resolve_priors_path(priors_path)
+        self.priors_path = resolved
+        self.inferencer = BayesianTrinityInferencer(prior_path=str(resolved))
         self.recursion_model = BayesianMLModel()
 
     def run_real_time(self, query: str) -> Dict:
@@ -50,15 +52,15 @@ class BayesianNexus:
         except Exception:
             return {"output": None, "error": traceback.format_exc()}
 
-    def run_mcmc(self) -> Dict:
-        try:
-            trace = run_mcmc_model(example_model)
-            return {
-                "output": {"n_samples": len(getattr(trace, "posterior", []))},
-                "error": None,
-            }
-        except Exception:
-            return {"output": None, "error": traceback.format_exc()}
+    # def run_mcmc(self) -> Dict:
+    #     try:
+    #         trace = run_mcmc_model(example_model)
+    #         return {
+    #             "output": {"n_samples": len(getattr(trace, "posterior", []))},
+    #             "error": None,
+    #         }
+    #     except Exception:
+    #         return {"output": None, "error": traceback.format_exc()}
 
     def run_pipeline(self, query: str) -> List[Dict]:
         report = []
@@ -95,7 +97,8 @@ if __name__ == "__main__":
         sys.exit(1)
 
     query = sys.argv[1]
-    nexus = BayesianNexus(priors_path="config/bayes_priors.json")
+    resolved_priors = resolve_priors_path("config/bayes_priors.json")
+    nexus = BayesianNexus(priors_path=str(resolved_priors))
     result = nexus.run_pipeline(query)
     pprint.pprint(result)
     # Optionally write to JSON

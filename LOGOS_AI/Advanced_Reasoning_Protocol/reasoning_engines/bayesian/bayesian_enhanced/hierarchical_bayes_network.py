@@ -11,10 +11,13 @@ import numpy as np
 from sklearn.linear_model import BayesianRidge
 from sklearn.preprocessing import StandardScaler
 
+from .bayes_update_real_time import resolve_priors_path
+
 
 def load_static_priors(path: str = "config/bayes_priors.json") -> dict:
-    with open(path) as f:
-        return json.load(f)
+    resolved = resolve_priors_path(path)
+    with resolved.open("r", encoding="utf-8") as handle:
+        return json.load(handle)
 
 
 def query_intent_analyzer(q: str) -> dict:

@@ -1,5 +1,5 @@
 """
-LOGOS PXL Core v0.7 - Temporal Predictor
+Temporal Predictor
 =======================================
 
 Provides safe integration of Pyro probabilistic programming for temporal reasoning

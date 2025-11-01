@@ -1,23 +1,8 @@
 """
-PraxeoPraxis - Action and Practical Reasoning Domain
-===================================================
+PraxeoPraxis Domain: Will and Volitional Praxis
 
-IEL domain for action reasoning, practical decision-making, and behavioral analysis.
-Maps bijectively to the "Action" second-order ontological property.
-
-Core Focus:
-- Action planning and execution
-- Practical reasoning and decision-making
-- Behavioral analysis and prediction
-- Goal-oriented activity coordination
-- Moral and ethical action evaluation
-
-Ontological Mapping:
-- Property: Action
-- C-Value: 0.93811+0.05540j
-- Trinity Weight: {"existence": 1.0, "goodness": 0.8, "truth": 0.7}
-- Group: Practical
-- Order: Second-Order
+This domain focuses on will, volition, and intentional action.
+Maps to Will ontological property.
 """
 
 import logging
@@ -27,76 +12,87 @@ logger = logging.getLogger(__name__)
 
 
 class PraxeoPraxisCore:
-    """Core action reasoning engine for practical analysis"""
+    """Core will reasoning engine for volitional analysis and intentional action"""
 
     def __init__(self):
-        self.action_metrics = {
-            "efficacy": 0.0,
-            "morality": 0.0,
-            "coherence": 0.0,
+        self.will_metrics = {
+            "volition": 0.0,
             "intentionality": 0.0,
-            "feasibility": 0.0,
+            "determination": 0.0,
+            "willpower": 0.0,
+            "purpose": 0.0,
         }
 
-    def evaluate_action_structure(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Evaluate action structure and practical reasoning"""
+    def evaluate_will(self, volitional_context: Dict[str, Any]) -> Dict[str, Any]:
+        """Evaluate will and volition in intentional contexts"""
+        will_analysis = {
+            "volition_assessment": self._assess_volition(volitional_context),
+            "intentionality_analysis": self._analyze_intentionality(volitional_context),
+            "determination_evaluation": self._evaluate_determination(volitional_context),
+            "willpower_validation": self._validate_willpower(volitional_context),
+            "purpose_distribution": self._assess_purpose_distribution(volitional_context)
+        }
 
-        action_efficacy = self._calculate_action_efficacy(input_data)
-        practical_analysis = self._analyze_practical_reasoning(input_data)
-        moral_assessment = self._assess_moral_dimensions(input_data)
+        # Update metrics
+        self.will_metrics.update({
+            "volition": will_analysis["volition_assessment"]["score"],
+            "intentionality": will_analysis["intentionality_analysis"]["score"],
+            "determination": will_analysis["determination_evaluation"]["score"],
+            "willpower": will_analysis["willpower_validation"]["score"],
+            "purpose": will_analysis["purpose_distribution"]["score"]
+        })
+
+        return will_analysis
+
+    def _assess_volition(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Assess volitional strength and clarity"""
+        return {"score": 0.89, "assessment": "Strong volitional presence"}
+
+    def _analyze_intentionality(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Analyze intentionality and purposeful action"""
+        return {"score": 0.86, "analysis": "Intentionality clearly established"}
+
+    def _evaluate_determination(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Evaluate determination and resolve"""
+        return {"score": 0.91, "evaluation": "Determination strongly manifested"}
+
+    def _validate_willpower(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Validate willpower and volitional strength"""
+        return {"score": 0.88, "validation": "Willpower validated"}
+
+    def _assess_purpose_distribution(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Assess distribution of purpose and will"""
+        return {"score": 0.84, "assessment": "Purpose effectively distributed"}
+
+    def construct_will_framework(self, volitional_context: Dict[str, Any]) -> Dict[str, Any]:
+        """Construct will framework for volitional action"""
+        framework = {
+            "will_principles": self._establish_will_principles(volitional_context),
+            "volition_framework": self._develop_volition_framework(volitional_context),
+            "determination_mechanisms": self._design_determination_mechanisms(volitional_context),
+            "intentional_standards": self._set_intentional_standards(volitional_context)
+        }
 
         return {
-            "action_efficacy": action_efficacy,
-            "practical_analysis": practical_analysis,
-            "moral_assessment": moral_assessment,
-            "action_verdict": self._generate_action_verdict(action_efficacy),
-            "practical_recommendations": self._suggest_action_improvements(input_data),
+            "will_framework": framework,
+            "will_metrics": self.will_metrics.copy()
         }
 
-    def _calculate_action_efficacy(self, data: Dict[str, Any]) -> float:
-        """Calculate overall action efficacy"""
-        return 0.87
+    def _establish_will_principles(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Establish fundamental will principles"""
+        return {"principles": ["volition", "intentionality", "determination", "purposeful_action"]}
 
-    def _analyze_practical_reasoning(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Analyze practical reasoning patterns"""
-        return {
-            "reasoning_coherence": 0.84,
-            "goal_alignment": 0.91,
-            "means_end_rationality": 0.88,
-            "practical_wisdom": 0.82,
-        }
+    def _develop_volition_framework(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Develop framework for volitional action"""
+        return {"volition": ["willful_action", "intentional_choice", "determined_pursuit"]}
 
-    def _assess_moral_dimensions(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Assess moral and ethical dimensions"""
-        return {
-            "moral_permissibility": 0.89,
-            "virtue_alignment": 0.85,
-            "consequential_analysis": 0.87,
-            "deontological_assessment": 0.83,
-        }
+    def _design_determination_mechanisms(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Design mechanisms for maintaining determination"""
+        return {"mechanisms": ["willpower_sustenance", "purpose_clarification", "resolve_strengthening"]}
 
-    def _generate_action_verdict(self, efficacy: float) -> str:
-        """Generate action verdict based on efficacy"""
-        if efficacy >= 0.9:
-            return "practically_excellent"
-        elif efficacy >= 0.8:
-            return "practically_sound"
-        elif efficacy >= 0.6:
-            return "practically_adequate"
-        else:
-            return "practically_deficient"
-
-    def _suggest_action_improvements(self, data: Dict[str, Any]) -> List[str]:
-        """Suggest practical improvements"""
-        return [
-            "enhance_goal_clarity",
-            "improve_means_efficiency",
-            "strengthen_moral_foundation",
-            "increase_practical_wisdom",
-        ]
+    def _set_intentional_standards(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Set standards for intentional evaluation"""
+        return {"standards": ["volitional_clarity", "purposeful_action", "determined_execution"]}
 
 
-# Global instance
-praxeo_praxis = PraxeoPraxisCore()
-
-__all__ = ["PraxeoPraxisCore", "praxeo_praxis"]
+__all__ = ["PraxeoPraxisCore"]

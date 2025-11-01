@@ -46,7 +46,7 @@ try:
     from interfaces.services.api_service import APIService
     from interfaces.services.gui_interfaces.logos_gui import LogosGUI
     from mathematics.pxl.core.pxl_core import PXLCore
-    from User_Interaction_Protocol.protocols.shared.message_formats import UIPRequest, UIPResponse
+    from User_Interaction_Protocol.system_utillities.shared.message_formats import UIPRequest, UIPResponse
     from protocols.user_interaction.uip_registry import UIPRegistry, UIPStatus
     DIVINE_PROCESSOR_AVAILABLE = True
 except ImportError as e:
