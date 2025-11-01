@@ -31,14 +31,15 @@ from typing import Any, Dict, List, Optional, Set
 
 # Import base nexus infrastructure
 import sys
-sys.path.append(str(Path(__file__).parent.parent.parent))
+sys.path.append(str(Path(__file__).parent.parent.parent.parent / "Logos_Agent" / "agent"))
 
 try:
     from agent_system.base_nexus import BaseNexus, AgentRequest, NexusResponse, ProtocolType, AgentType
 except ImportError:
     # Fallback for development
     class BaseNexus:
-        pass
+        def __init__(self, **kwargs):
+            pass
     class AgentRequest:
         pass
     class NexusResponse:
@@ -50,6 +51,31 @@ except ImportError:
     class AgentType(Enum):
         SYSTEM_AGENT = "system"
         EXTERIOR_AGENT = "exterior"
+
+# Import coding environment for self-improvement
+try:
+    import sys
+    import os
+    # Add the operations/code_generator path to sys.path
+    code_gen_path = os.path.join(os.path.dirname(__file__), '..', 'operations', 'code_generator')
+    if code_gen_path not in sys.path:
+        sys.path.insert(0, code_gen_path)
+    from self_improvement_integration import (
+        SOPSelfImprovementManager,
+        trigger_self_improvement,
+        get_self_improvement_status
+    )
+    from development_environment import (
+        SOPCodeEnvironment,
+        CodeGenerationRequest,
+        generate_improvement,
+        get_code_environment_status
+    )
+    CODING_ENVIRONMENT_AVAILABLE = True
+except ImportError:
+    # logger not defined yet, use print
+    print("⚠️ Coding environment not available - self-improvement disabled")
+    CODING_ENVIRONMENT_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -303,6 +329,10 @@ class SOPNexus(BaseNexus):
         self.system_metrics: Dict[str, Any] = {}
         self.protocol_statuses: Dict[str, Dict[str, Any]] = {}
         
+        # Self-improvement system
+        self.self_improvement_manager = None
+        self.code_environment = None
+        
         # Initialize directories
         self._initialize_directories()
         
@@ -334,6 +364,10 @@ class SOPNexus(BaseNexus):
             
             # Start background monitoring
             await self._start_background_monitoring()
+            
+            # Initialize coding environment for self-improvement
+            if CODING_ENVIRONMENT_AVAILABLE:
+                await self._initialize_coding_environment()
             
             logger.info("✅ SOP infrastructure initialized")
             return True
@@ -412,6 +446,29 @@ class SOPNexus(BaseNexus):
         
         logger.info("✅ Background monitoring active")
         
+    async def _initialize_coding_environment(self) -> None:
+        """Initialize coding environment for self-improvement"""
+        if not CODING_ENVIRONMENT_AVAILABLE:
+            logger.warning("⚠️ Coding environment not available")
+            return
+            
+        try:
+            logger.info("💻 Initializing coding environment...")
+            
+            # Initialize self-improvement manager
+            self.self_improvement_manager = SOPSelfImprovementManager()
+            
+            # Initialize code environment
+            self.code_environment = SOPCodeEnvironment()
+            
+            # Start self-improvement monitoring
+            asyncio.create_task(self.self_improvement_manager.monitor_and_maintain())
+            
+            logger.info("✅ Coding environment initialized")
+            
+        except Exception as e:
+            logger.error(f"❌ Failed to initialize coding environment: {e}")
+        
     # Protocol-specific abstract method implementations
     
     async def _protocol_specific_security_validation(self, request: AgentRequest) -> Dict[str, Any]:
@@ -427,7 +484,9 @@ class SOPNexus(BaseNexus):
         allowed_operations = [
             "request_token", "validate_token", "request_todo_token",
             "get_system_status", "run_gap_detection", "approve_todo_integration",
-            "get_todo_queue", "system_test", "health_check"
+            "get_todo_queue", "system_test", "health_check",
+            "trigger_self_improvement", "get_self_improvement_status",
+            "generate_code_improvement", "get_code_environment_status"
         ]
         
         if request.operation not in allowed_operations:
@@ -471,6 +530,14 @@ class SOPNexus(BaseNexus):
                 return await self._handle_system_test_request(payload)
             elif operation == "health_check":
                 return await self._handle_health_check_request(payload)
+            elif operation == "trigger_self_improvement":
+                return await self._handle_self_improvement_request(payload)
+            elif operation == "get_self_improvement_status":
+                return await self._handle_self_improvement_status_request(payload)
+            elif operation == "generate_code_improvement":
+                return await self._handle_code_generation_request(payload)
+            elif operation == "get_code_environment_status":
+                return await self._handle_code_environment_status_request(payload)
             else:
                 return {"success": False, "error": f"Unknown operation: {operation}"}
                 
@@ -754,7 +821,12 @@ class SOPNexus(BaseNexus):
                 "file_management": {
                     "available_scaffolds": len(list(self.scaffold_library_path.glob("*.scaffold"))),
                     "backup_files": len(list(self.backup_storage_path.glob("*")))
-                }
+                },
+                "coding_environment": {
+                    "available": CODING_ENVIRONMENT_AVAILABLE,
+                    "self_improvement_active": self.self_improvement_manager is not None,
+                    "code_environment_active": self.code_environment is not None
+                } if CODING_ENVIRONMENT_AVAILABLE else {"available": False}
             }
             
             return {"success": True, "system_status": status}
@@ -795,6 +867,82 @@ class SOPNexus(BaseNexus):
             return {
                 "success": True,
                 "test_results": test_results
+            }
+            
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+            
+    # Self-Improvement Operations
+    
+    async def _handle_self_improvement_request(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle self-improvement trigger request"""
+        
+        if not CODING_ENVIRONMENT_AVAILABLE or not self.self_improvement_manager:
+            return {"success": False, "error": "Self-improvement system not available"}
+            
+        try:
+            system_metrics = payload.get("system_metrics", {})
+            result = await self.self_improvement_manager.analyze_and_improve(system_metrics)
+            
+            return {
+                "success": True,
+                "improvement_result": result
+            }
+            
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+            
+    async def _handle_self_improvement_status_request(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle self-improvement status request"""
+        
+        if not CODING_ENVIRONMENT_AVAILABLE:
+            return {"success": False, "error": "Self-improvement system not available"}
+            
+        try:
+            status = get_self_improvement_status()
+            
+            return {
+                "success": True,
+                "self_improvement_status": status
+            }
+            
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+            
+    async def _handle_code_generation_request(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle code generation request"""
+        
+        if not CODING_ENVIRONMENT_AVAILABLE:
+            return {"success": False, "error": "Code generation system not available"}
+            
+        try:
+            # Create code generation request
+            request_data = payload.get("code_request", {})
+            code_request = CodeGenerationRequest(**request_data)
+            
+            # Generate improvement
+            result = await generate_improvement(code_request.__dict__)
+            
+            return {
+                "success": True,
+                "code_generation_result": result
+            }
+            
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+            
+    async def _handle_code_environment_status_request(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle code environment status request"""
+        
+        if not CODING_ENVIRONMENT_AVAILABLE:
+            return {"success": False, "error": "Code environment not available"}
+            
+        try:
+            status = get_code_environment_status()
+            
+            return {
+                "success": True,
+                "code_environment_status": status
             }
             
         except Exception as e:

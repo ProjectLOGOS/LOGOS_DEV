@@ -1,6 +1,6 @@
-from core.logos_validator_hub import validator_gate
-from core.async_workers import submit_async
-from core.config_loader import Config
+from .logos_validator_hub import validator_gate
+from .async_workers import submit_async
+from .config_loader import Config
 
 class OntologyInducer:
     """

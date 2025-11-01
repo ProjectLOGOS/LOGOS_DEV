@@ -8,7 +8,7 @@ import logging
 from typing import Tuple, List, Dict, Any, Optional
 
 from ontological_node_class import OntologicalNode
-from trinity_vector import TrinityVector
+from LOGOS_AI.Synthetic_Cognition_Protocol.MVS_System.mvs_calculators.trinity_vector import TrinityVector
 
 logger = logging.getLogger(__name__)
 

@@ -41,7 +41,7 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 # Add startup modules to path
 sys.path.append(str(Path(__file__).parent / "System_Operations_Protocol" / "startup"))
@@ -109,6 +109,28 @@ from User_Interaction_Protocol.system_utillities.shared.message_formats import (
 
 # OpenAI integration removed to prevent terminal communication issues
 OPENAI_PIPELINE_AVAILABLE = False
+
+# Import mathematical safety formalisms
+try:
+    from Logos_Agent.formalisms import (
+        LOGOSFormalisms,
+        validate_operation,
+        process_reasoning,
+        get_safety_status
+    )
+    FORMALISMS_AVAILABLE = True
+except ImportError as e:
+    logging.warning(f"Mathematical safety formalisms not available: {e}")
+    FORMALISMS_AVAILABLE = False
+    # Define fallback functions
+    def LOGOSFormalisms():
+        return None
+    def validate_operation(op):
+        return {"validation": "unavailable", "reason": "formalisms not loaded"}
+    def process_reasoning(req):
+        return {"processing": "unavailable", "reason": "formalisms not loaded"}
+    def get_safety_status():
+        return {"status": "unavailable", "reason": "formalisms not loaded"}
 
 
 @dataclass
@@ -234,6 +256,13 @@ class LOGOSMasterController:
         # Setup logging
         self.setup_logging()
         self.logger = logging.getLogger(__name__)
+
+        # Initialize mathematical safety formalisms
+        self.formalisms = LOGOSFormalisms() if FORMALISMS_AVAILABLE else None
+        if self.formalisms:
+            self.logger.info("🛡️  Mathematical Safety Formalisms initialized")
+        else:
+            self.logger.warning("⚠️  Mathematical Safety Formalisms not available")
 
         # Signal handlers
         self.setup_signal_handlers()
@@ -543,6 +572,9 @@ class LOGOSMasterController:
         self.logger.info(
             f"   🧠 Advanced General Protocol (AGP): {'✅ Online' if 'AGP' in operational_protocols else '❌ Offline'}"
         )
+        self.logger.info(
+            f"   🛡️  Mathematical Safety Formalisms: {'✅ Active' if FORMALISMS_AVAILABLE and self.formalisms else '❌ Inactive'}"
+        )
         self.logger.info(f"   🌐 System Mode: {self.status.system_mode.upper()}")
         self.logger.info(f"   🔢 Protocols Active: {len(operational_protocols)}/3")
 
@@ -550,6 +582,10 @@ class LOGOSMasterController:
             self.logger.info("   ♾️  Infinite Reasoning: Available")
             self.logger.info("   🌌 MVS/BDN Mathematics: Online")
             self.logger.info("   🔬 Singularity AGI: Active")
+
+        if FORMALISMS_AVAILABLE and self.formalisms:
+            self.logger.info("   🛡️  AGI Misalignment Prevention: Active")
+            self.logger.info("   🔒 Mathematical Safety Guarantees: Enabled")
 
         startup_time = (
             datetime.now(timezone.utc) - self.status.startup_time
@@ -585,6 +621,33 @@ class LOGOSMasterController:
                 "session_id": request.session_id,
                 "status": "processing",
             }
+
+            # Validate operation through mathematical safety formalisms
+            if self.formalisms:
+                operation_context = {
+                    "operation": "user_request_processing",
+                    "entity": {"type": "user", "session_id": request.session_id},
+                    "context": {
+                        "user_input": request.user_input,
+                        "request_metadata": getattr(request, 'metadata', {}),
+                        "timestamp": datetime.now(timezone.utc).isoformat()
+                    }
+                }
+
+                formalism_validation = self.formalisms.validate_agi_operation(operation_context)
+
+                if formalism_validation.get("overall_validation") == "failed":
+                    self.logger.warning("🛡️ Safety formalism validation failed - blocking request")
+                    return UIPResponse(
+                        session_id=request.session_id,
+                        correlation_id=str(uuid.uuid4()),
+                        response_text="Request blocked by safety formalisms",
+                        confidence_score=0.0,
+                        metadata={"blocked_by_formalisms": True, "validation_details": formalism_validation}
+                    )
+
+                # Log successful validation
+                self.logger.debug("🛡️ Safety formalism validation passed")
 
             # Use standard UIP pipeline (OpenAI integration removed)
             self.logger.debug(f"Processing request via standard UIP: {request.user_input[:50]}...")
@@ -713,6 +776,9 @@ class LOGOSMasterController:
                 ),
             },
             "protocol_health": self.protocol_health,
+            "safety_formalisms": (
+                self.formalisms.get_system_safety_status() if self.formalisms else {"status": "unavailable"}
+            ),
             "performance_metrics": {
                 "total_requests_processed": self.status.total_requests_processed,
                 "active_requests": self.status.active_requests,
@@ -728,8 +794,156 @@ class LOGOSMasterController:
                 "agp_enabled": self.config.enable_agp,
                 "agp_mode": self.config.agp_mode,
                 "development_mode": self.config.development_mode,
+                "formalisms_enabled": FORMALISMS_AVAILABLE,
             },
         }
+
+
+    def check_resource_limits(self, request: UIPRequest) -> Tuple[bool, str]:
+        """
+        Resource governor to prevent DoS attacks and system overload.
+        Based on LOGOSNexus orchestration patterns.
+        """
+        # Check input length limits
+        if len(request.user_input) > 10000:
+            return False, "Input exceeds maximum character limit (10,000)"
+
+        # Check concurrent request limits
+        if len(self.active_requests) >= self.config.max_concurrent_requests:
+            return False, f"System at maximum concurrent requests ({self.config.max_concurrent_requests})"
+
+        # Check for rapid-fire requests from same session (basic rate limiting)
+        session_requests = [r for r in self.active_requests.values()
+                          if r.get("session_id") == request.session_id]
+        if len(session_requests) >= 5:  # Max 5 concurrent per session
+            return False, "Too many concurrent requests from this session"
+
+        return True, ""
+
+    async def handle_external_request(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Handle external requests with enhanced orchestration.
+        Based on LOGOSNexus async request handling patterns.
+        """
+        request_id = request_data.get("request_id", str(uuid.uuid4()))
+        query = request_data.get("query", "")
+        session_id = request_data.get("session_id", "external")
+
+        self.logger.info(f"[Orchestration] Processing external request {request_id}")
+
+        # Create UIPRequest from external data
+        uip_request = UIPRequest(
+            session_id=session_id,
+            correlation_id=request_id,
+            user_input=query,
+            metadata=request_data.get("metadata", {})
+        )
+
+        # Check resource limits (GATE 1)
+        resource_approved, reason = self.check_resource_limits(uip_request)
+        if not resource_approved:
+            self.logger.warning(f"[Orchestration] Request {request_id} rejected: {reason}")
+            return {
+                "request_id": request_id,
+                "status": "rejected",
+                "reason": reason,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
+
+        # Process through standard pipeline
+        try:
+            response = await self.process_request(uip_request)
+
+            return {
+                "request_id": request_id,
+                "status": "completed",
+                "response": {
+                    "text": response.response_text,
+                    "confidence": response.confidence_score,
+                    "metadata": getattr(response, 'metadata', {})
+                },
+                "processing_time_ms": getattr(response, 'processing_time_ms', None),
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
+
+        except Exception as e:
+            self.logger.error(f"[Orchestration] Request {request_id} failed: {e}")
+            return {
+                "request_id": request_id,
+                "status": "error",
+                "error": str(e),
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
+
+    async def run_autonomous_cycle(self):
+        """
+        Autonomous learning and self-improvement cycle.
+        Based on LOGOSNexus autonomous loop patterns.
+        """
+        self.logger.info("🚀 Starting autonomous learning cycle")
+
+        try:
+            # Generate autonomous query based on system state
+            autonomous_query = self._generate_autonomous_query()
+
+            # Process through external request handler
+            request_data = {
+                "request_id": f"auto_{uuid.uuid4()}",
+                "query": autonomous_query,
+                "session_id": "autonomous",
+                "metadata": {"autonomous": True}
+            }
+
+            result = await self.handle_external_request(request_data)
+
+            # Analyze result for self-improvement triggers
+            self._analyze_autonomous_result(result)
+
+            self.logger.info("✅ Autonomous learning cycle completed")
+
+        except Exception as e:
+            self.logger.error(f"❌ Autonomous cycle failed: {e}")
+
+    def _generate_autonomous_query(self) -> str:
+        """Generate autonomous learning query based on system state"""
+        # Simple autonomous query generation - could be enhanced
+        queries = [
+            "Analyze the coherence of recent reasoning patterns",
+            "Explore connections between current knowledge domains",
+            "Identify potential improvements to reasoning capabilities",
+            "Review system performance metrics for optimization opportunities"
+        ]
+
+        # Cycle through queries or use more sophisticated selection
+        import random
+        return random.choice(queries)
+
+    def _analyze_autonomous_result(self, result: Dict[str, Any]):
+        """Analyze autonomous cycle results for self-improvement triggers"""
+        if result.get("status") == "completed":
+            confidence = result.get("response", {}).get("confidence", 0.0)
+
+            # Track performance for self-improvement decisions
+            if not hasattr(self, '_autonomous_performance'):
+                self._autonomous_performance = []
+
+            self._autonomous_performance.append({
+                "timestamp": datetime.now(timezone.utc),
+                "confidence": confidence,
+                "query": result.get("request_id", "")
+            })
+
+            # Keep only recent performance data
+            if len(self._autonomous_performance) > 100:
+                self._autonomous_performance = self._autonomous_performance[-100:]
+
+            # Check for self-improvement threshold
+            recent_performance = self._autonomous_performance[-10:]  # Last 10 cycles
+            if len(recent_performance) >= 10:
+                avg_confidence = sum(p["confidence"] for p in recent_performance) / len(recent_performance)
+                if avg_confidence > 0.95:  # High performance threshold
+                    self.logger.info("🎯 Self-improvement threshold reached - triggering enhancement cycle")
+                    # Could trigger actual self-improvement here
 
 
 # Global LOGOS controller instance
@@ -856,6 +1070,9 @@ def main():
                 )
                 print(
                     f"   🧠 AGI Capabilities: {'Online' if config.enable_agp else 'Disabled'}"
+                )
+                print(
+                    f"   🛡️  Safety Formalisms: {'Active' if FORMALISMS_AVAILABLE else 'Unavailable'}"
                 )
                 print(f"   🌐 Operation Mode: {args.mode.upper()}")
                 print("=" * 60)

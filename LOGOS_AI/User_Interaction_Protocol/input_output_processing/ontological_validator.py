@@ -10,12 +10,13 @@ Enhanced with: Trinity ontology integration, modal metaphysics, scholastic categ
 """
 
 import itertools
+import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
-from protocols.shared.system_imports import *
+from LOGOS_AI.User_Interaction_Protocol.system_utillities.shared.system_imports import *
 
 
 class OntologicalCategory(Enum):

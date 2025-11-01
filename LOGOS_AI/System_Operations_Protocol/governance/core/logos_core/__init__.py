@@ -4,7 +4,7 @@ from ..iel_integration import IELIntegration, get_iel_integration, initialize_ie
 from ..language.natural_language_processor import NaturalLanguageProcessor
 from ..learning.autonomous_learning import LearningCycleManager
 from .archon_planner import ArchonPlannerGate
-from .integration_harmonizer import IntegrationHarmonizer
+from ....alignment_protocols.compliance.integration_harmonizer import IntegrationHarmonizer
 from .logos_nexus import LogosNexus
 from .meta_reasoning.iel_evaluator import IELEvaluator
 from .meta_reasoning.iel_generator import IELGenerator
@@ -16,9 +16,9 @@ from .unified_formalisms import UnifiedFormalismValidator
 
 # Optional API server imports - handle missing dependencies gracefully
 try:
-    from .api_server import app as api_server_app
+    from ....deployment.monitoring.api_server import app as api_server_app
     from .demo_server import DemoServer
-    from .health_server import HealthMonitor
+    from ....deployment.monitoring.health_server import HealthMonitor
     from .server import LogosAPIServer
 
     _api_servers_available = True
@@ -33,8 +33,8 @@ except ImportError as e:
 
 from .coherence.coherence_metrics import CoherenceMetrics, TrinityCoherence
 from .coherence.coherence_optimizer import CoherenceOptimizer
-from .governance.iel_signer import IELSigner
-from .governance.policy import PolicyManager
+from .meta_reasoning.iel_signer import IELSigner
+from .coherence.policy import PolicyManager
 
 __all__ = [
     "ArchonPlannerGate",

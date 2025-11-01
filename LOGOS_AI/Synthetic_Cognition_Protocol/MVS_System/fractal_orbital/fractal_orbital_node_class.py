@@ -65,7 +65,7 @@ class OntologicalNode:
         return {"depth": i, "in_set": (i == max_iter - 1)}
 
     def _calc_trinity_vector(self):
-        from trinity_vector import TrinityVector
+        from LOGOS_AI.Synthetic_Cognition_Protocol.MVS_System.mvs_calculators.trinity_vector import TrinityVector
 
         depth = self.orbit_properties["depth"]
         e = 0.3 + (depth / 100) * 0.7
