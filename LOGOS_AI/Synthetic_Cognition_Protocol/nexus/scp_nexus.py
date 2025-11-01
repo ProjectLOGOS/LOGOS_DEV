@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-AGP Nexus - Advanced General Protocol Cognitive Enhancement System
-================================================================
+SCP Nexus - Synthetic Cognition Protocol Cognitive Enhancement System
+====================================================================
 
-Specialized nexus for Advanced General Protocol focused on:
-- Meta-Verification System (MVS) and Belief-Desire-Network (BDN) 
+Specialized nexus for Synthetic Cognition Protocol focused on:
+- Modal Vector Space (MVS) System and Banach Data Node (BDN) Infrastructure
 - Modal logic chains (causal, epistemic, necessity, possibility, temporal, counterfactual)
 - Fractal orbital analysis and infinite/meta-reasoning capabilities
-- Cognitive enhancement and self-improvement systems
+- Cognitive enhancement and consciousness modeling systems
 - Creative hypothesis generation and optimization engines
 
-Designed for thinking to infinity and comprehensive meta-reasoning operations.
+Designed for synthetic consciousness, cognitive enhancement, and meta-reasoning operations.
 """
 
 import asyncio
